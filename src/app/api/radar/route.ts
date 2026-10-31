@@ -25,7 +25,7 @@ export async function GET(req: Request) {
       status: snap.status,
       destinations: destinationsLive(ds, snap, now),
       notableQuakes: notableQuakes(snap.quakes, now).slice(0, 40),
-      sources: withLiveSources(ds.sources).filter((s) => s.id === "fcdo" || s.id === "usgs"),
+      sources: withLiveSources(ds.sources).filter((s) => s.id === "fcdo" || s.id === "usgs" || s.id === "gdacs"),
     });
   } catch {
     return apiError(500, "ERROR_INTERNO", "No se pudo preparar el Radar.");

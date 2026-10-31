@@ -16,9 +16,37 @@ import { SaveButton } from "../SaveButton";
 import { EmptyPanel, ErrorPanel, LoadingPanel } from "../StatePanels";
 import { PageHeader } from "../ui/PageHeader";
 
-function limitedText(card: DestinationCard): string {
+/**
+ * Para un destino sin puntaje, muestra primero lo que SÍ sabemos (datos reales con su fuente)
+ * y después lo que falta. Nunca una tarjeta que solo diga «faltan datos».
+ */
+function LimitedBody({ card }: { card: DestinationCard }) {
+  const by = new Map(card.result.factors.map((f) => [f.key, f]));
+  const clima = by.get("clima");
+  const riesgo = by.get("riesgo");
+  const tendencia = by.get("tendencia");
+  const level = riesgo?.value != null ? /^Nivel (\d) de 4/.exec(riesgo.detail)?.[1] : undefined;
+  const rows: Array<[string, string]> = [];
+  if (clima?.value != null) rows.push(["Clima", clima.detail]);
+  if (riesgo?.value != null) rows.push(["Aviso FCDO", level ? `nivel ${level} de 4` : riesgo.detail]);
+  if (tendencia?.value != null) rows.push(["Interés", tendencia.detail.replace(/^Interés\s*/, "")]);
   const missing = card.result.missing.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
-  return missing.length > 0 ? `Faltan datos: ${joinList(missing.slice(0, 3))}.` : card.result.reason;
+  return (
+    <>
+      {rows.length > 0 ? (
+        <ul className="flex flex-col gap-0.5">
+          {rows.map(([k, v]) => (
+            <li key={k}>
+              <b className="font-semibold text-fg">{k}:</b> {v}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        card.result.reason
+      )}
+      {missing.length > 0 ? <span className="mt-1 block text-mid">Aún sin: {joinList(missing.slice(0, 3))}.</span> : null}
+    </>
+  );
 }
 
 function Hero({ card, q, request, next, computedAt }: { card: DestinationCard; q: string; request: TripRequest; next?: DestinationCard; computedAt: string }) {
@@ -120,7 +148,7 @@ function Results({ data, q, banner }: { data: RecommendationsResponse; q: string
                     confidence={{ value: r.confidence, band: r.confidenceBand }}
                     body={
                       limited ? (
-                        limitedText(c)
+                        <LimitedBody card={c} />
                       ) : (
                         <>
                           {r.cost.totalUsd != null ? <b className="font-semibold text-fg">{formatUsd(r.cost.totalUsd)}. </b> : null}

@@ -1,10 +1,11 @@
+import { HAZARD_LABEL } from "./gdacs";
 import type { DestinationLive } from "./overlay";
 
 export type RiskLevel = 1 | 2 | 3 | 4;
 
 export interface RadarAlert {
   id: string;
-  kind: "advisory" | "quake";
+  kind: "advisory" | "quake" | "hazard";
   level: RiskLevel | null;
   title: string;
   detail: string;
@@ -17,6 +18,12 @@ export interface RadarSummary {
   /** Nivel más alto entre los destinos con dato; null si ninguno lo tiene. No es un promedio ni una predicción. */
   maxLevel: RiskLevel | null;
   alerts: RadarAlert[];
+}
+
+/** Los avisos oficiales de nivel alto y las alertas rojas van primero. */
+function alertRank(a: RadarAlert): number {
+  if (a.kind === "hazard") return a.detail.includes("roja") ? 3.5 : 2.5;
+  return a.level ?? 0;
 }
 
 const mag = (m: number) => m.toFixed(1).replace(".", ",");
@@ -48,6 +55,19 @@ export function summarizeRadar(destinations: DestinationLive[]): RadarSummary {
       });
     }
   }
-  alerts.sort((a, b) => (b.level ?? 0) - (a.level ?? 0) || a.title.localeCompare(b.title, "es"));
+  const seenHazards = new Set<string>();
+  for (const d of destinations) {
+    for (const h of d.hazards) {
+      // Verde = informativo: no se publica como alerta. Un evento cercano a varios destinos se lista una vez por destino.
+      if (h.alertLevel === "Green" || seenHazards.has(`${h.id}-${d.id}`)) continue;
+      seenHazards.add(`${h.id}-${d.id}`);
+      alerts.push({
+        id: `hz-${h.id}-${d.id}`, kind: "hazard", level: null, href: h.reportUrl,
+        title: `${HAZARD_LABEL[h.type]} cerca de ${d.name}: ${h.name}`,
+        detail: `Alerta ${h.alertLevel === "Red" ? "roja" : "naranja"} · a ${h.distanceKm} km · GDACS (ONU y UE)`,
+      });
+    }
+  }
+  alerts.sort((a, b) => alertRank(b) - alertRank(a) || a.title.localeCompare(b.title, "es"));
   return { counts, withData, maxLevel, alerts };
 }

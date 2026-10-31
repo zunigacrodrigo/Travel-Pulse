@@ -2,6 +2,7 @@ import type { Dataset } from "@/lib/types";
 import { LIVE_SOURCES } from "./catalog";
 import { advisoryReason, FCDO_SOURCE_ID } from "./fcdo";
 import type { LiveSnapshot } from "./live";
+import { type HazardNear, hazardsNear } from "./gdacs";
 import { type Quake, type QuakesNear, quakesNear } from "./usgs";
 
 /**
@@ -39,6 +40,8 @@ export interface DestinationLive {
   advisoryUrl: string | null;
   advisoryUpdatedAt: string | null;
   quakes: QuakesNear;
+  /** Eventos GDACS vigentes cerca del destino (ciclones, inundaciones, volcanes, incendios). */
+  hazards: HazardNear[];
 }
 
 export function destinationsLive(ds: Dataset, snap: LiveSnapshot, now: Date): DestinationLive[] {
@@ -57,6 +60,7 @@ export function destinationsLive(ds: Dataset, snap: LiveSnapshot, now: Date): De
       advisoryUrl: live ? hit.advisory.url : null,
       advisoryUpdatedAt: live ? hit.advisory.updatedAt : null,
       quakes: quakesNear(snap.quakes, d.lat, d.lon, now),
+      hazards: hazardsNear(snap.hazards, d.lat, d.lon, now),
     };
   });
 }

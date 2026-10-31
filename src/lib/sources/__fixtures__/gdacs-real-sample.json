@@ -1,0 +1,277 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.0,
+     22.9
+    ]
+   },
+   "properties": {
+    "eventtype": "TC",
+    "eventid": 1001343,
+    "episodeid": 34,
+    "name": "Tropical Cyclone IN-FA-26",
+    "alertlevel": "Green",
+    "alertscore": 1,
+    "country": "Japan, Marshall Islands",
+    "fromdate": "2026-10-25T06:00:00",
+    "todate": "2026-10-31T18:00:00",
+    "datemodified": "2026-10-31T20:07:29",
+    "iscurrent": "true",
+    "url": {
+     "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001343&episodeid=34",
+     "report": "https://www.gdacs.org/report.aspx?eventid=1001343&episodeid=34&eventtype=TC",
+     "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001343"
+    },
+    "severitydata": {
+     "severity": 240.7392,
+     "severitytext": "Hurricane/Typhoon > 74 mph (maximum wind speed of 241 km/h)",
+     "severityunit": "km/h"
+    },
+    "iso3": "MHL"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -107.7,
+     20.7
+    ]
+   },
+   "properties": {
+    "eventtype": "TC",
+    "eventid": 1001341,
+    "episodeid": 35,
+    "name": "Tropical Cyclone VANCE-26",
+    "alertlevel": "Green",
+    "alertscore": 1,
+    "country": "México",
+    "fromdate": "2026-10-21T15:00:00",
+    "todate": "2026-10-30T03:00:00",
+    "datemodified": "2026-10-31T00:07:32",
+    "iscurrent": "true",
+    "url": {
+     "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001341&episodeid=35",
+     "report": "https://www.gdacs.org/report.aspx?eventid=1001341&episodeid=35&eventtype=TC",
+     "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001341"
+    },
+    "severitydata": {
+     "severity": 138.888,
+     "severitytext": "Tropical Depression (maximum wind speed of 139 km/h)",
+     "severityunit": "km/h"
+    },
+    "iso3": ""
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     81.8,
+     16.4
+    ]
+   },
+   "properties": {
+    "eventtype": "TC",
+    "eventid": 1001345,
+    "episodeid": 10,
+    "name": "Tropical Cyclone ARNAB-26",
+    "alertlevel": "Red",
+    "alertscore": 3,
+    "country": "India",
+    "fromdate": "2026-10-26T00:00:00",
+    "todate": "2026-10-28T06:00:00",
+    "datemodified": "2026-10-29T08:02:06",
+    "iscurrent": "true",
+    "url": {
+     "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001345&episodeid=10",
+     "report": "https://www.gdacs.org/report.aspx?eventid=1001345&episodeid=10&eventtype=TC",
+     "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001345"
+    },
+    "severitydata": {
+     "severity": 222.2208,
+     "severitytext": "Tropical Storm (maximum wind speed of 222 km/h)",
+     "severityunit": "km/h"
+    },
+    "iso3": "IND"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     34.7194,
+     38.7235
+    ]
+   },
+   "properties": {
+    "eventtype": "FL",
+    "eventid": 1104254,
+    "episodeid": 5,
+    "name": "Flood in Türkiye",
+    "alertlevel": "Green",
+    "alertscore": 1,
+    "country": "Türkiye",
+    "fromdate": "2026-10-26T01:00:00",
+    "todate": "2026-10-31T01:00:00",
+    "datemodified": "2026-10-31T14:13:12",
+    "iscurrent": "true",
+    "url": {
+     "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=FL&eventid=1104254&episodeid=5",
+     "report": "https://www.gdacs.org/report.aspx?eventid=1104254&episodeid=5&eventtype=FL",
+     "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=FL&eventid=1104254"
+    },
+    "severitydata": {
+     "severity": 0.0,
+     "severitytext": "Magnitude 0 ",
+     "severityunit": ""
+    },
+    "iso3": "TUR"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     89.8364,
+     27.6363
+    ]
+   },
+   "properties": {
+    "eventtype": "FL",
+    "eventid": 1104265,
+    "episodeid": 1,
+    "name": "Flood in Bhutan",
+    "alertlevel": "Green",
+    "alertscore": 1,
+    "country": "Bhutan",
+    "fromdate": "2026-10-29T01:00:00",
+    "todate": "2026-10-31T01:00:00",
+    "datemodified": "2026-10-31T13:02:11",
+    "iscurrent": "true",
+    "url": {
+     "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=FL&eventid=1104265&episodeid=1",
+     "report": "https://www.gdacs.org/report.aspx?eventid=1104265&episodeid=1&eventtype=FL",
+     "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=FL&eventid=1104265"
+    },
+    "severitydata": {
+     "severity": 0.0,
+     "severitytext": "Magnitude 0 ",
+     "severityunit": ""
+    },
+    "iso3": "BTN"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     99.3812,
+     2.1924
+    ]
+   },
+   "properties": {
+    "eventtype": "FL",
+    "eventid": 1104253,
+    "episodeid": 10,
+    "name": "Flood in Indonesia",
+    "alertlevel": "Green",
+    "alertscore": 1,
+    "country": "Indonesia",
+    "fromdate": "2026-10-24T01:00:00",
+    "todate": "2026-10-30T01:00:00",
+    "datemodified": "2026-10-31T14:12:49",
+    "iscurrent": "true",
+    "url": {
+     "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=FL&eventid=1104253&episodeid=10",
+     "report": "https://www.gdacs.org/report.aspx?eventid=1104253&episodeid=10&eventtype=FL",
+     "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=FL&eventid=1104253"
+    },
+    "severitydata": {
+     "severity": 0.0,
+     "severitytext": "Magnitude 0 ",
+     "severityunit": ""
+    },
+    "iso3": "IDN"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     123.132,
+     10.412
+    ]
+   },
+   "properties": {
+    "eventtype": "VO",
+    "eventid": 1000152,
+    "episodeid": 1,
+    "name": "Eruption  Kanlaon",
+    "alertlevel": "Orange",
+    "alertscore": 2,
+    "country": "Philippines",
+    "fromdate": "2026-10-10T05:58:00",
+    "todate": "2026-10-10T05:58:00",
+    "datemodified": "2026-10-12T06:02:40",
+    "iscurrent": "false",
+    "url": {
+     "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=VO&eventid=1000152&episodeid=1",
+     "report": "https://www.gdacs.org/report.aspx?eventid=1000152&episodeid=1&eventtype=VO",
+     "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=VO&eventid=1000152"
+    },
+    "severitydata": {
+     "severity": 0.0,
+     "severitytext": "",
+     "severityunit": ""
+    },
+    "iso3": "PHL"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9975,
+     14.0106
+    ]
+   },
+   "properties": {
+    "eventtype": "VO",
+    "eventid": 1000151,
+    "episodeid": 1,
+    "name": "Eruption  Taal",
+    "alertlevel": "Orange",
+    "alertscore": 2,
+    "country": "Philippines",
+    "fromdate": "2026-10-08T10:29:00",
+    "todate": "2026-10-08T10:29:00",
+    "datemodified": "2026-10-08T13:02:20",
+    "iscurrent": "false",
+    "url": {
+     "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=VO&eventid=1000151&episodeid=1",
+     "report": "https://www.gdacs.org/report.aspx?eventid=1000151&episodeid=1&eventtype=VO",
+     "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=VO&eventid=1000151"
+    },
+    "severitydata": {
+     "severity": 0.0,
+     "severitytext": "",
+     "severityunit": ""
+    },
+    "iso3": "PHL"
+   }
+  }
+ ]
+}

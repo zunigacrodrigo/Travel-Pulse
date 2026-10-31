@@ -10,6 +10,7 @@ import { getRadar, type RadarResponse } from "@/lib/client/api";
 import { useAsync } from "@/lib/client/hooks";
 import type { FeedStatus } from "@/lib/sources/live";
 import type { DestinationLive } from "@/lib/sources/overlay";
+import { HAZARD_LABEL } from "@/lib/sources/gdacs";
 import { summarizeRadar, type RadarSummary, type RiskLevel } from "@/lib/sources/radar-summary";
 import { PageHeader } from "../ui/PageHeader";
 import { Button } from "../ui/Button";
@@ -155,8 +156,10 @@ function ActiveAlerts({ summary }: { summary: RadarSummary }) {
         <ul className="mt-3 flex max-h-[260px] flex-col gap-2 overflow-y-auto pr-1">
           {summary.alerts.map((a) => (
             <li key={a.id} className="rounded-xl border border-white/10 bg-white/5 p-2.5" style={{ borderLeft: `4px solid ${a.level ? LEVEL_FILL[a.level] : "var(--c-panel-fg)"}` }}>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-panel-mid">{a.kind === "advisory" ? `Aviso · nivel ${a.level}` : "Sismo"}</p>
-              {a.href ? (
+              <p className="text-[11px] font-bold uppercase tracking-wide text-panel-mid">{a.kind === "advisory" ? `Aviso · nivel ${a.level}` : a.kind === "quake" ? "Sismo" : "Evento natural"}</p>
+              {a.href && a.kind === "hazard" ? (
+                <a href={a.href} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold underline underline-offset-2">{a.title}</a>
+              ) : a.href ? (
                 <Link href={a.href} className="text-[13px] font-bold underline-offset-2 hover:underline">{a.title}</Link>
               ) : (
                 <p className="text-[13px] font-bold">{a.title}</p>
@@ -207,6 +210,21 @@ function Row({ d }: { d: DestinationLive }) {
           <span className="text-alert">Dato de nuestra base ({d.riskObservedAt}); no se pudo verificar en vivo.</span>
         )}
       </p>
+      {d.hazards.length > 0 ? (
+        <ul aria-label={`Eventos naturales cerca de ${d.name}`} className="mt-1 flex flex-col gap-0.5 text-[13px] leading-[1.5] text-fg2">
+          {d.hazards.map((h) => (
+            <li key={h.id}>
+              <b>{HAZARD_LABEL[h.type]}</b> ({h.alertLevel === "Red" ? "alerta roja" : h.alertLevel === "Orange" ? "alerta naranja" : "informativo"}) a {h.distanceKm} km
+              {h.reportUrl ? (
+                <>
+                  {" · "}
+                  <a href={h.reportUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">GDACS</a>
+                </>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <p className="mt-1 text-[13px] leading-[1.5] text-fg2">
         {q.count === 0
           ? `Sin sismos M${mag(q.minMag)}+ a menos de ${q.radiusKm} km en ${q.days} días.`
@@ -258,6 +276,7 @@ export function RadarView() {
             <ul aria-label="Estado de las fuentes" className="flex flex-col gap-2">
               <StatusChip name="Avisos FCDO" s={radar.data.status.fcdo} />
               <StatusChip name="Sismos USGS" s={radar.data.status.usgs} />
+              <StatusChip name="Desastres GDACS" s={radar.data.status.gdacs} />
             </ul>
             <div className="flex flex-col gap-4">
               <RadarMap data={radar.data} />
@@ -278,7 +297,7 @@ export function RadarView() {
             </section>
             <p className="text-[11px] leading-4 text-mid">
               El aviso del FCDO es la posición del gobierno del Reino Unido, no una verdad universal: contrástalo con la cancillería de tu país. Los
-              sismos vienen del USGS (M4,5+) y se informan, no se predicen. Generado: {when(radar.data.generatedAt)}.
+              sismos vienen del USGS (M4,5+) y los ciclones, inundaciones, volcanes e incendios del GDACS (ONU y UE); se informan, no se predicen. Generado: {when(radar.data.generatedAt)}.
             </p>
           </>
         ) : null}

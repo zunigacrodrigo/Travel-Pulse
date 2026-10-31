@@ -44,6 +44,8 @@ export async function fetchJson(url: string, opts: FetchOptions = {}): Promise<u
     if (!res.ok) throw new SourceError("http", `HTTP ${res.status}`, res.status);
     const text = await res.text();
     if (text.length > MAX_BYTES) throw new SourceError("too_large", "Respuesta demasiado grande");
+    // Algunas fuentes (p. ej. GDACS) responden 204 con cuerpo vacío cuando no hay resultados.
+    if (res.status === 204 || text.trim() === "") return null;
     try {
       return JSON.parse(text) as unknown;
     } catch {

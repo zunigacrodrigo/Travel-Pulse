@@ -122,7 +122,7 @@ export async function postWhatIf(
 export interface RadarResponse {
   generatedAt: string;
   liveEnabled: boolean;
-  status: { fcdo: FeedStatus; usgs: FeedStatus };
+  status: { fcdo: FeedStatus; usgs: FeedStatus; gdacs: FeedStatus };
   destinations: DestinationLive[];
   notableQuakes: Quake[];
 }

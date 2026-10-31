@@ -5,6 +5,7 @@
  *  - Si no hay ningún dato, se declara "unavailable" (el motor usa la semilla).
  */
 import { type Advisory, FCDO_COUNTRY_SLUGS, fetchAdvisory } from "./fcdo";
+import { fetchHazards, type Hazard } from "./gdacs";
 import { describeError, type FetchOptions } from "./http";
 import { fetchQuakes, type Quake } from "./usgs";
 
@@ -27,7 +28,8 @@ export interface CheckedAdvisory {
 export interface LiveSnapshot {
   advisories: Record<string, CheckedAdvisory>;
   quakes: Quake[];
-  status: { fcdo: FeedStatus; usgs: FeedStatus };
+  hazards: Hazard[];
+  status: { fcdo: FeedStatus; usgs: FeedStatus; gdacs: FeedStatus };
 }
 
 export interface LiveOptions {
@@ -35,8 +37,10 @@ export interface LiveOptions {
   now?: () => Date;
   fcdoBase?: string;
   usgsBase?: string;
+  gdacsBase?: string;
   fcdoTtlMs?: number;
   usgsTtlMs?: number;
+  gdacsTtlMs?: number;
   timeoutMs?: number;
 }
 
@@ -46,11 +50,13 @@ export function createLiveSources(opts: LiveOptions = {}) {
   const now = opts.now ?? (() => new Date());
   const fcdoTtl = opts.fcdoTtlMs ?? 6 * 3_600_000;
   const usgsTtl = opts.usgsTtlMs ?? 10 * 60_000;
+  const gdacsTtl = opts.gdacsTtlMs ?? 15 * 60_000;
   const http: FetchOptions = { fetchImpl: opts.fetchImpl, timeoutMs: opts.timeoutMs };
 
-  const snap: LiveSnapshot = { advisories: {}, quakes: [], status: { fcdo: { ...EMPTY }, usgs: { ...EMPTY } } };
+  const snap: LiveSnapshot = { advisories: {}, quakes: [], hazards: [], status: { fcdo: { ...EMPTY }, usgs: { ...EMPTY }, gdacs: { ...EMPTY } } };
   let fcdoAttempt = 0;
   let usgsAttempt = 0;
+  let gdacsAttempt = 0;
   let inflight: Promise<void> | null = null;
 
   async function refreshFcdo(): Promise<void> {
@@ -93,6 +99,22 @@ export function createLiveSources(opts: LiveOptions = {}) {
     }
   }
 
+  async function refreshGdacs(): Promise<void> {
+    gdacsAttempt = now().getTime();
+    try {
+      snap.hazards = await fetchHazards(now(), { ...http, base: opts.gdacsBase ?? process.env.TP_GDACS_BASE });
+      snap.status.gdacs = { state: "ok", fetchedAt: now().toISOString(), error: null, count: snap.hazards.length };
+    } catch (e) {
+      const had = snap.hazards.length > 0 || snap.status.gdacs.fetchedAt !== null;
+      snap.status.gdacs = {
+        state: had ? "stale" : "unavailable",
+        fetchedAt: snap.status.gdacs.fetchedAt,
+        error: describeError(e),
+        count: snap.hazards.length,
+      };
+    }
+  }
+
   return {
     /** Último estado conocido, sin red. */
     peek(): LiveSnapshot {
@@ -105,6 +127,7 @@ export function createLiveSources(opts: LiveOptions = {}) {
       const jobs: Promise<void>[] = [];
       if (force || t - fcdoAttempt >= fcdoTtl) jobs.push(refreshFcdo());
       if (force || t - usgsAttempt >= usgsTtl) jobs.push(refreshUsgs());
+      if (force || t - gdacsAttempt >= gdacsTtl) jobs.push(refreshGdacs());
       if (jobs.length === 0) return Promise.resolve(snap);
       inflight = Promise.all(jobs)
         .then(() => undefined)

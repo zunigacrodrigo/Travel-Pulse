@@ -6,6 +6,7 @@ const base = (o: Partial<DestinationLive>): DestinationLive => ({
   id: "x", name: "X", country: "Chile", lat: 0, lon: 0, riskLevel: 1, riskOrigin: "live", riskObservedAt: "2026-10-31",
   advisoryUrl: null, advisoryUpdatedAt: null,
   quakes: { count: 0, minMag: 4.5, radiusKm: 300, days: 30, maxMag: null, strongest: null },
+  hazards: [],
   ...o,
 });
 
@@ -33,5 +34,19 @@ describe("summarizeRadar", () => {
     ]);
     expect(s.alerts.map((a) => a.kind)).toEqual(["advisory", "quake"]);
     expect(s.alerts[1]!.detail).toContain("M5,2");
+  });
+  it("las alertas GDACS naranja y roja se publican; las verdes no", () => {
+    const hz = (id: string, alertLevel: "Green" | "Orange" | "Red") => ({
+      id, type: "FL" as const, name: "Inundación X", alertLevel, country: "Chile", lat: 0, lon: 0, from: "2026-10-20T00:00:00.000Z",
+      to: null, modified: null, current: true, severityText: null, reportUrl: "https://www.gdacs.org/report.aspx?x", distanceKm: 40,
+    });
+    const s = summarizeRadar([base({ id: "a", name: "Cusco", hazards: [hz("FL-1", "Green"), hz("FL-2", "Orange"), hz("FL-3", "Red")] })]);
+    expect(s.alerts.map((x) => x.id)).toEqual(["hz-FL-3-a", "hz-FL-2-a"]);
+    expect(s.alerts[0]!.detail).toContain("roja");
+  });
+  it("una alerta roja va antes que un aviso oficial de nivel 3", () => {
+    const hz = { id: "TC-1", type: "TC" as const, name: "X", alertLevel: "Red" as const, country: "", lat: 0, lon: 0, from: "2026-10-20T00:00:00.000Z", to: null, modified: null, current: true, severityText: null, reportUrl: null, distanceKm: 100 };
+    const s = summarizeRadar([base({ id: "a", name: "A", riskLevel: 3, hazards: [hz] })]);
+    expect(s.alerts[0]!.kind).toBe("hazard");
   });
 });
