@@ -173,6 +173,15 @@ describe("filtros duros", () => {
     const tyo = scoreDestination(BASE_REQUEST, findDestination(ds, "TYO")!, ds, NOW);
     expect(isExclusion(tyo) && tyo.reason).toBe("over_budget");
   });
+  it("sin datos de conectividad para el origen no se sabe si hay ruta: no se excluye", () => {
+    const sinConectividad = { ...ds, destinations: ds.destinations.map((d) => ({ ...d, connectivity: {} })) };
+    const ush = scoreDestination(BASE_REQUEST, findDestination(sinConectividad, "USH")!, sinConectividad, NOW);
+    expect(isExclusion(ush)).toBe(false);
+    if (!isExclusion(ush)) {
+      const f = ush.factors.find((x) => x.key === "conectividad")!;
+      expect(f.value).toBeNull();
+    }
+  });
   it("evaluateDestination calcula aunque el destino no pase los filtros", () => {
     const tyo = evaluateDestination(BASE_REQUEST, findDestination(ds, "TYO")!, ds, NOW);
     expect(tyo.cost.totalUsd).toBe(2800);

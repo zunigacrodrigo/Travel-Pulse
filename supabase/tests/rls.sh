@@ -46,3 +46,8 @@ run "$P -d t -f $DIR/0004.sql" >/dev/null
 echo "Migraciones 0001 y 0004 aplicadas."
 cp "$HERE/rls.sql" "$DIR/rls.sql"; chmod 644 "$DIR/rls.sql"
 run "$P -d t -f $DIR/rls.sql" 2>&1
+
+# El seed generado (datos reales + ausencias declaradas) debe cargarse sin errores y sin precios inventados.
+cp "$HERE/../seed.sql" "$DIR/seed.sql"; chmod 644 "$DIR/seed.sql"
+run "$P -d t -f $DIR/seed.sql" >/dev/null
+run "$P -d t -At -c \"select 'seed: ' || (select count(*) from public.destinations) || ' destinos, ' || (select count(*) from public.destination_monthly) || ' meses, ' || (select count(*) from public.price_snapshots) || ' precios, ' || (select count(*) from public.destination_monthly where season is not null or saturation is not null or daily_cost_usd is not null) || ' filas con datos no reales'\""

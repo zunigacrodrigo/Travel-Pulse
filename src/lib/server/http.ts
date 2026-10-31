@@ -104,6 +104,9 @@ export function limitOr429(req: Request, scope: string, limit = Number(process.e
 }
 
 /** Orígenes con datos de conectividad en el dataset (V1: Santiago). */
-export function originSupported(dataset: { destinations: Array<{ connectivity: Record<string, unknown> }> }, origin: string) {
-  return dataset.destinations.some((d) => origin in d.connectivity);
+/** Orígenes que el producto cubre hoy. Es una decisión de alcance, no se deduce de que exista un dato. */
+export const SUPPORTED_ORIGINS: readonly string[] = ["SCL"];
+
+export function originSupported(_dataset: unknown, origin: string) {
+  return SUPPORTED_ORIGINS.includes(origin);
 }

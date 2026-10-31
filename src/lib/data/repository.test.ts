@@ -16,19 +16,17 @@ describe("memoryRepository", () => {
     expect(getRepository()).toBe(memoryRepository);
   });
 
-  it("getDataset filtra por origen y completa prevMonthSaturation", async () => {
+  it("getDataset: 30 destinos, sin precios inventados y sin saturación previa", async () => {
     const ds = await memoryRepository.getDataset("scl", 11);
     expect(ds.destinations).toHaveLength(30);
-    expect(ds.prices.length).toBe(360);
-    expect(ds.trends.find((t) => t.destinationId === "SLA")?.prevMonthSaturation).toBe(76);
-    // FLN noviembre: saturación nula, pero octubre existe.
-    expect(ds.trends.find((t) => t.destinationId === "FLN")?.prevMonthSaturation).toBe(80);
+    expect(ds.prices).toHaveLength(0);
+    expect(ds.trends.every((t) => t.prevMonthSaturation === undefined)).toBe(true);
   });
 
   it("getDestination y getSources", async () => {
     expect((await memoryRepository.getDestination("cuz"))?.name).toBe("Cusco");
     expect(await memoryRepository.getDestination("XXX")).toBeNull();
-    expect((await memoryRepository.getSources()).length).toBe(8);
+    expect((await memoryRepository.getSources()).map((s) => s.id)).toContain("sin-fuente");
   });
 
   it("guarda consulta y recomendaciones", async () => {

@@ -94,11 +94,17 @@ export function confidenceScore(qualities: Record<FactorKey, number>, weights: R
  * Filtros duros (sección 5): aviso oficial máximo, sin vuelo desde el origen o
  * costo total sobre 110% del presupuesto. Un costo desconocido NO excluye.
  */
-export function hardFilter(req: TripRequest, destination: Destination, cost: CostEstimate): Exclusion | null {
+export function hardFilter(
+  req: TripRequest,
+  destination: Destination,
+  cost: CostEstimate,
+  /** ¿El dataset tiene datos de conectividad para este origen? Si no, la ausencia es desconocimiento, no «sin ruta». */
+  originCovered = true,
+): Exclusion | null {
   if (destination.riskLevel.value === MAX_RISK_LEVEL) {
     return { destinationId: destination.id, reason: "max_risk", detail: "Aviso oficial máximo (nivel 4 de 4)." };
   }
-  if (!destination.connectivity[req.origin]) {
+  if (originCovered && !destination.connectivity[req.origin]) {
     return { destinationId: destination.id, reason: "no_flight", detail: `Sin vuelos razonables desde ${req.origin}.` };
   }
   if (cost.totalUsd !== null && cost.totalUsd * OVER_BUDGET_DEN > req.budgetUsd * OVER_BUDGET_NUM) {
@@ -272,7 +278,8 @@ export function scoreDestination(
 ): ScoreResult | Exclusion {
   const ctx: FactorContext = { req, destination, dataset, now };
   const cost = estimateCost(ctx);
-  const excluded = hardFilter(req, destination, cost);
+  const originCovered = dataset.destinations.some((d) => req.origin in d.connectivity);
+  const excluded = hardFilter(req, destination, cost, originCovered);
   return excluded ?? buildScoreResult(ctx, cost);
 }
 

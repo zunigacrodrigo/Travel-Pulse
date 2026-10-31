@@ -75,8 +75,11 @@ export function cheapestDestination(
   now: Date,
 ): { destinationId: string; name: string; totalUsd: number } | null {
   let best: { destinationId: string; name: string; totalUsd: number } | null = null;
+  const originCovered = dataset.destinations.some((d) => req.origin in d.connectivity);
   for (const destination of dataset.destinations) {
-    if (destination.riskLevel.value === MAX_RISK_LEVEL || !destination.connectivity[req.origin]) continue;
+    if (destination.riskLevel.value === MAX_RISK_LEVEL) continue;
+    // Sin datos de conectividad para el origen no se sabe si hay ruta: no se descarta el destino.
+    if (originCovered && !destination.connectivity[req.origin]) continue;
     const total = estimateCost({ req, destination, dataset, now }).totalUsd;
     if (total === null) continue;
     if (!best || total < best.totalUsd || (total === best.totalUsd && destination.id < best.destinationId)) {

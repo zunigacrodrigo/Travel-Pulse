@@ -14,6 +14,8 @@ export const SOURCE_IDS = {
   tendencias: "tendencias-busqueda",
   costoVida: "costo-vida",
   travelPulseEstimate: "estimacion-tp",
+  wikipedia: "wikipedia-pageviews",
+  sinFuente: "sin-fuente",
 } as const;
 
 export type SourceId = (typeof SOURCE_IDS)[keyof typeof SOURCE_IDS];
@@ -80,6 +82,22 @@ export const sources: Source[] = [
     license: "Dataset sintético interno",
     maxAgeDays: 1,
     reliability: 0.25,
+  },
+  {
+    id: SOURCE_IDS.wikipedia,
+    name: "Wikimedia Pageviews (es.wikipedia.org)",
+    license: "CC0",
+    maxAgeDays: 45,
+    reliability: 0.7,
+    url: "https://wikimedia.org/api/rest_v1/",
+  },
+  {
+    // Marca explícita de «no hay fuente real conectada»: el valor va en null y el motor lo declara «sin dato».
+    id: SOURCE_IDS.sinFuente,
+    name: "Sin fuente conectada",
+    license: "—",
+    maxAgeDays: 1,
+    reliability: 0,
   },
 ];
 

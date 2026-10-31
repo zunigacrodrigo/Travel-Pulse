@@ -84,11 +84,16 @@ const conn = ds.destinations.flatMap((d) =>
     q(c.sourceId), q(c.observedAt),
   ]),
 );
-out.push(
-  "insert into public.destination_connectivity (destination_id, origin, direct_flights, flight_hours,\n" +
-    "  weekly_frequency, source_id, observed_at) values",
-);
-out.push(rows(conn) + ";");
+// Sin conectividad real no se inserta nada: un INSERT sin filas sería SQL inválido.
+if (conn.length) {
+  out.push(
+    "insert into public.destination_connectivity (destination_id, origin, direct_flights, flight_hours,\n" +
+      "  weekly_frequency, source_id, observed_at) values",
+  );
+  out.push(rows(conn) + ";");
+} else {
+  out.push("-- Sin datos reales de conectividad: no se inserta ninguna fila.");
+}
 out.push("");
 
 out.push(
@@ -110,19 +115,23 @@ out.push(
 );
 out.push("");
 
-out.push(
-  "insert into public.price_snapshots (destination_id, origin, month, flight_usd, flight_source_id,\n" +
-    "  flight_observed_at, usual_flight_usd, usual_source_id, usual_observed_at) values",
-);
-out.push(
-  rows(
-    ds.prices.map((p) => [
-      q(p.destinationId), q(p.origin), q(p.month),
-      q(p.flightUsd.value), q(p.flightUsd.sourceId), q(p.flightUsd.observedAt),
-      q(p.usualFlightUsd.value), q(p.usualFlightUsd.sourceId), q(p.usualFlightUsd.observedAt),
-    ]),
-  ) + ";",
-);
+if (ds.prices.length) {
+  out.push(
+    "insert into public.price_snapshots (destination_id, origin, month, flight_usd, flight_source_id,\n" +
+      "  flight_observed_at, usual_flight_usd, usual_source_id, usual_observed_at) values",
+  );
+  out.push(
+    rows(
+      ds.prices.map((p) => [
+        q(p.destinationId), q(p.origin), q(p.month),
+        q(p.flightUsd.value), q(p.flightUsd.sourceId), q(p.flightUsd.observedAt),
+        q(p.usualFlightUsd.value), q(p.usualFlightUsd.sourceId), q(p.usualFlightUsd.observedAt),
+      ]),
+    ) + ";",
+  );
+} else {
+  out.push("-- Sin proveedor de precios conectado: no se inserta ningún precio.");
+}
 out.push("");
 
 out.push(

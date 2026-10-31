@@ -1,25 +1,33 @@
 # Catálogo de fuentes de datos (Prompt Maestro §14)
 
-Fecha: 31-oct-2026 · Versión 0.3.0. **Clase de confianza** según el documento de arquitectura.
+Versión 0.5.0 · 31-oct-2026. **Regla de producto: solo datos reales. Si no hay fuente real, el dato es «sin dato» y no se puntúa.** No se estima, no se interpola, no se generan números.
 
-| Fuente | Clase | Qué aporta | Licencia / términos | Actualización | Fiabilidad base | Límites | Costo | Si falla |
-|---|---|---|---|---|---|---|---|---|
-| **FCDO (GOV.UK)** `fcdo` | Oficial (un solo gobierno: Reino Unido) | Nivel de riesgo 1–4 por país → factor «riesgo» | Open Government Licence v3.0 — *verificar términos antes de producción* | Consulta cada 6 h; se considera vigente 7 días | 0,90 | Es la postura del Reino Unido, no un consenso; 14 países | Gratis, sin clave | Conserva el último dato bueno y lo marca «desactualizada»; sin ninguno, usa la semilla y lo dice |
-| **USGS sismos M4,5+** `usgs` | Oficial (EE. UU.) | Sismos del último mes cerca de cada destino. **Informativo, no entra al puntaje** | Dominio público | Cada 10 min; vigente 1 día | 0,95 | Solo M4,5+; se informa, no se predice | Gratis, sin clave | Igual que arriba |
-| Open-Meteo | Proveedor externo | Clima y geocodificación en `/ciudad` | CC BY 4.0 (no comercial) | Bajo demanda | 0,85 | Uso comercial requiere plan | Gratis | Mensaje de error en la pantalla |
-| Overpass / OSM | Comunitaria | Lugares en `/ciudad` | ODbL | Bajo demanda | — | Límite de uso justo | Gratis | Mensaje de error |
-| Semilla curada `curaduria-tp`, `estimacion-tp` | Estimación / histórico | Precios, conectividad, temporada, costos | Interna, **sintética** | **Vencida** (confianza 54 %) | 0,75 | Sin precios reales | — | — |
-| Amadeus | Proveedor externo | (Previsto) vuelos | Comercial | — | 0,9 | **Requiere clave: no conectada** | De pago/clave | Sigue la semilla |
+## Datos reales hoy
+| Dato | Fuente | Estado | Cómo llega | Verificación |
+|---|---|---|---|---|
+| Riesgo oficial por país | FCDO (GOV.UK), Open Government Licence v3 | **Vivo** | Consulta cada 6 h en el servidor (overlay) | **Contrastado con GOV.UK directamente: 14 de 14 países coinciden.** Los valores `…_to_parts` y `…_whole_country` ahora están observados (Cuba = todo el país → nivel 3) |
+| Sismos M4,5+ | USGS | **Vivo** | Cada 10 min | 733 eventos recibidos en la prueba real; informativo, no entra al puntaje |
+| Clima mensual (temp., lluvia, viento) de los 30 destinos | Open-Meteo Historical API (ERA5), CC BY 4.0 | **Real, histórico** (climatología 2015-2024) | `scripts/fetch-real-data.mjs` → `real.generated.json` | 30 de 30 destinos; pruebas de coherencia física (estaciones, hemisferios, altitud) |
+| Tendencia de interés (30 d vs 30 d previos) | Wikimedia Pageviews (es.wikipedia.org), CC0 | **Real, instantánea** con fecha | Mismo script | 29 de 30; Cusco pendiente (la API limitó el ritmo). Es un indicador de interés, no de reservas |
+| Clima y lugares de una ciudad (`/ciudad`) | Open-Meteo y OpenStreetMap (ODbL) | Vivo, bajo demanda | Navegador | Open-Meteo accesible; OSM sin cambios |
 
-## Decisiones
-- **Wikipedia (pageviews) excluida:** exige títulos de artículo que no puedo verificar por destino.
-- **Precios de vuelo:** no existe fuente abierta sin clave; siguen siendo estimaciones etiquetadas y vencidas.
-- **Sin Supabase:** todo queda local y en memoria; las fuentes se cachean en el proceso del servidor.
+## Sin fuente conectada (valor `null`, el motor lo declara «sin dato»)
+| Dato | Por qué falta | Qué haría falta |
+|---|---|---|
+| Precio de vuelos | No existe fuente abierta fiable | Una API con clave (p. ej. Amadeus o Duffel) y su plan; **lo elige y contrata el dueño** |
+| Costo diario del destino | Sin fuente abierta fiable | Proveedor de costo de vida con licencia |
+| Conectividad (vuelo directo, horas, frecuencia) | OpenFlights es de 2014 (obsoleto) y sin frecuencias | Proveedor de rutas actual |
+| Saturación turística y temporada | No hay fuente abierta; no se derivan para no duplicar el clima | Fuente de afluencia o señales de PulseMesh |
+| Tendencia de precio | Depende de la fuente de precios | Ídem |
 
-## Cómo se trata el dato
-- `observedAt` del riesgo vivo = día de **nuestra consulta**; la fecha del aviso original se muestra aparte.
-- El nivel se deriva de `details.alert_status` del FCDO: sin alerta = 1; «evitar no esenciales / todo viaje a zonas» = 2; «evitar no esenciales a todo el país» = 3; «evitar todo viaje a todo el país» = 4 (el motor excluye el 4). Valores no reconocidos → no se publica nivel.
-- **Observado vs inferido:** los valores `*_to_parts` y `avoid_all_but_essential_travel_to_parts` se vieron en respuestas reales; los `*_whole_country` se infirieron por simetría y están cubiertos por pruebas, no por una respuesta real.
+## Lo editorial (no es observación del mundo)
+Nombre, coordenadas, altitud, afinidad por interés (0-5), descripción y paleta de cada destino son clasificación propia del producto. Es el factor «Experiencia».
+
+## Qué se eliminó de las versiones anteriores
+El dataset fabricaba precios con una función pseudoaleatoria, costos y saturación con fórmulas, y atribuía un clima escrito a mano a «open-meteo». Ya no existe nada de eso y los tests lo impiden (`validate.test.ts`: ninguna fuente de datos inventados puede aparecer).
+
+## Consecuencias que se muestran tal cual
+Con 4 de 8 factores reales la confianza ronda 35-37 %, bajo el umbral de 40 %. Cada destino sale como «Información limitada», con lo que falta, sin puntaje. El simulador What-If y el costo total no se ofrecen hasta conectar precios.
 
 ## Variables de entorno
-`LIVE_SOURCES=0` desactiva las fuentes vivas · `TP_FCDO_BASE` / `TP_USGS_BASE` apuntan a otro servidor (pruebas, `qa/mock-sources.js`).
+`LIVE_SOURCES=0` desactiva las fuentes vivas · `TP_FCDO_BASE` / `TP_USGS_BASE` apuntan a otro servidor (pruebas, `qa/mock-sources.js`). Para refrescar clima e interés: `NODE_USE_ENV_PROXY=1 node scripts/fetch-real-data.mjs` (reanudable).

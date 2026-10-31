@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { INTERESTS } from "@/lib/types";
-import { sources } from "../sources";
+import { SOURCE_IDS, sources } from "../sources";
 import { seedDataset, withMonthContext } from "./index";
 
 const ds = seedDataset;
@@ -14,30 +14,36 @@ function sourcedOk(s: { sourceId: string; observedAt: string }) {
 }
 
 const inRange = (v: number | null, lo: number, hi: number) => v === null || (v >= lo && v <= hi);
+const monthly = (id: string, month: number) => ds.monthly.find((m) => m.destinationId === id && m.month === month)!;
+
+/** Fuentes que en versiones anteriores respaldaban números escritos o generados por nosotros. */
+const FABRICATED_SOURCES = [SOURCE_IDS.curaduria, SOURCE_IDS.travelPulseEstimate, SOURCE_IDS.costoVida, SOURCE_IDS.openFlights, SOURCE_IDS.tendencias];
 
 describe("catálogo de fuentes", () => {
   it("ids únicos y rangos válidos", () => {
     expect(sourceIds.size).toBe(sources.length);
     for (const s of sources) {
-      expect(s.reliability).toBeGreaterThan(0);
+      expect(s.reliability).toBeGreaterThanOrEqual(0);
       expect(s.reliability).toBeLessThanOrEqual(1);
       expect(s.maxAgeDays).toBeGreaterThan(0);
+      // Solo «sin fuente» puede tener fiabilidad cero.
+      if (s.id !== SOURCE_IDS.sinFuente) expect(s.reliability).toBeGreaterThan(0);
     }
   });
 });
 
-describe("seedDataset", () => {
+describe("seedDataset: estructura editorial", () => {
   it("tiene 30 destinos con ids IATA únicos", () => {
     expect(ds.destinations).toHaveLength(30);
     expect(ids.size).toBe(30);
     for (const d of ds.destinations) expect(d.id).toMatch(/^[A-Z]{3}$/);
   });
 
-  it("incluye los destinos de la historia demo", () => {
+  it("incluye los destinos clave", () => {
     for (const id of ["CUZ", "AQP", "SLA", "OAX", "MDE", "FLN"]) expect(ids.has(id)).toBe(true);
   });
 
-  it("destinos: coordenadas, etiquetas, riesgo, conectividad y similares válidos", () => {
+  it("destinos: coordenadas, etiquetas y similares válidos", () => {
     for (const d of ds.destinations) {
       expect(d.lat).toBeGreaterThanOrEqual(-90);
       expect(d.lat).toBeLessThanOrEqual(90);
@@ -50,15 +56,6 @@ describe("seedDataset", () => {
         expect(Number.isInteger(d.tags[k])).toBe(true);
         expect(inRange(d.tags[k], 0, 5)).toBe(true);
       }
-      sourcedOk(d.riskLevel);
-      expect([1, 2, 3, 4]).toContain(d.riskLevel.value);
-      expect(d.riskReasons.length).toBeGreaterThan(0);
-      for (const r of d.riskReasons) expect(r.toLowerCase()).not.toMatch(/barrio/);
-      const c = d.connectivity.SCL;
-      expect(c, `${d.id} sin conectividad SCL`).toBeDefined();
-      sourcedOk(c);
-      expect(c.value!.flightHours).toBeGreaterThan(0);
-      expect(c.value!.weeklyFrequency).toBeGreaterThan(0);
       expect(d.similar.length).toBeGreaterThanOrEqual(2);
       expect(d.similar.length).toBeLessThanOrEqual(3);
       for (const s of d.similar) {
@@ -71,83 +68,96 @@ describe("seedDataset", () => {
       }
     }
   });
+});
 
-  it("al menos un destino con riesgo 3 y uno con riesgo 4", () => {
-    const levels = ds.destinations.map((d) => d.riskLevel.value);
-    expect(levels).toContain(3);
-    expect(levels).toContain(4);
+describe("seedDataset: ningún dato fabricado", () => {
+  it("riesgo y conectividad: sin dato en la semilla (el riesgo llega en vivo del FCDO)", () => {
+    for (const d of ds.destinations) {
+      sourcedOk(d.riskLevel);
+      expect(d.riskLevel.value, `${d.id}: la semilla no debe traer un nivel escrito a mano`).toBeNull();
+      expect(d.riskReasons).toEqual([]);
+      expect(Object.keys(d.connectivity)).toEqual([]);
+    }
   });
 
-  it("destination_monthly: 12 meses por destino, valores en rango", () => {
+  it("no hay precios de vuelo hasta conectar un proveedor real", () => {
+    expect(ds.prices).toEqual([]);
+  });
+
+  it("temporada, saturación y costo diario: siempre «sin dato» con fuente declarada", () => {
+    for (const m of ds.monthly) {
+      for (const field of [m.season, m.saturation, m.dailyCostUsd]) {
+        sourcedOk(field);
+        expect(field.value).toBeNull();
+        expect(field.sourceId).toBe(SOURCE_IDS.sinFuente);
+      }
+    }
+  });
+
+  it("ningún dato del dataset cita una fuente que respaldaba números inventados", () => {
+    const used = new Set<string>();
+    for (const d of ds.destinations) used.add(d.riskLevel.sourceId);
+    for (const m of ds.monthly) [m.season, m.saturation, m.dailyCostUsd, m.climate].forEach((f) => used.add(f.sourceId));
+    for (const t of ds.trends) [t.priceChange30dPct, t.interestChange30dPct].forEach((f) => used.add(f.sourceId));
+    for (const f of FABRICATED_SOURCES) expect(used.has(f), `se usa ${f}`).toBe(false);
+  });
+});
+
+describe("seedDataset: datos reales", () => {
+  it("destination_monthly: 12 meses por destino", () => {
     expect(ds.monthly).toHaveLength(30 * 12);
     for (const id of ids) {
       const months = ds.monthly.filter((m) => m.destinationId === id).map((m) => m.month).sort((a, b) => a - b);
       expect(months).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     }
+  });
+
+  it("clima: cubre los 30 destinos, viene de Open-Meteo y está en rangos físicos", () => {
+    for (const id of ids) {
+      const rows = ds.monthly.filter((m) => m.destinationId === id);
+      expect(rows.every((r) => r.climate.value !== null), `${id} sin clima completo`).toBe(true);
+    }
     for (const m of ds.monthly) {
-      [m.season, m.saturation, m.dailyCostUsd, m.climate].forEach(sourcedOk);
-      expect(inRange(m.season.value, 0, 100)).toBe(true);
-      expect(inRange(m.saturation.value, 0, 100)).toBe(true);
-      expect(inRange(m.dailyCostUsd.value, 20, 400)).toBe(true);
+      sourcedOk(m.climate);
+      expect(m.climate.sourceId).toBe(SOURCE_IDS.openMeteo);
       const c = m.climate.value!;
-      expect(inRange(c.tempC, -10, 40)).toBe(true);
-      expect(inRange(c.rainMm, 0, 500)).toBe(true);
+      expect(inRange(c.tempC, -15, 40)).toBe(true);
+      expect(inRange(c.rainMm, 0, 1500)).toBe(true);
       expect(inRange(c.windKmh, 0, 60)).toBe(true);
     }
   });
 
-  it("precios desde SCL: 12 meses por destino, positivos y realistas", () => {
-    expect(ds.prices).toHaveLength(30 * 12);
-    for (const p of ds.prices) {
-      expect(p.origin).toBe("SCL");
-      expect(ids.has(p.destinationId)).toBe(true);
-      sourcedOk(p.flightUsd);
-      sourcedOk(p.usualFlightUsd);
-      expect(inRange(p.flightUsd.value, 80, 2000)).toBe(true);
-      expect(inRange(p.usualFlightUsd.value, 80, 2000)).toBe(true);
-    }
-    // Algunas oportunidades: precio actual ≥10% bajo lo habitual.
-    const deals = ds.prices.filter(
-      (p) => p.flightUsd.value !== null && p.usualFlightUsd.value !== null && p.flightUsd.value <= p.usualFlightUsd.value * 0.9,
-    );
-    expect(deals.length).toBeGreaterThan(5);
+  it("clima: coherencia física de datos reales (estaciones y hemisferios)", () => {
+    // Cusco: temporada seca en el invierno austral, lluvias en el verano.
+    expect(monthly("CUZ", 7).climate.value!.rainMm).toBeLessThan(monthly("CUZ", 1).climate.value!.rainMm);
+    // Hemisferio sur: julio es más frío que enero. Hemisferio norte: al revés.
+    expect(monthly("PUQ", 7).climate.value!.tempC).toBeLessThan(monthly("PUQ", 1).climate.value!.tempC);
+    expect(monthly("CUN", 7).climate.value!.tempC).toBeGreaterThan(monthly("CUN", 1).climate.value!.tempC);
+    // La altitud enfría: Cusco (3 400 m) es más frío que Cancún (nivel del mar) todo el año.
+    for (let m = 1; m <= 12; m++) expect(monthly("CUZ", m).climate.value!.tempC).toBeLessThan(monthly("CUN", m).climate.value!.tempC);
   });
 
-  it("tendencias: una por destino con fuentes válidas", () => {
+  it("tendencias: sin precio; el interés (Wikipedia) cubre casi todos con fuente y fecha", () => {
     expect(ds.trends).toHaveLength(30);
+    let withInterest = 0;
     for (const t of ds.trends) {
       expect(ids.has(t.destinationId)).toBe(true);
       sourcedOk(t.priceChange30dPct);
+      expect(t.priceChange30dPct.value).toBeNull();
       sourcedOk(t.interestChange30dPct);
+      if (t.interestChange30dPct.value !== null) {
+        withInterest++;
+        expect(t.interestChange30dPct.sourceId).toBe(SOURCE_IDS.wikipedia);
+        expect(inRange(t.interestChange30dPct.value, -100, 1000)).toBe(true);
+      }
     }
+    expect(withInterest).toBeGreaterThanOrEqual(25);
   });
 
-  it("FLN en noviembre: sin precio de vuelo ni saturación", () => {
-    const p = ds.prices.find((x) => x.destinationId === "FLN" && x.month === 11)!;
-    expect(p.flightUsd.value).toBeNull();
-    const m = ds.monthly.find((x) => x.destinationId === "FLN" && x.month === 11)!;
-    expect(m.saturation.value).toBeNull();
-    expect(m.climate.value).not.toBeNull();
-  });
-
-  it("historia demo: totales aproximados para 8 días, 1 viajero, noviembre", () => {
-    const total = (id: string) => {
-      const p = ds.prices.find((x) => x.destinationId === id && x.month === 11)!;
-      const m = ds.monthly.find((x) => x.destinationId === id && x.month === 11)!;
-      return p.flightUsd.value! + m.dailyCostUsd.value! * 8;
-    };
-    expect(total("CUZ")).toBe(1180);
-    expect(total("SLA")).toBe(890);
-    expect(total("OAX")).toBe(1420);
-    expect(total("MDE")).toBe(1250);
-    expect(total("AQP")).toBe(1040);
-  });
-
-  it("withMonthContext completa prevMonthSaturation y filtra por origen", () => {
+  it("withMonthContext: sin saturación previa y sin precios", () => {
     const nov = withMonthContext(ds, "SCL", 11);
-    const cuz = nov.trends.find((t) => t.destinationId === "CUZ")!;
-    expect(cuz.prevMonthSaturation).toBe(58);
-    expect(nov.prices.every((p) => p.origin === "SCL")).toBe(true);
+    expect(nov.trends.every((t) => t.prevMonthSaturation === undefined)).toBe(true);
+    expect(nov.prices).toHaveLength(0);
     expect(withMonthContext(ds, "LIM", 11).prices).toHaveLength(0);
   });
 });

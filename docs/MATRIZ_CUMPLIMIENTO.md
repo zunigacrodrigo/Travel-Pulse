@@ -1,6 +1,6 @@
 # Matriz de cumplimiento — Prompt Maestro 2.0
 
-Fecha: 31 de octubre de 2026 · Versión: 0.4.0 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
+Fecha: 31 de octubre de 2026 · Versión: 0.5.0 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
 
 Estados (del prompt, sección 32): **Implementado y verificado** · Implementado sin validar · **Parcial** · **Pendiente** · Bloqueado · No viable en el entorno actual.
 
@@ -69,3 +69,18 @@ Falta cerrar el ciclo hacia Trip Twin: del destino elegido al itinerario editabl
 | Sincronización DNA, guardados y viaje activo | **Implementado y verificado** con fakes (13 pruebas) y en navegador con Supabase simulado (19 de 19) |
 | Contra un proyecto Supabase real y correo real | **Implementado sin validar** en producción: requiere que apliques `docs/CONFIGURAR_NUBE.md` |
 | PulseMesh en servidor | Pendiente (sigue en el navegador) |
+
+## 6. Datos reales (0.5.0)
+
+Regla del dueño: solo datos reales. Detalle en `docs/CATALOGO_FUENTES.md`.
+
+| Pieza | Estado |
+|---|---|
+| Riesgo FCDO y sismos USGS contra los servicios reales | **Implementado y verificado:** 14 de 14 países coinciden con GOV.UK; 733 sismos recibidos |
+| Clima real de 30 destinos (Open-Meteo, 2015-2024) | **Implementado y verificado** (coherencia física probada) |
+| Tendencia de interés real (Wikipedia) | **Parcial:** 29 de 30 (falta Cusco por límite de la API) |
+| Precios, costo diario, conectividad, saturación, temporada | **Bloqueado:** requieren proveedor con clave; hoy «sin dato» |
+| Dataset sin datos fabricados | **Implementado y verificado** (tests impiden fuentes inventadas) |
+| Trip Twin de demostración y `client/mock.ts` (modo demo) | **Pendiente de eliminar:** siguen siendo datos sintéticos |
+| What-If y costo total en la ficha | **No viable** hasta conectar precios reales |
+| Puntaje publicado | Ningún destino alcanza el 40 % de confianza hoy |

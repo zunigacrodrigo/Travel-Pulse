@@ -99,38 +99,21 @@ const step = async (name, fn) => {
   });
   await ctx.close();
 
-  // ---------- What-If (móvil 390 y escritorio 1280) ----------
+  // ---------- What-If con datos reales ----------
+  // Sin precios reales conectados no hay costo que simular: el panel no se ofrece y la ficha lo explica.
+  // (El motor What-If sigue cubierto por pruebas unitarias con fixtures; esta UI volverá a probarse
+  // completa cuando exista una fuente real de precios.)
   for (const [w, h, tag] of [[390, 844, 'mobile'], [1280, 900, 'desktop']]) {
     ({ ctx, p } = await mk(w, h));
     await p.goto(`${BASE}/destino/CUZ?q=${q}`, { waitUntil: 'networkidle' });
-    await step(`WhatIf[${tag}]: panel visible y «Simular» deshabilitado sin cambios`, async () => {
-      await p.getByRole('heading', { name: '¿Y si cambio algo?' }).waitFor({ timeout: 20000 });
-      assert.ok(await p.getByRole('button', { name: 'Simular escenario' }).isDisabled());
+    await step(`WhatIf[${tag}]: sin precios reales no se ofrece simular (no se inventan costos)`, async () => {
+      await p.getByText('Información limitada').first().waitFor({ timeout: 20000 });
+      assert.equal(await p.getByRole('heading', { name: '¿Y si cambio algo?' }).count(), 0);
+      assert.ok(await p.getByText(/Qué datos faltan/).count());
     });
-    await step(`WhatIf[${tag}]: +2 días muestra veredicto y tabla`, async () => {
-      const panel = p.locator('section', { has: p.getByRole('heading', { name: '¿Y si cambio algo?' }) });
-      await panel.getByRole('button', { name: 'Más días' }).click();
-      await panel.getByRole('button', { name: 'Más días' }).click();
-      await panel.getByRole('button', { name: 'Simular escenario' }).click();
-      await panel.getByText(/el costo estimado sube US\$190/).waitFor();
-      const rows = await panel.locator('tbody tr').count();
-      assert.equal(rows, 5);
-      assert.match(await panel.locator('tbody tr').first().innerText(), /US\$1\.180.*US\$1\.370.*\+US\$190/s);
-      await panel.scrollIntoViewIfNeeded();
-      await panel.screenshot({ path: `${OUT}/whatif-${tag}.png` });
-    });
-    await step(`WhatIf[${tag}]: cambiar un valor limpia el resultado y «Volver a mi plan» restablece`, async () => {
-      const panel = p.locator('section', { has: p.getByRole('heading', { name: '¿Y si cambio algo?' }) });
-      await panel.getByRole('button', { name: 'Más viajeros' }).click();
-      assert.equal(await panel.locator('tbody').count(), 0);
-      await panel.getByRole('button', { name: 'Volver a mi plan' }).click();
-      assert.ok(await panel.getByRole('button', { name: 'Simular escenario' }).isDisabled());
-    });
-    await step(`WhatIf[${tag}]: presupuesto bajo marca exceso del 110 %`, async () => {
-      const panel = p.locator('section', { has: p.getByRole('heading', { name: '¿Y si cambio algo?' }) });
-      await panel.getByLabel('Presupuesto (USD)').fill('900');
-      await panel.getByRole('button', { name: 'Simular escenario' }).click();
-      await panel.getByText(/supera el 110 % del presupuesto de US\$900/).waitFor();
+    await step(`WhatIf[${tag}]: la ficha distingue datos disponibles de los que faltan`, async () => {
+      const t = await p.locator('main').innerText();
+      assert.match(t, /Clima\s+Disponible/); assert.match(t, /Precio\s+Sin datos/);
     });
     await step(`WhatIf[${tag}]: sin desbordamiento horizontal`, async () => {
       const sw = await p.evaluate(() => document.documentElement.scrollWidth);
@@ -138,20 +121,6 @@ const step = async (name, fn) => {
     });
     await ctx.close();
   }
-
-  // ---------- Error de red en What-If ----------
-  ({ ctx, p } = await mk(390, 844));
-  await p.goto(`${BASE}/destino/CUZ?q=${q}`, { waitUntil: 'networkidle' });
-  await step('WhatIf: falla de servidor muestra error accesible, sin romper la página', async () => {
-    await p.route('**/api/what-if', (r) => r.fulfill({ status: 500, contentType: 'application/json', body: '{"error":{"code":"X","message":"Falla simulada"}}' }));
-    const panel = p.locator('section', { has: p.getByRole('heading', { name: '¿Y si cambio algo?' }) });
-    await panel.getByRole('button', { name: 'Más días' }).click();
-    await panel.getByRole('button', { name: 'Simular escenario' }).click();
-    await panel.getByRole('alert').waitFor();
-    assert.match(await panel.getByRole('alert').innerText(), /Falla simulada/);
-    assert.ok(await panel.getByRole('button', { name: 'Simular escenario' }).isEnabled());
-  });
-  await ctx.close();
 
   await browser.close();
   console.log(results.map(([s, n]) => `${s}  ${n}`).join('\n'));

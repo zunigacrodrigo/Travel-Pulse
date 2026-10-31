@@ -29,7 +29,9 @@ export async function POST(req: Request) {
     const byId = new Map(dataset.destinations.map((d) => [d.id, d]));
 
     const top: DestinationCard[] = await Promise.all(
-      (ranking.emptyHelp ? [] : ranking.top).map(async (result) => {
+      // Con datos reales y pocas fuentes conectadas, «información limitada» es el estado normal:
+      // se muestran los destinos con lo que falta, sin puntaje, en vez de una pantalla vacía.
+      ranking.top.map(async (result) => {
         const destination = byId.get(result.destinationId)!;
         const verdict = await writeVerdict({ destination, result, request });
         return { destination, result, verdict };
