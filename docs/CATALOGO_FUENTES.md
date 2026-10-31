@@ -14,7 +14,7 @@ Versión 0.5.0 · 31-oct-2026. **Regla de producto: solo datos reales. Si no hay
 ## Sin fuente conectada (valor `null`, el motor lo declara «sin dato»)
 | Dato | Por qué falta | Qué haría falta |
 |---|---|---|
-| Precio de vuelos | No existe fuente abierta fiable | Una API con clave (p. ej. Amadeus o Duffel) y su plan; **lo elige y contrata el dueño** |
+| Precio de vuelos | No existe fuente abierta fiable. **Amadeus Self-Service cerró el 17-jul-2026** (verificado), así que ya no es opción | Candidatas a evaluar: Travelpayouts/Aviasales Data API (gratis con cuenta de afiliado; precios en caché de búsquedas de usuarios, cobertura SCL sin verificar) y Duffel (pago por búsqueda; cobertura LATAM sin verificar). **Lo elige y contrata el dueño** |
 | Costo diario del destino | Sin fuente abierta fiable | Proveedor de costo de vida con licencia |
 | Conectividad (vuelo directo, horas, frecuencia) | OpenFlights es de 2014 (obsoleto) y sin frecuencias | Proveedor de rutas actual |
 | Saturación turística y temporada | No hay fuente abierta; no se derivan para no duplicar el clima | Fuente de afluencia o señales de PulseMesh |
