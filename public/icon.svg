@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0B1626"/>
+  <rect x="84" y="136" width="164" height="240" rx="22" fill="#1A2B43"/>
+  <rect x="264" y="136" width="164" height="240" rx="22" fill="#1A2B43"/>
+  <text x="166" y="318" text-anchor="middle" font-family="Archivo, Arial Black, Arial, sans-serif" font-weight="800" font-size="190" fill="#FFD400">T</text>
+  <text x="346" y="318" text-anchor="middle" font-family="Archivo, Arial Black, Arial, sans-serif" font-weight="800" font-size="190" fill="#FFD400">P</text>
+  <rect x="84" y="254" width="344" height="6" fill="#E8EDF1" opacity=".55"/>
+</svg>

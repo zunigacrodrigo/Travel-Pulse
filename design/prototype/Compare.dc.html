@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Comparación</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit;text-decoration:none}
+</style>
+</helmet>
+<div style="width:390px;height:1000px;box-sizing:border-box;background:#E8EDF1;color:#0B1626;font-family:'Instrument Sans',sans-serif;position:relative;overflow:hidden">
+
+  <a href="Results.dc.html" aria-label="Volver" style="position:absolute;left:20px;top:50px;width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B1626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+  </a>
+  <div style="position:absolute;left:76px;top:50px;height:44px;display:flex;align-items:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:19px">Comparar destinos</div>
+
+  <!-- Dos tarjetas -->
+  <div style="position:absolute;left:20px;right:20px;top:112px;display:flex;gap:10px">
+    <div style="flex:1;background:#0B1626;border-radius:18px;overflow:hidden">
+      <svg viewBox="0 0 200 130" preserveAspectRatio="xMidYMid slice" width="175" height="120" style="display:block"><rect width="200" height="130" fill="#F7B7A3"/><circle cx="146" cy="46" r="22" fill="#E5412D"/><path d="M0 96 L36 56 L62 76 L96 36 L130 82 L162 60 L200 88 V130H0Z" fill="#2C3E55"/><path d="M0 130 V104 L50 84 L100 102 L150 80 L200 100 V130Z" fill="#0B1626"/><path d="M16 116 H84 M110 112 H176" stroke="#FFD400" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <div style="padding:10px 12px 12px;color:#F2F5F8">
+        <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:32px;line-height:.9;color:#FFD400;letter-spacing:1px">CUZ</div>
+        <div style="font-size:13px;margin-top:4px">Cusco</div>
+        <div style="display:flex;gap:3px;margin-top:8px"><span style="width:28px;height:40px;border-radius:5px;background:#1a2b43;color:#FFD400;font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;display:flex;align-items:center;justify-content:center">8</span><span style="width:28px;height:40px;border-radius:5px;background:#1a2b43;color:#FFD400;font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;display:flex;align-items:center;justify-content:center">4</span></div>
+        <div style="font-size:12px;color:#8FA3BA;margin-top:6px">US$1.180</div>
+      </div>
+    </div>
+    <div style="flex:1;background:#fff;border-radius:18px;overflow:hidden">
+      <svg viewBox="0 0 200 130" preserveAspectRatio="xMidYMid slice" width="175" height="120" style="display:block"><rect width="200" height="130" fill="#BFE3E8"/><circle cx="54" cy="44" r="18" fill="#FFD400"/><path d="M0 100 L40 58 L74 86 L116 46 L160 90 L200 64 V130H0Z" fill="#E5412D"/><path d="M0 130 V112 L70 96 L140 114 L200 100 V130Z" fill="#A32A1E"/></svg>
+      <div style="padding:10px 12px 12px">
+        <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:32px;line-height:.9;letter-spacing:1px">SLA</div>
+        <div style="font-size:13px;margin-top:4px">Salta</div>
+        <div style="display:flex;gap:3px;margin-top:8px"><span style="width:28px;height:40px;border-radius:5px;background:#0B1626;color:#FFD400;font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;display:flex;align-items:center;justify-content:center">7</span><span style="width:28px;height:40px;border-radius:5px;background:#0B1626;color:#FFD400;font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;display:flex;align-items:center;justify-content:center">9</span></div>
+        <div style="font-size:12px;color:#4A5B70;margin-top:6px">US$890</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filas -->
+  <div style="position:absolute;left:36px;right:36px;top:388px;display:flex;font-size:13px;font-weight:700;color:#0B1626"><span style="flex:1;font-weight:500;color:#4A5B70">Factor, de 0 a 100</span><span style="width:60px;text-align:center">Cusco</span><span style="width:60px;text-align:center">Salta</span></div>
+  <div style="position:absolute;left:20px;right:20px;top:420px;background:#fff;border-radius:16px;padding:6px 16px">
+    <div style="display:flex;align-items:center;height:42px;border-bottom:1px solid #E1E8EE;font-size:14px"><span style="flex:1">Precio</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:600;font-size:17px;color:#4A5B70">88</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;background:#FFD400;border-radius:6px;line-height:28px">94</span></div>
+    <div style="display:flex;align-items:center;height:42px;border-bottom:1px solid #E1E8EE;font-size:14px"><span style="flex:1">Experiencia</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;background:#FFD400;border-radius:6px;line-height:28px">92</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:600;font-size:17px;color:#4A5B70">81</span></div>
+    <div style="display:flex;align-items:center;height:42px;border-bottom:1px solid #E1E8EE;font-size:14px"><span style="flex:1">Clima</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:600;font-size:17px;color:#4A5B70">78</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;background:#FFD400;border-radius:6px;line-height:28px">86</span></div>
+    <div style="display:flex;align-items:center;height:42px;border-bottom:1px solid #E1E8EE;font-size:14px"><span style="flex:1">Saturación</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:600;font-size:17px;color:#4A5B70">64</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;background:#FFD400;border-radius:6px;line-height:28px">83</span></div>
+    <div style="display:flex;align-items:center;height:42px;border-bottom:1px solid #E1E8EE;font-size:14px"><span style="flex:1">Conectividad</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;background:#FFD400;border-radius:6px;line-height:28px">85</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:600;font-size:17px;color:#B3321F">58</span></div>
+    <div style="display:flex;align-items:center;height:42px;font-size:14px"><span style="flex:1">Tendencia</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:600;font-size:17px;color:#B3321F">47</span><span style="width:60px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;background:#FFD400;border-radius:6px;line-height:28px">69</span></div>
+  </div>
+
+  <div style="position:absolute;left:20px;right:20px;top:704px">
+    <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:22px">Cuál elegir según tu prioridad</div>
+    <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+      <span style="min-height:44px;box-sizing:border-box;padding:0 16px;border-radius:999px;font-size:14px;font-weight:600;background:#0B1626;color:#FFD400;display:flex;align-items:center">Precio</span>
+      <span style="min-height:44px;box-sizing:border-box;padding:0 16px;border-radius:999px;font-size:14px;border:1.5px solid #9fb0c2;display:flex;align-items:center">Experiencia</span>
+      <span style="min-height:44px;box-sizing:border-box;padding:0 16px;border-radius:999px;font-size:14px;border:1.5px solid #9fb0c2;display:flex;align-items:center">Menos gente</span>
+    </div>
+    <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#1d2c40">Con prioridad en precio gana <b>Salta</b>: cuesta US$290 menos y el factor precio es 94 frente a 88. Te alcanza para 2 días extra. Cusco gana en experiencia (92 frente a 81).</p>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:96px;background:linear-gradient(180deg,rgba(232,237,241,0),#E8EDF1 40%);display:flex;align-items:flex-end;gap:10px;padding:0 20px 24px">
+    <a href="Destination.dc.html" style="flex:1;height:56px;border-radius:14px;background:#FFD400;font-family:'Archivo',sans-serif;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 #0B1626">Elegir Cusco</a>
+    <a href="Destination.dc.html" style="flex:1;height:56px;border-radius:14px;border:2px solid #0B1626;background:#E8EDF1;font-family:'Archivo',sans-serif;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center">Elegir Salta</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

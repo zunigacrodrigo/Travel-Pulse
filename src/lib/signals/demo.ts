@@ -1,0 +1,11 @@
+import type { TravelSignal } from "./types";
+const now = Date.now();
+const ago = (minutes: number) => new Date(now - minutes * 60_000).toISOString();
+const later = (hours: number) => new Date(now + hours * 3_600_000).toISOString();
+export const DEMO_SIGNALS: TravelSignal[] = [
+  { id: "demo-1", title: "Fila larga en acceso principal", detail: "Hay bastante espera en el acceso principal. Considera llegar con más margen y seguir la señalización oficial.", place: "Autódromo de Interlagos", city: "São Paulo", type: "Afluencia", createdAt: ago(18), expiresAt: later(2), source: "demo", evidence: "observación directa", confirmations: 2, reporter: "Viajero de la comunidad" },
+  { id: "demo-2", title: "Estación de tren como alternativa", detail: "La estación Autódromo queda a distancia caminable del circuito; verifica operación y accesos oficiales antes de salir.", place: "Estación Autódromo", city: "São Paulo", type: "Transporte", createdAt: ago(42), expiresAt: later(1), source: "demo", evidence: "enlace", confirmations: 3, reporter: "Guía local" },
+  { id: "demo-3", title: "Café tranquilo para una pausa", detail: "Café de barrio con mesas al interior y opciones sin lactosa según el menú observado. Confirma horario al llegar.", place: "Pinheiros", city: "São Paulo", type: "Lugar nuevo", createdAt: ago(130), expiresAt: later(120), source: "demo", evidence: "observación directa", confirmations: 1, reporter: "Explorador local" },
+  { id: "demo-4", title: "Revisa el precio antes de comprar", detail: "El precio publicado en una carta no coincidía con el cobrado. Pregunta el total y posibles cargos antes de ordenar.", place: "Vila Madalena", city: "São Paulo", type: "Precio", createdAt: ago(95), expiresAt: later(8), source: "demo", evidence: "foto", confirmations: 1, reporter: "Viajera de la comunidad" },
+  { id: "demo-5", title: "Vereda irregular en el cruce", detail: "Hay un tramo de vereda irregular cerca del cruce. La accesibilidad de la ruta alternativa no está verificada.", place: "Entorno de Interlagos", city: "São Paulo", type: "Accesibilidad", createdAt: ago(260), expiresAt: later(70), source: "demo", evidence: "foto", confirmations: 0, reporter: "Viajero de la comunidad" },
+];

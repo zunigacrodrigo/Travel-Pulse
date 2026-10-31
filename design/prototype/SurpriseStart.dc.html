@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Sorpresa: botón único</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit;text-decoration:none}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#E8EDF1;color:#0B1626;font-family:'Instrument Sans',sans-serif;position:relative;overflow:hidden">
+
+  <div style="position:absolute;left:20px;right:20px;top:54px">
+    <div style="font-family:'Archivo',sans-serif;font-stretch:75%;font-weight:800;font-size:46px;line-height:.95;letter-spacing:-1px">Send Me Somewhere</div>
+    <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#2A3A4E">Un toque y elegimos por ti un destino que quizá no habías considerado, según tu presupuesto y tu perfil.</p>
+  </div>
+
+  <div style="position:absolute;left:20px;right:20px;top:258px;display:flex;justify-content:center">
+    <svg viewBox="0 0 320 320" width="320" height="320">
+      <circle cx="160" cy="160" r="150" fill="none" stroke="#c3cdd8" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>
+      <circle cx="160" cy="160" r="116" fill="#0B1626"/>
+      <circle cx="160" cy="160" r="96" fill="#FFD400"/>
+      <path d="M118 176 L214 128 L186 214 L166 180 Z" fill="#0B1626"/>
+      <path d="M166 180 L214 128" stroke="#FFD400" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <a href="Surprise.dc.html" aria-label="Sorpréndeme" style="position:absolute;left:84px;top:322px;width:222px;height:192px;border-radius:999px"></a>
+
+  <div style="position:absolute;left:20px;right:20px;top:600px;text-align:center">
+    <a href="Surprise.dc.html" style="display:flex;height:56px;border-radius:14px;background:#0B1626;color:#FFD400;font-family:'Archivo',sans-serif;font-weight:800;font-size:18px;align-items:center;justify-content:center">Sorpréndeme</a>
+    <div style="font-size:13px;color:#4A5B70;margin-top:12px">Desde Santiago, noviembre, 8 días, US$1.500</div>
+    <a href="Main.dc.html" style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;text-decoration:underline">Cambiar mis datos</a>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:72px;background:#0B1626;display:flex;justify-content:space-around;align-items:center;padding-bottom:8px">
+    <a href="Main.dc.html" style="min-width:72px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#8FA3BA;font-size:12px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Buscar</a>
+    <a href="SurpriseStart.dc.html" style="min-width:72px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#FFD400;font-size:12px;font-weight:600">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/></svg>Sorpresa</a>
+    <a href="Saved.dc.html" style="min-width:72px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#8FA3BA;font-size:12px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Guardados</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1284 @@
+{"verdict":"allow","rev":21,"data":{"rev":21,"xml":"
+Travel Pulse — Documento maestro Fase 0 + V1
+ · 
+1. Resumen ejecutivo
+Travel Pulse es un motor de decisión de viajes: con origen, presupuesto, días e intereses, entrega 5 destinos con un Opportunity Score explicable y un nivel de confianza, y aprende de viajeros reales después de cada viaje.
+ | 
+Elemento | 
+Definición
+ | 
+Tesis | 
+Construir primero un motor de decisión; la comunidad, el grafo de datos y el B2B solo se construyen si el motor demuestra tracción
+ | 
+Pregunta que responde | 
+Con mi presupuesto, mi tiempo y lo que busco, ¿dónde debería viajar ahora?
+ | 
+Mercado inicial | 
+Origen Santiago de Chile; destinos en Sudamérica y México; español primero
+ | 
+Producto V1 | 
+Formulario de viaje, Top 5 destinos, score explicable, Reality Check, comparación, Send Me Somewhere, guardar, compartir, clic de salida
+ | 
+Primer dato propio | 
+Expectation Gap: expectativa antes del viaje contra realidad después, aportado por 100 Founding Explorers
+ | 
+Estado del foso | 
+Hipótesis, no foso: se demuestra solo si 100, luego 1.000 y luego 10.000 viajeros mejoran las recomendaciones
+ | 
+Plazo | 
+Fase 0: 2 semanas. V1: 6 a 10 semanas
+ | 
+Criterio de éxito de V1 | 
+100 personas que guardan un destino y hacen clic de salida, y al menos 30 Founding Explorers activos
+Quien construye debe respetar tres reglas: no se inventa precisión (todo score muestra su confianza y su explicación), no se construye nada de la lista de exclusión de V1, y ninguna fase empieza sin cumplir la salida de la anterior.
+2. Alcance: qué entra y qué no
+V1 contiene 14 funciones y nada más; cualquier otra idea del hilo queda asignada a una fase posterior.
+ | 
+# | 
+Función V1 | 
+Descripción mínima
+ | 
+1 | 
+Home | 
+Formulario: origen, presupuesto, días, fechas, intereses
+ | 
+2 | 
+Decision Engine | 
+Calcula candidatos y los ordena
+ | 
+3 | 
+Top 5 | 
+Cinco destinos con tarjeta explicativa
+ | 
+4 | 
+Opportunity Score | 
+Puntaje 0 a 100 por destino
+ | 
+5 | 
+Score explicable | 
+Desglose por factor y texto del veredicto
+ | 
+6 | 
+Confianza | 
+Porcentaje y motivo; admite "no hay información suficiente"
+ | 
+7 | 
+Reality Check | 
+Destino elegido contra una alternativa similar
+ | 
+8 | 
+Comparación | 
+Dos destinos lado a lado
+ | 
+9 | 
+Send Me Somewhere | 
+Destino sorpresa según presupuesto y perfil
+ | 
+10 | 
+Guardar | 
+Lista de destinos guardados
+ | 
+11 | 
+Compartir | 
+Tarjeta de imagen con enlace
+ | 
+12 | 
+Clic de salida | 
+Enlace de afiliado a vuelo u hotel, con registro del clic
+ | 
+13 | 
+Feedback Founding Explorers | 
+Preguntas antes, durante y después del viaje
+ | 
+14 | 
+Expectation Gap | 
+Diferencia entre expectativa y realidad por destino
+ | 
+Elemento | 
+Fase | 
+Condición para construirlo
+ | 
+Señales humanas en vivo, Live Pulse | 
+3 | 
+30 o más señales por día en 3 ciudades
+ | 
+Pasaporte mínimo y sellos | 
+2 | 
+100 Founding Explorers activos
+ | 
+Travel DNA, niveles, importar viajes | 
+3 | 
+5.000 usuarios con 2 o más viajes registrados
+ | 
+Trust Score de viajero | 
+3 | 
+Señales suficientes para calibrar
+ | 
+Rutas y Route Creators, Living Routes | 
+4 | 
+Tráfico y moderación disponibles
+ | 
+Panel B2B | 
+5 | 
+2 o 3 pilotos pagados
+ | 
+API de inteligencia | 
+6 | 
+Producto B2B validado
+ | 
+Pasaporte físico, beneficios de partners | 
+5 o más | 
+Base de usuarios para negociar
+ | 
+Red social, seguidores, likes, marketplace, concierge humano, reservas propias, GPS permanente, biometría | 
+No planificado | 
+Quedan fuera salvo decisión explícita posterior
+3. Fase 0: factibilidad de datos (2 semanas)
+Antes de escribir el algoritmo hay que confirmar qué datos se pueden obtener, a qué costo y con qué permisos; el mayor riesgo es el precio de vuelos y hoteles. Las opciones de proveedores abajo son candidatas conocidas hasta mediados de 2026: sus condiciones, precios y límites deben verificarse en la documentación oficial de cada uno.
+ | 
+Dato | 
+Para qué se usa | 
+Fuentes candidatas | 
+Qué verificar | 
+Plan B si falla
+ | 
+Precio de vuelos | 
+Factor Precio | 
+Duffel, Amadeus Self-Service, Kiwi/Tequila, Travelpayouts | 
+Cobertura desde SCL, costo por consulta, caché permitido, historial | 
+Precio histórico estimado por temporada y enlace a precio actual
+ | 
+Precio de alojamiento | 
+Factor Precio | 
+Duffel Stays, Booking/Expedia afiliados, índices públicos de costo | 
+Acceso real, límites, uso comercial | 
+Índice de costo diario por ciudad (Numbeo u otro, verificando licencia)
+ | 
+Clima | 
+Factor Clima | 
+Open-Meteo | 
+Licencia comercial, límites de llamadas | 
+Climatología histórica mensual
+ | 
+Estacionalidad y saturación | 
+Factores Temporada y Saturación | 
+Estadísticas de turismo, datos de aeropuertos, tendencias de búsqueda | 
+Disponibilidad por destino, frecuencia | 
+Escala manual 1 a 5 curada por destino
+ | 
+Alertas y riesgo | 
+Factor Riesgo | 
+Alertas oficiales de viaje de cancillerías, GDACS | 
+Formato, frecuencia, atribución | 
+Enlace a la fuente oficial sin puntaje propio
+ | 
+Lugares y mapas | 
+Contenido, globo | 
+OpenStreetMap, Wikidata, Mapbox | 
+Licencia ODbL, costo de Mapbox | 
+MapLibre con teselas abiertas
+ | 
+Conectividad | 
+Factor Conectividad | 
+Datos de rutas aéreas (OpenFlights u otro) | 
+Vigencia | 
+Conteo de vuelos directos desde SCL curado a mano
+ | 
+Tendencia | 
+Factor Tendencia | 
+Google Trends no oficial u otras fuentes | 
+Estabilidad y términos | 
+Omitir el factor y reponderar
+Reglas de decisión al cierre de la Fase 0
+ | 
+Resultado | 
+Decisión
+ | 
+Hay precios de vuelo y alojamiento con costo por usuario inferior a US$0,05 por búsqueda | 
+Continuar con precios dinámicos
+ | 
+Solo hay vuelos, o los precios son caros | 
+Continuar con Plan B: Price Intelligence y enlace de salida
+ | 
+Ninguna fuente de precios permite uso comercial ni caché | 
+Rediseñar V1 sobre estacionalidad y costo de vida, sin precios en vivo
+ | 
+Menos de 12 destinos con datos suficientes | 
+Ampliar la curaduría manual antes de construir
+Entregables de la Fase 0
+Tabla de fuentes completada con costo, límites, licencia y frecuencia (este documento, sección 3).
+Un prototipo en hoja de cálculo con 20 destinos y el score calculado a mano.
+20 a 30 entrevistas con viajeros chilenos: cómo deciden hoy a dónde ir.
+Decisión por escrito: precios dinámicos, Plan B o rediseño.
+Lista de 100 candidatos a Founding Explorer.
+4. Producto V1: pantallas y flujos
+El flujo principal tiene 7 pantallas; el globo es la entrada visual y el Decision Engine es el cerebro.
+ | 
+# | 
+Pantalla | 
+Contenido | 
+Acción principal | 
+Datos que lee o escribe
+ | 
+1 | 
+Home con globo | 
+Globo 3D con destinos coloreados por oportunidad, formulario flotante | 
+Completar formulario | 
+Escribe trip_request
+ | 
+2 | 
+Formulario | 
+Origen (Santiago por defecto), presupuesto en USD, días, mes o fechas flexibles, viajeros, intereses (aventura, comida, cultura, naturaleza, playa, romance, desconocido, lujo) | 
+Descubrir mi viaje | 
+trip_request
+ | 
+3 | 
+Resultados Top 5 | 
+Cinco tarjetas con nombre, score, costo estimado, razón en una línea, barra de confianza | 
+Abrir destino, guardar, comparar | 
+recommendation
+ | 
+4 | 
+Detalle de destino | 
+Score total, desglose por 8 factores, veredicto IA, confianza con motivo, fuentes, fecha de cada dato, Reality Check | 
+Guardar, comparar, ir a vuelos u hoteles | 
+destination_metric, source
+ | 
+5 | 
+Comparación | 
+Dos destinos lado a lado, tabla de factores, veredicto según prioridad del usuario | 
+Elegir ganador | 
+comparison
+ | 
+6 | 
+Send Me Somewhere | 
+Botón único; devuelve un destino que el usuario no consideró, con razón | 
+Ver detalle, compartir | 
+recommendation
+ | 
+7 | 
+Guardados y Compartir | 
+Lista de destinos guardados; tarjeta de imagen para compartir | 
+Compartir, salida a afiliado | 
+saved_destination, outbound_click
+Pantallas del ciclo de feedback
+ | 
+Momento | 
+Pregunta | 
+Formato | 
+Frecuencia
+ | 
+Antes del viaje | 
+Qué esperas de este destino | 
+5 deslizadores 1 a 10: autenticidad, saturación, costo, seguridad percibida, comida | 
+Una vez por viaje guardado
+ | 
+Durante | 
+Cómo está este lugar | 
+3 toques: ambiente, afluencia, precio | 
+Opcional, voluntario, sin GPS permanente
+ | 
+Después | 
+Cómo fue realmente | 
+Los mismos 5 deslizadores más una frase opcional | 
+Un aviso a los 7 días de la fecha del viaje
+Reglas de contenido
+Cada puntaje muestra su fecha de actualización y su confianza.
+Cuando la confianza es inferior a 40%, la tarjeta dice "Información limitada" y no muestra ranking numérico.
+El texto del veredicto lo redacta la IA, pero los números salen del motor; la IA no inventa cifras.
+El resultado de seguridad se muestra como nivel de riesgo con razones y fuente, nunca como etiqueta de barrio.
+Todo enlace de afiliado se identifica como tal.
+5. Opportunity Score
+El score es una media ponderada de 8 factores en escala 0 a 100, con pesos iniciales declarados como hipótesis y calibrados después con datos de uso.
+ | 
+Factor | 
+Peso inicial | 
+Qué mide | 
+Cálculo base (0 a 100)
+ | 
+Precio | 
+25% | 
+Costo total estimado frente al presupuesto y al precio habitual | 
+100 si el costo es 50% o menos del presupuesto; 0 si supera el 100%; lineal entre ambos; bonus de hasta 10 puntos si está bajo su precio habitual
+ | 
+Ajuste de experiencia | 
+20% | 
+Coincidencia entre intereses elegidos y etiquetas del destino | 
+Promedio ponderado de afinidad por interés (matriz destino por interés, curada)
+ | 
+Clima | 
+15% | 
+Condiciones en las fechas | 
+Temperatura, lluvia y viento normalizados contra rango agradable
+ | 
+Temporada | 
+10% | 
+Si es buen mes para visitar | 
+Índice mensual curado por destino
+ | 
+Saturación | 
+10% | 
+Congestión turística esperada (más alto = menos saturado) | 
+Índice mensual curado, ajustado por señales cuando existan
+ | 
+Conectividad | 
+10% | 
+Facilidad de llegar desde el origen | 
+Vuelos directos, duración y frecuencia desde el origen
+ | 
+Riesgo | 
+5% | 
+Nivel de riesgo con fuentes oficiales (más alto = menor riesgo) | 
+Mapeo de niveles oficiales de alerta; destinos con aviso máximo se excluyen
+ | 
+Tendencia | 
+5% | 
+Si el destino mejora o empeora | 
+Cambio de precio y de interés en 30 días
+S es el score final, f_i el valor del factor i (0 a 100), w_i su peso y D el conjunto de factores con dato disponible; si falta un factor, los demás se reponderan y la confianza baja.
+C es la confianza (0 a 100); q_i va de 0 a 1 según qué tan reciente y fiable es el dato del factor.
+Reglas del motor
+ | 
+Regla | 
+Detalle
+ | 
+Filtros duros | 
+Se excluyen destinos sobre el 110% del presupuesto, con aviso oficial máximo, o sin vuelo razonable desde el origen
+ | 
+Orden de resultados | 
+Por score; empates se resuelven por menor costo
+ | 
+Umbral de confianza | 
+Menos de 40: mostrar "Información limitada" sin ranking; entre 40 y 69: mostrar con advertencia; 70 o más: mostrar normal
+ | 
+Personalización | 
+Los intereses multiplican el peso de Ajuste de experiencia hasta un máximo de 30%
+ | 
+Opportunity Index | 
+Score más un indicador de oportunidad: sube cuando precio actual está por debajo del habitual en 10% o más y la saturación es menor que la del mes anterior
+ | 
+Calibración | 
+Cada 500 recomendaciones con clic o viaje, revisar pesos contra las acciones de usuarios; los pesos nunca se cambian sin registro en el historial
+ | 
+Transparencia | 
+La pantalla de detalle debe decir que los pesos son una estimación experimental
+Datos curados iniciales
+Para V1 se construyen a mano, con revisión de dos personas, estas tablas para 30 destinos: etiquetas de interés (0 a 5), índice mensual de temporada, índice mensual de saturación, vuelos directos desde Santiago y costo diario medio. Cada dato lleva fuente y fecha.
+6. Diseño visual
+La interfaz es clara y editorial, inspirada en los tableros de salidas de aeropuerto y los afiches de viaje: el puntaje se lee como un marcador de tablero, cada destino lleva su código (CUZ, SLA, OAX) y el globo abre el Home. Esta dirección reemplaza la versión oscura con acento lima del borrador anterior. Referencia navegable: prototipo V1 de 11 pantallas.
+ | 
+Token | 
+Valor | 
+Uso
+ | 
+Terminal | 
+#E8EDF1 | 
+Fondo principal
+ | 
+Paper | 
+#FFFFFF | 
+Pases y paneles claros
+ | 
+Ink | 
+#0B1626 | 
+Texto principal, tablero de salidas, barra inferior
+ | 
+Mid | 
+#4A5B70 | 
+Texto secundario (contraste 5,9 a 1 sobre Terminal)
+ | 
+Signal | 
+#FFD400 | 
+Acción principal y dígitos del marcador sobre Ink (contraste 12,7 a 1)
+ | 
+Stamp | 
+#D23A26 | 
+Reality Check, alertas y confianza baja; texto blanco encima (contraste 4,8 a 1)
+ | 
+Runway | 
+#2C6FA3 | 
+Detalles de mar, costos y datos secundarios
+ | 
+Verde pista | 
+#2E8B6F | 
+Estados positivos ("Mejor") y vegetación en afiches
+ | 
+Elemento | 
+Especificación
+ | 
+Tipografía de títulos | 
+Archivo (Google Fonts, eje de ancho), pesos 800 y 900; titulares al 75% de ancho
+ | 
+Tipografía de texto | 
+Instrument Sans, pesos 400, 500 y 600
+ | 
+Cifras del marcador | 
+Archivo 800 sobre fichas Ink con dígitos Signal
+ | 
+Escala de texto | 
+12, 14, 16, 18, 22, 28, 38 a 56 px; 176 px solo en la pantalla de sorpresa
+ | 
+Espaciado | 
+Base de 4 px; múltiplos de 8 para bloques
+ | 
+Radios | 
+14 px en botones, 16 a 20 px en tarjetas, 999 px en chips
+ | 
+Modo | 
+Claro por defecto en V1; el modo oscuro queda pendiente de derivar de los tokens
+ | 
+Imágenes | 
+Afiche plano vectorial por destino (paleta propia); fotografía real por definir con licencia
+ | 
+Movimiento | 
+Una transición principal: la tarjeta del Top 5 se expande al detalle, 250 ms ease-out; respeta prefers-reduced-motion
+ | 
+Accesibilidad | 
+Contraste mínimo 4,5 a 1 en texto; objetivos táctiles de 44 px; el color nunca es el único indicador ("Mejor", "Peor", "Información limitada" van con texto)
+Globo y mapa
+ | 
+Aspecto | 
+Especificación
+ | 
+Tecnología | 
+Mapbox GL JS con proyección globe, o MapLibre con teselas abiertas si el costo lo exige
+ | 
+Capas V1 | 
+Países y ciudades candidatas coloreados por score del usuario; sin capas en vivo
+ | 
+Interacción | 
+Rotar, acercar, tocar destino abre su tarjeta; transición Mundo, país y ciudad
+ | 
+Rendimiento | 
+Presupuesto de 3 segundos hasta interactivo en móvil medio; versión 2D si el dispositivo no soporta WebGL
+ | 
+Respaldo | 
+Lista y mapa 2D equivalentes para accesibilidad y conexiones lentas
+Componentes
+ | 
+Componente | 
+Comportamiento
+ | 
+Tarjeta de destino | 
+Afiche plano, código de aeropuerto, nombre, marcador de score, costo, razón en una línea, barra de confianza
+ | 
+Marcador de score | 
+Dos fichas Ink con dígitos Signal; con confianza menor a 40% muestra guiones y el texto "Información limitada"
+ | 
+Desglose de factores | 
+Ocho barras con valor, fuente y fecha de cada dato
+ | 
+Medidor de confianza | 
+Barra con porcentaje y el motivo en una frase
+ | 
+Pase de abordar (formulario) | 
+Origen, mes, fechas flexibles, presupuesto, días, viajeros e intereses
+ | 
+Chips de interés | 
+Selección múltiple, ocho opciones
+ | 
+Slider de presupuesto | 
+Rango US$300 a US$5.000, con valor numérico editable
+ | 
+Reality Check | 
+Destino elegido frente a una alternativa similar, con cuatro factores comparados y una conclusión
+ | 
+Enlace de afiliado | 
+Etiqueta bajo el botón de salida: podemos recibir una comisión sin costo extra; se registra el clic
+ | 
+Tarjeta compartible | 
+Imagen vertical 1080 por 1920 con código, nombre, score y marca; generada en servidor
+ | 
+Estados vacíos y de error | 
+Mensajes claros y acción de reintento; nunca un score sin dato
+Voz y textos
+Español neutro con tuteo; frases cortas; sin superlativos vacíos.
+Nunca afirmar "seguro" o "peligroso"; usar "nivel de riesgo" y la razón.
+Los textos del veredicto no superan 40 palabras.
+La marca se escribe Travel Pulse; el eslogan de V1 es "Dónde conviene viajar, según datos de hoy".
+7. Arquitectura técnica
+El cliente habla solo con la API en Vercel detrás de Cloudflare; el motor de score es código, y la IA y los datos externos entran únicamente a través de él.
+ | 
+Capa | 
+Tecnología | 
+Razón
+ | 
+Frontend | 
+Next.js (App Router), TypeScript estricto, Tailwind, shadcn/ui | 
+Estándar, rápido de construir con Claude Code
+ | 
+Mapa y globo | 
+Mapbox GL JS con proyección globe; MapLibre como respaldo | 
+Globo listo; respaldo si el costo sube
+ | 
+Backend | 
+Route Handlers en Vercel, esquemas Zod | 
+Sin servidor propio que mantener
+ | 
+Base de datos | 
+Supabase: Postgres, PostGIS, Auth, RLS | 
+Geodatos y permisos por fila en un solo servicio
+ | 
+IA | 
+API de Anthropic: Haiku 5.5 y Sonnet 5.5 | 
+Costo bajo para texto corto, revisión más fuerte donde importa
+ | 
+Datos | 
+Adaptadores por fuente y cron de Vercel | 
+Cambiar de proveedor sin tocar el motor
+ | 
+Borde y seguridad | 
+Cloudflare | 
+WAF y límites de tasa
+ | 
+Analítica y errores | 
+PostHog y Sentry | 
+Embudo y errores desde el día uno
+ | 
+Pagos | 
+Stripe, solo cuando exista Pro | 
+No se paga infraestructura que aún no se usa
+ | 
+Móvil | 
+Web móvil primero; Expo en Fase 2 | 
+Una sola base de código para validar
+8. Modelo de datos
+El esquema de V1 usa Postgres con PostGIS en Supabase; las tablas de fases futuras se diseñan ahora pero no se crean hasta que haga falta.
+ | 
+Tabla | 
+Propósito | 
+Fase
+ | 
+profiles | 
+Usuario, origen, idioma, rol (user, founding_explorer, admin) | 
+1
+ | 
+destinations | 
+Destinos con país, geometría, etiquetas | 
+1
+ | 
+destination_monthly | 
+Índices por mes: temporada, saturación, costo diario, clima histórico | 
+1
+ | 
+sources | 
+Catálogo de fuentes con licencia, frecuencia y límite | 
+1
+ | 
+price_snapshots | 
+Precios observados con fecha y fuente | 
+1
+ | 
+trip_requests | 
+Consultas del formulario (anónimas o con usuario) | 
+1
+ | 
+recommendations | 
+Resultado por consulta: destino, score, confianza, desglose | 
+1
+ | 
+saved_destinations | 
+Destinos guardados | 
+1
+ | 
+outbound_clicks | 
+Clics de salida a afiliados | 
+1
+ | 
+expectations | 
+Expectativa previa al viaje | 
+1
+ | 
+experiences | 
+Realidad posterior al viaje | 
+1
+ | 
+events | 
+Eventos de producto para métricas | 
+1
+ | 
+human_signals | 
+Señales de viajeros por lugar y hora | 
+3
+ | 
+traveler_trust | 
+Confianza de contribuyente | 
+3
+ | 
+passports, stamps, trips | 
+Pasaporte, sellos, viajes | 
+2
+ | 
+routes, route_items | 
+Rutas de creadores | 
+4
+ | 
+org_accounts, api_keys | 
+B2B y API | 
+5
+Expectation Gap
+e_k es la expectativa y r_k la realidad del criterio k (autenticidad, saturación, costo, seguridad percibida, comida); un gap negativo significa que la realidad quedó bajo lo esperado. Se publica un gap por destino solo con 10 o más respuestas.
+9. Capa de IA
+Los números los calcula un motor determinista en código; la IA redacta el veredicto, interpreta lenguaje libre y revisa el resultado, pero nunca inventa cifras.
+ | 
+Tarea | 
+Quién la hace | 
+Modelo (cadena API) | 
+Razón
+ | 
+Cálculo de score y confianza | 
+Código (TypeScript) | 
+Ninguno | 
+Reproducible, auditable y gratis
+ | 
+Veredicto de 40 palabras por destino | 
+LLM con salida estructurada | 
+Haiku 5.5 (claude-haiku-5-5) | 
+Texto corto a volumen; costo y latencia bajos
+ | 
+Reality Check y comparación explicada | 
+LLM | 
+Sonnet 5.5 (claude-sonnet-5-5) | 
+Razonamiento medio con buen costo
+ | 
+Interpretar texto libre del usuario ("quiero algo tranquilo y barato") | 
+LLM a esquema de intereses | 
+Haiku 5.5 | 
+Extracción simple
+ | 
+Revisor crítico antes de mostrar | 
+LLM con las cifras y fuentes | 
+Sonnet 5.5 | 
+Debe detectar contradicciones y datos faltantes
+ | 
+Diseño de fórmula, arquitectura y revisión de seguridad (desarrollo, no producción) | 
+Claude Code | 
+Opus 5.5 (claude-opus-5-5) | 
+Errores caros; razonamiento largo
+ | 
+Emergencias y alertas | 
+Fuentes oficiales enlazadas | 
+Ninguno | 
+No delegar seguridad a un LLM
+Flujo de una recomendación
+El formulario se valida en servidor y se guarda como trip_request.
+El motor filtra candidatos con las reglas duras.
+Para cada candidato lee datos de la base; si un dato supera su vida útil, el orquestador lo refresca desde la fuente.
+El motor calcula score, desglose y confianza.
+El LLM recibe solo esos números y las fuentes, y redacta el veredicto en JSON validado.
+El revisor crítico verifica que cada afirmación del texto coincida con un número del desglose.
+Si el revisor rechaza, se muestra el desglose sin texto de IA y se registra el evento.
+Se guarda la recomendación con la versión del motor.
+Revisor crítico
+ | 
+Pregunta que debe responder | 
+Acción si falla
+ | 
+¿Cada afirmación del veredicto está respaldada por un valor del desglose? | 
+Rechazar texto
+ | 
+¿Qué datos faltan o están vencidos? | 
+Bajar confianza y mostrarlo
+ | 
+¿Qué podría hacer incorrecta la recomendación? | 
+Agregar una advertencia de una línea
+ | 
+¿Hay lenguaje de seguridad absoluta o discriminatorio? | 
+Rechazar texto
+Guardrails
+Salida estructurada con esquema JSON validado; reintento único y luego texto de respaldo.
+Caché de veredictos por combinación de destino, mes y rango de score para controlar costo.
+Límite de 20 consultas por usuario anónimo por hora y por IP.
+Presupuesto mensual de IA con alerta al 70% y corte de funciones no esenciales al 100%.
+Registro de cada llamada con modelo, tokens, latencia y costo.
+Los datos de usuarios no se envían a un LLM con identificadores personales.
+10. Seguridad, privacidad y legal
+V1 recolecta el mínimo de datos personales posible; los puntos legales abajo deben confirmarse con un abogado antes del lanzamiento público.
+ | 
+Área | 
+Control en V1
+ | 
+Autenticación | 
+Supabase Auth con Google, Apple y correo; consultas anónimas permitidas con anon_id
+ | 
+Autorización | 
+Row Level Security en todas las tablas de usuario; escritura de catálogos solo con service role
+ | 
+Secretos | 
+Claves de APIs solo en servidor y en variables de entorno de Vercel; nunca en el cliente
+ | 
+Protección de borde | 
+Cloudflare con límite de tasa, reglas de bots y WAF
+ | 
+Validación | 
+Esquemas Zod en cada endpoint; sanitización de texto libre
+ | 
+Abuso | 
+Límites por IP y por usuario; CAPTCHA invisible en formularios públicos
+ | 
+Respaldo | 
+Copia diaria de la base y prueba de restauración trimestral
+ | 
+Monitoreo | 
+Sentry para errores, PostHog para eventos, alertas de costo de APIs
+ | 
+Tema | 
+Decisión
+ | 
+Datos personales | 
+Correo, nombre opcional, origen y respuestas de feedback; sin ubicación continua ni biometría
+ | 
+Ubicación | 
+Solo con acción voluntaria y puntual, nunca en segundo plano en V1
+ | 
+Selfie y retrato del Pasaporte | 
+Fuera de V1; en Fase 2 foto opcional o avatar elegido, procesada sin guardar plantillas faciales
+ | 
+Documentos | 
+Nunca se pide ni almacena el pasaporte real ni números de identificación
+ | 
+Seguridad de destinos | 
+Nivel de riesgo con razones y enlace a fuente oficial; sin etiquetas de barrios
+ | 
+Afiliados | 
+Enlaces marcados como afiliados; divulgación visible
+ | 
+Derechos del usuario | 
+Exportar y eliminar cuenta desde la configuración
+ | 
+Menores | 
+Registro solo para mayores de 18 años en V1
+ | 
+Riesgo legal | 
+Mitigación
+ | 
+Ley de datos personales de Chile en transición (nueva ley con agencia de protección) | 
+Política de privacidad clara, base legal de consentimiento, minimización; revisión legal
+ | 
+GDPR si hay usuarios europeos | 
+Consentimiento, derecho al olvido y encargado de tratamiento con proveedores
+ | 
+Términos de Google Places | 
+No almacenar ni recombinar sus datos; usar OpenStreetMap y datos propios como base
+ | 
+Licencia ODbL de OpenStreetMap | 
+Atribución visible y compartir derivados de la base geográfica cuando corresponda
+ | 
+Difamación por señales de usuarios (Fase 3) | 
+Moderación, canal de reclamos y lenguaje estructurado, sin texto libre público
+ | 
+Pasaporte ficticio (Fase 2) | 
+Aviso "Membresía ficticia, no es documento de viaje" y diseño distinto a un pasaporte oficial
+ | 
+Políticas de tiendas de apps | 
+Declaración de datos y uso de cámara y ubicación solo si se activan
+11. Métricas y experimentos
+La North Star es la Decisión Útil: una persona que recibe recomendaciones, guarda un destino y hace clic de salida; los umbrales abajo son metas iniciales a ajustar con datos reales, no promesas.
+ | 
+Etapa del embudo | 
+Evento registrado | 
+Meta inicial de conversión desde la etapa anterior
+ | 
+Visita | 
+page_view | 
+Base
+ | 
+Completa preferencias | 
+trip_request_created | 
+35%
+ | 
+Recibe destinos | 
+recommendations_shown | 
+95%
+ | 
+Abre un destino | 
+destination_opened | 
+70%
+ | 
+Guarda o compara | 
+destination_saved, comparison_viewed | 
+30%
+ | 
+Clic de salida | 
+outbound_click | 
+20%
+ | 
+Viaja (declarado) | 
+trip_confirmed | 
+10%
+ | 
+Feedback posterior | 
+experience_submitted | 
+50%
+ | 
+Regresa por otro viaje | 
+second_trip_request | 
+25%
+ | 
+Métrica | 
+Definición | 
+Meta al cierre de V1
+ | 
+Decisiones Útiles | 
+Usuarios únicos con guardado y clic de salida | 
+100
+ | 
+Activación | 
+Usuarios que generan una recomendación | 
+60% de visitantes con formulario iniciado
+ | 
+Compartidos | 
+Tarjetas compartidas por usuario activo | 
+0,15
+ | 
+Retención 30 días | 
+Vuelven a consultar un segundo viaje | 
+15%
+ | 
+Founding Explorers activos | 
+Responden al menos una vez al mes | 
+30 de 100
+ | 
+Calidad de recomendación | 
+Respuesta "me mostró un destino que no habría considerado y tenía sentido" en encuesta de 1 pregunta | 
+60% de afirmativos
+ | 
+Confianza media | 
+Promedio de C en recomendaciones mostradas | 
+70 o más
+ | 
+Costo de IA por consulta | 
+Costo total de LLM dividido en consultas | 
+Menos de US$0,01
+Experimentos de V1
+ | 
+Experimento | 
+Hipótesis | 
+Medida | 
+Decisión
+ | 
+Landing con 3 propuestas de valor | 
+Una de las 3 promesas convierte al doble que las otras | 
+Registro en lista de espera | 
+Elegir mensaje principal
+ | 
+Con y sin desglose de score | 
+El desglose aumenta guardados | 
+Tasa de guardado | 
+Mantener o simplificar
+ | 
+Con y sin confianza visible | 
+Mostrar confianza no reduce clics | 
+Tasa de clic de salida | 
+Mantener o esconder en nivel 2
+ | 
+Send Me Somewhere en home | 
+Genera más compartidos que el formulario | 
+Compartidos por sesión | 
+Ubicación en el producto
+ | 
+Aviso a los 7 días | 
+El aviso por correo logra feedback | 
+Tasa de respuesta de Expectation Gap | 
+Ajustar canal (correo, WhatsApp)
+Reglas de decisión
+ | 
+Situación al día 60 de V1 | 
+Decisión
+ | 
+100 o más Decisiones Útiles y 60% de calidad percibida | 
+Pasar a Fase 2
+ | 
+Entre 40 y 99 Decisiones Útiles | 
+Iterar 4 semanas sobre el factor con peor desempeño
+ | 
+Menos de 40 Decisiones Útiles | 
+Replantear propuesta o público antes de gastar más
+ | 
+Calidad percibida bajo 40% | 
+Revisar pesos y datos curados antes de captar más usuarios
+Nota de adquisición: V1 se valida con tráfico orgánico, comunidad propia (incluida la audiencia de El Oráculo del Viajero), grupos de viajeros chilenos y contenido compartible. Si el costo por Decisión Útil con tráfico pagado supera US$10, no se escala pagado.
+12. Roadmap
+La fase resaltada es la que se construye ahora; cada diamante es la condición que debe cumplirse antes de empezar la fase siguiente.
+13. Plan de construcción y prompts
+Cada prompt se pega en Claude Code con el modelo indicado: Opus 5.5 donde un error es caro o el razonamiento es largo, Sonnet 5.5 para construcción de volumen, Haiku 5.5 para tareas simples y repetitivas.
+ | 
+# | 
+Tarea | 
+Modelo | 
+Razón | 
+Semana
+ | 
+P1 | 
+Estructura del proyecto y configuración | 
+Sonnet 5.5 | 
+Trabajo mecánico y de volumen | 
+1
+ | 
+P2 | 
+Esquema SQL, RLS y migraciones | 
+Opus 5.5 | 
+Un error de permisos expone datos de usuarios | 
+1
+ | 
+P3 | 
+Motor de Opportunity Score | 
+Opus 5.5 | 
+Lógica central, debe ser correcta y testeable | 
+2
+ | 
+P4 | 
+Ingesta de datos y orquestador | 
+Sonnet 5.5 | 
+Integraciones repetitivas | 
+2 a 3
+ | 
+P5 | 
+API y validaciones | 
+Sonnet 5.5 | 
+Endpoints estándar | 
+3
+ | 
+P6 | 
+UI: home, formulario, resultados, detalle | 
+Sonnet 5.5 | 
+Construcción de interfaz de volumen | 
+3 a 5
+ | 
+P7 | 
+Globo 3D | 
+Sonnet 5.5 | 
+Implementación guiada por especificación | 
+4
+ | 
+P8 | 
+Veredicto IA y revisor crítico | 
+Sonnet 5.5 | 
+Prompts y validación de esquemas | 
+5
+ | 
+P9 | 
+Feedback y Expectation Gap | 
+Sonnet 5.5 | 
+Formularios y cálculo simple | 
+6
+ | 
+P10 | 
+Analítica y eventos | 
+Haiku 5.5 | 
+Instrumentación repetitiva | 
+6
+ | 
+P11 | 
+Pruebas automáticas | 
+Sonnet 5.5 | 
+Volumen de casos | 
+7
+ | 
+P12 | 
+Revisión de seguridad y de costos | 
+Opus 5.5 | 
+Revisión adversarial de todo el sistema | 
+8
+Prompt de contexto común (pegar al inicio de cada sesión)
+P2 · Esquema y RLS (Opus 5.5)
+P3 · Motor de score (Opus 5.5)
+P4 · Ingesta y orquestador (Sonnet 5.5)
+P6 · Interfaz (Sonnet 5.5)
+P7 · Globo (Sonnet 5.5)
+P8 · Veredicto y revisor crítico (Sonnet 5.5)
+P12 · Revisión de seguridad y costos (Opus 5.5)
+Definición de terminado (V1)
+Pruebas del motor en verde y cobertura de 90% en /lib/engine.
+Ninguna tabla de usuario legible por otro usuario.
+Tiempo de respuesta de una recomendación por debajo de 3 segundos en p95.
+Cada score muestra fuente, fecha y confianza.
+Costo de IA por consulta bajo US$0,01 en pruebas de carga.
+Lighthouse de rendimiento 85 o más y accesibilidad 95 o más en móvil.
+14. Monetización y economía unitaria
+V1 monetiza solo con afiliación en el momento de intención; las cifras abajo son supuestos ilustrativos que Fase 0 debe reemplazar con datos de los programas reales.
+ | 
+Fuente de ingreso | 
+Fase | 
+Modelo | 
+Supuesto a validar
+ | 
+Afiliación vuelos y alojamiento | 
+1 | 
+Comisión por reserva | 
+Comisión de vuelos baja; alojamiento de un dígito porcentual
+ | 
+Pro (inteligencia personal) | 
+2 a 3 | 
+Suscripción mensual o anual | 
+US$5 a 8 al mes; 2 a 4% de conversión
+ | 
+Alertas de oportunidad | 
+2 a 3 | 
+Incluidas en Pro | 
+Retención mensual
+ | 
+Panel de destinos B2B | 
+5 | 
+SaaS | 
+2 a 3 pilotos pagados antes de construir
+ | 
+API de inteligencia | 
+6 | 
+Uso y volumen | 
+Producto B2B validado
+ | 
+Beneficios de partners | 
+5 o más | 
+Acuerdos comerciales | 
+Base de usuarios para negociar
+Cuenta ilustrativa de V1 (supuestos, no pronóstico)
+ | 
+Variable | 
+Supuesto
+ | 
+Clics de salida por mes | 
+1.000
+ | 
+Conversión de clic a reserva | 
+3%
+ | 
+Reservas por mes | 
+30
+ | 
+Ingreso por reserva (comisión) | 
+US$15
+ | 
+Ingreso mensual | 
+US$450
+ | 
+Costo mensual de infraestructura y datos | 
+US$150 a 400
+ | 
+Costo de IA por consulta | 
+menor a US$0,01
+Conclusión de la cuenta: con estos supuestos V1 no genera utilidad por sí sola; sirve para demostrar intención de compra. La rentabilidad depende de Pro y de B2B, por eso V1 se mide por Decisiones Útiles y no por ingreso.
+15. Riesgos
+Los tres riesgos que pueden matar el proyecto son el costo de datos de precios, la adquisición de usuarios y que las recomendaciones no cambien decisiones reales.
+ | 
+# | 
+Riesgo | 
+Probabilidad | 
+Impacto | 
+Mitigación | 
+Señal de alerta
+ | 
+1 | 
+Precios de vuelos y hoteles caros o restringidos | 
+Alta | 
+Alto | 
+Fase 0; Plan B de Price Intelligence | 
+Costo por búsqueda sobre US$0,05
+ | 
+2 | 
+No llegan los primeros 1.000 usuarios | 
+Alta | 
+Alto | 
+Comunidad propia, contenido compartible, Founding Explorers | 
+Menos de 100 visitas por semana en la semana 4
+ | 
+3 | 
+Recomendaciones sin efecto real | 
+Media | 
+Alto | 
+Medir Decisión Útil y calidad percibida; calibrar pesos | 
+Calidad percibida bajo 40%
+ | 
+4 | 
+Score visto como opinión con números | 
+Media | 
+Medio | 
+Desglose, fuentes, confianza y aviso experimental | 
+Desconfianza en encuestas
+ | 
+5 | 
+Datos curados desactualizados | 
+Media | 
+Medio | 
+Fecha de cada dato, revisión mensual de dos personas | 
+Datos con más de 90 días
+ | 
+6 | 
+Términos de APIs prohíben el uso previsto | 
+Media | 
+Alto | 
+Revisión de licencias en Fase 0; datos abiertos como base | 
+Restricciones al almacenamiento
+ | 
+7 | 
+Alcance crece sin control | 
+Alta | 
+Medio | 
+Lista de exclusión de V1 y puerta de fase | 
+Funciones nuevas sin salida de fase
+ | 
+8 | 
+Alucinación del texto de IA | 
+Media | 
+Medio | 
+Números solo del motor y revisor crítico | 
+Rechazos del revisor sobre 10%
+ | 
+9 | 
+Costo de IA | 
+Baja | 
+Medio | 
+Caché, modelo económico, presupuesto con corte | 
+Costo por consulta sobre US$0,01
+ | 
+10 | 
+Incumplimiento de privacidad | 
+Baja | 
+Alto | 
+Mínimo de datos, sin biometría, revisión legal | 
+Solicitudes de usuarios sin atender
+ | 
+11 | 
+Competidores grandes copian el motor | 
+Media | 
+Medio | 
+Velocidad, foco en Latinoamérica y datos propios | 
+Lanzamientos de Google en el nicho
+ | 
+12 | 
+Dependencia de una sola persona | 
+Media | 
+Medio | 
+Documentación en este documento y repositorio | 
+Conocimiento no escrito
+16. Visión por fases
+La visión grande se mantiene, pero cada capa debe ganarse el derecho de existir con una salida medible de la fase anterior.
+ | 
+Fase | 
+Producto | 
+Pregunta que responde | 
+Qué se agrega | 
+Salida para avanzar
+ | 
+0 | 
+Factibilidad | 
+¿Podemos pagar y usar los datos? | 
+Tabla de fuentes y prototipo en hoja | 
+Decisión de datos por escrito
+ | 
+1 | 
+Decision Engine | 
+¿Dónde debería viajar? | 
+V1 completo | 
+100 Decisiones Útiles
+ | 
+2 | 
+Founding Explorers y Pasaporte mínimo | 
+¿Qué está pasando realmente? | 
+Expectation Gap, perfil, sellos por país, número de fundador, tarjeta de viaje compartible | 
+30 explorers activos y 10 gaps por destino principal
+ | 
+3 | 
+Inteligencia humana | 
+¿Cómo está ahora? | 
+Señales estructuradas, Trust Score, Pulse semanal y Travel DNA | 
+30 señales por día en 3 ciudades
+ | 
+4 | 
+Red viva | 
+¿Qué hacen viajeros como yo? | 
+Rutas, Route Creators, Living Routes, importar viajes | 
+Moderación y tráfico sostenidos
+ | 
+5 | 
+Plataforma B2B | 
+¿Qué demanda hay en mi destino? | 
+Panel para hoteles, municipios y aerolíneas; beneficios de partners | 
+2 o 3 pilotos pagados
+ | 
+6 | 
+API | 
+¿Qué destino conviene a este segmento? | 
+API de inteligencia | 
+Producto B2B validado
+Pasaporte World Citizen (Fase 2 mínima)
+ | 
+Elemento | 
+Fase 2 | 
+Fases posteriores
+ | 
+Identidad | 
+Nombre, avatar elegido o foto opcional, número de explorador | 
+Retrato generado
+ | 
+Sellos | 
+Un sello por país con nivel de verificación: autodeclarado, con evidencia, verificado por señales | 
+Sellos por ciudad y logros
+ | 
+Momentos | 
+Tarjeta compartible por viaje con historia | 
+Passport Moments automáticos
+ | 
+Travel DNA | 
+No existe | 
+Con 5 o más viajes, explicable y editable
+ | 
+Fundadores | 
+Founding Explorer número 001 a 100, no se vende | 
+Insignia permanente
+ | 
+Aviso | 
+Membresía ficticia, no es documento de viaje; diseño distinto a un pasaporte oficial | 
+Igual
+ | 
+Datos | 
+Sin biometría, sin número de pasaporte real | 
+Igual
+ | 
+Físico y beneficios | 
+No | 
+Fase 5 o más, bajo demanda y con partners
+Reglas de la visión
+Las notas de potencial por idea de los documentos de trabajo son opiniones sin evidencia; no se usan para decidir.
+Cada capa se activa solo si la métrica de la fase anterior se cumple.
+No se promete un foso de datos hasta tener datos propios que mejoren las recomendaciones.
+17. Preguntas abiertas y próximos pasos
+Seis decisiones del dueño del producto bloquean el inicio; sin ellas, quien construya debe asumir los valores por defecto indicados.
+ | 
+# | 
+Pregunta abierta | 
+Valor por defecto si no hay respuesta
+ | 
+1 | 
+Nombre y marca definitivos | 
+Travel Pulse
+ | 
+2 | 
+Plataforma de V1 | 
+Web móvil primero (Next.js); app nativa con Expo en Fase 2
+ | 
+3 | 
+Presupuesto mensual de infraestructura, datos e IA | 
+US$300
+ | 
+4 | 
+Dedicación semanal y equipo disponible | 
+1 persona con Claude Code, 15 horas semanales
+ | 
+5 | 
+Moneda y mercado | 
+USD en la interfaz; Chile como origen
+ | 
+6 | 
+Programas de afiliados a solicitar | 
+Duffel o Travelpayouts para vuelos; un programa de alojamiento
+Próximos 14 días
+Completar la tabla de fuentes de la sección 3 con costos y licencias reales.
+Curar 30 destinos con etiquetas, temporada, saturación y costo diario.
+Armar el prototipo en hoja de cálculo con 20 destinos y calcular el score a mano.
+Entrevistar a 20 a 30 viajeros chilenos.
+Reunir 100 candidatos a Founding Explorer.
+Validar el prototipo visual con 10 personas.
+Registrar la decisión de datos y la fecha de inicio de V1.
+Fuentes y supuestos
+Las cifras de mercado y los nombres de proveedores provienen de conocimiento general hasta mediados de 2026 y no se han verificado en línea para este documento; sus condiciones, precios y límites deben comprobarse en la documentación oficial de cada proveedor durante la Fase 0.","complete":true},"frame":{"slug":"8a9362b5-91bc-498c-a0d3-814e42384ce3","url":"https://claude.ai/code/artifact/8a9362b5-91bc-498c-a0d3-814e42384ce3","artifactUrl":"https://claude.ai/code/artifact/8a9362b5-91bc-498c-a0d3-814e42384ce3"}}
