@@ -1,6 +1,6 @@
 # Matriz de cumplimiento — Prompt Maestro 2.0
 
-Fecha: 31 de octubre de 2026 · Versión: 0.3.0 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
+Fecha: 31 de octubre de 2026 · Versión: 0.3.1 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
 
 Estados (del prompt, sección 32): **Implementado y verificado** · Implementado sin validar · **Parcial** · **Pendiente** · Bloqueado · No viable en el entorno actual.
 
@@ -15,7 +15,7 @@ Estados (del prompt, sección 32): **Implementado y verificado** · Implementado
 | 3 | Pulse Index | Parcial | `evaluateDestination`: 8 factores, pesos por intereses, reponderación, confianza, "no publica puntaje bajo 40 %" (221 pruebas previas) | Se llama "score"/"Opportunity Score" en la UI, no "Pulse Index". Decisión: mantener un solo número | 2 |
 | 4 | Opportunity Index | Parcial | Bandera `opportunity` (vuelo ≥10 % bajo lo habitual y saturación mejor que el mes previo) | Es una bandera, no un índice; depende de precios que hoy son semilla | 2 |
 | 5 | Comparator | Parcial | `compareDestinations` con 8 factores y veredicto por prioridad; `/api/compare` probado; `/comparar` responde 200 | No probé la interfaz en navegador; máximo 2 destinos (el diseño pide 2–4) | 2 |
-| 6 | Trip Twin | Parcial | `/trip-twin` (demo y viaje importado), `/importar`, reordenar y ajustar duración, replanificación propuesta con aprobación del viajero (según el código; auditoría previa probó reordenar y reiniciar en navegador) | **Sin deshacer ni historial de versiones en la interfaz** (el plan guarda `version` y `parentPlanId`, pero no se muestran). Actividades sintéticas o aproximadas; sin cuentas | 3 |
+| 6 | Trip Twin | Parcial | `/trip-twin` (demo y viaje importado), `/importar`, reordenar y ajustar duración, replanificación propuesta con aprobación del viajero (según el código; auditoría previa probó reordenar y reiniciar en navegador) | **Deshacer, rehacer e historial (0.3.1): implementado y verificado** (6 pruebas unitarias y E2E 15/15 en móvil y escritorio; se guarda en el dispositivo, hasta 20 cambios; reiniciar también se puede deshacer). Pendiente: versiones con nombre y vista comparada. Actividades sintéticas o aproximadas; sin cuentas | 3 |
 | 7 | AI Router | Pendiente | — (los traslados figuran "sin datos") | Proveedor de rutas y optimizador | 3 |
 | 8 | Travel Memory / DNA | **Implementado y verificado** (solo local) | `/perfil`, `dna-core.ts` (14 pruebas), E2E: guardar, recargar, exportar/importar, borrar | Sincronización entre dispositivos requiere cuentas (módulo de autenticación pendiente) | 1 |
 | 9 | PulseMesh | Parcial | `/live` y `/api/signals`: señales con vigencia y confianza, solo en el navegador | Sin servidor, moderación ni corroboración entre usuarios | 5 |

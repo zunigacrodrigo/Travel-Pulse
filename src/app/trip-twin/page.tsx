@@ -9,6 +9,7 @@ import { activitySchema, tripPlanSchema, tripSchema, type Activity, type PlanCha
 import { cityPlaceToActivity, getWeatherSuggestion, loadCityWorkspace, saveCityActivities, saveCityTrip, type CityWorkspace } from "@/lib/trip-twin/city-workspace";
 import type { TravelSignal } from "@/lib/signals/types";
 import { pickRelevantSignal } from "@/lib/signals/trip-link";
+import { emptyHistory, parseHistory, pushSnapshot, redo, undo, type History, type Snapshot } from "@/lib/trip-twin/history";
 
 const attractions = [
   { id: "f1", name: "Fórmula 1 · GP de São Paulo", meta: "Autódromo de Interlagos", time: "Evento en otra fecha del destino", price: "Precio no conectado", tag: "Evento", image: "" },
@@ -25,7 +26,8 @@ export default function TripTwinPage() {
   const [activities, setActivities] = useState<Activity[]>(DEMO_ACTIVITIES);
   const [plan, setPlan] = useState<TripPlan>(() => buildTripPlan(DEMO_TRIP, DEMO_ACTIVITIES, { now: "2026-10-27T15:00:00Z" }));
   const [notice, setNotice] = useState("Analicé tu viaje y encontré algunos puntos que conviene revisar. Los precios, rutas y horarios de esta demo son sintéticos.");
-  const [history, setHistory] = useState<TripPlan[]>([]);
+  const [hist, setHist] = useState<History>(emptyHistory);
+  const [histLoaded, setHistLoaded] = useState(false);
   const [delayId, setDelayId] = useState("museum");
   const [chat, setChat] = useState("");
   const [chatReply, setChatReply] = useState("");
@@ -116,6 +118,53 @@ export default function TripTwinPage() {
     }
   }, [activities, currentTrip, plan, ready, workspace]);
 
+  const histKey = workspace ? `travel-pulse.trip-twin.history.v1:${workspace.city}|${workspace.country}` : "travel-pulse.trip-twin.history.v1";
+  useEffect(() => {
+    if (!ready) return;
+    try { const raw = localStorage.getItem(histKey); setHist(raw ? parseHistory(JSON.parse(raw)) : emptyHistory()); }
+    catch { setHist(emptyHistory()); }
+    setHistLoaded(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
+
+  useEffect(() => {
+    if (!histLoaded) return;
+    try { localStorage.setItem(histKey, JSON.stringify(hist)); } catch { /* el historial es opcional */ }
+  }, [hist, histLoaded, histKey]);
+
+  function describeChange(change: PlanChange): string {
+    if (change.type === "activity_cancelled") return `Cancelar ${activityById.get(change.activityId)?.name ?? "actividad"}`;
+    if (change.type === "delay") return `Retrasar ${activityById.get(change.activityId)?.name ?? "actividad"} ${change.delayMinutes} min`;
+    if (change.type === "budget_changed") return "Cambiar presupuesto";
+    return change.description;
+  }
+  function snapshotNow(label: string): Snapshot {
+    return { label, at: new Date().toISOString(), trip: currentTrip, activities, plan };
+  }
+  function remember(label: string) { setHist((old) => pushSnapshot(old, snapshotNow(label))); }
+  function restore(target: Snapshot) {
+    setActivities(target.activities); setPlan(target.plan);
+    if (JSON.stringify(target.trip) !== JSON.stringify(currentTrip)) {
+      if (workspace) { setWorkspace({ ...workspace, trip: target.trip }); saveCityTrip(workspace, target.trip); }
+      else setTripOverride(JSON.stringify(target.trip) === JSON.stringify(DEMO_TRIP) ? null : target.trip);
+    }
+    if (!target.activities.some((a) => a.id === selectedId)) setSelectedId(target.activities[0]?.id ?? "");
+    if (!target.activities.some((a) => a.id === delayId)) setDelayId(target.activities.find((a) => a.importance !== "fixed")?.id ?? "");
+  }
+  function doUndo() {
+    const result = undo(hist, snapshotNow("Estado anterior al deshacer"));
+    if (!result) return;
+    const label = hist.past.at(-1)?.label ?? "cambio";
+    setHist(result.history); restore(result.restored);
+    setNotice(`Deshecho: ${label}. Puedes rehacerlo.`);
+  }
+  function doRedo() {
+    const result = redo(hist, snapshotNow("Estado anterior al rehacer"));
+    if (!result) return;
+    setHist(result.history); restore(result.restored);
+    setNotice("Cambio rehecho.");
+  }
+
   function addSuggestion(name: string, location: Activity["location"], category?: string, placeId?: string) {
     if (activities.some((activity) => activity.name === name)) {
       setNotice(`${name} ya forma parte de este itinerario.`);
@@ -127,14 +176,14 @@ export default function TripTwinPage() {
     const next = [...activities, activity];
     setActivities(next);
     const result = buildTripPlan(currentTrip, next, { version: plan.version + 1, parentPlanId: plan.id, now: new Date().toISOString() });
-    setHistory((old) => [...old, plan]); setPlan(result); setSelectedId(activity.id);
+    remember(`Añadir ${name}`); setPlan(result); setSelectedId(activity.id);
     setNotice(category ? `${name} se añadió desde OpenStreetMap. Horarios, traslados y precios no están disponibles.` : `${name} se añadió al itinerario de demostración. Horarios, traslados y precios no están verificados.`);
   }
 
   function applyChange(change: PlanChange) {
     try {
       const result = replanTrip(currentTrip, activities, plan, change, new Date().toISOString());
-      setHistory((old) => [...old, plan]); setPlan(result.plan);
+      remember(describeChange(change)); setPlan(result.plan);
       if (change.type === "activity_cancelled") {
         const remaining = activities.filter((activity) => activity.id !== change.activityId);
         setActivities(remaining);
@@ -156,21 +205,21 @@ export default function TripTwinPage() {
     const next = [...activities];
     [next[index], next[target]] = [next[target]!, next[index]!];
     setActivities(next);
-    setHistory((old) => [...old, plan]);
+    remember("Reordenar actividades");
     setPlan(buildTripPlan(currentTrip, next, { version: plan.version + 1, parentPlanId: plan.id, now: new Date().toISOString() }));
   }
   function adjustDuration(activityId: string, delta: -15 | 15) {
     const next = activities.map((activity) => activity.id === activityId ? { ...activity, durationMinutes: Math.max(15, Math.min(720, activity.durationMinutes + delta)) } : activity);
-    setActivities(next); setHistory((old) => [...old, plan]);
+    setActivities(next); remember("Ajustar duración");
     setPlan(buildTripPlan(currentTrip, next, { version: plan.version + 1, parentPlanId: plan.id, now: new Date().toISOString() }));
   }
   function reset() {
     if (workspace) {
-      setActivities([]); setPlan(buildTripPlan(currentTrip, [], { version: plan.version + 1, parentPlanId: plan.id, now: new Date().toISOString() }));
-      setHistory([]); setNotice(`Itinerario de ${workspace.city} reiniciado. Puedes volver a elegir lugares en Explorar ciudad.`); setWeatherDismissed(true); return;
+      remember("Reinicio del itinerario"); setActivities([]); setPlan(buildTripPlan(currentTrip, [], { version: plan.version + 1, parentPlanId: plan.id, now: new Date().toISOString() }));
+      setNotice(`Itinerario de ${workspace.city} reiniciado. Puedes volver a elegir lugares en Explorar ciudad.`); setWeatherDismissed(true); return;
     }
-    setTripOverride(null); setActivities(DEMO_ACTIVITIES); setPlan(buildTripPlan(DEMO_TRIP, DEMO_ACTIVITIES, { now: new Date().toISOString() }));
-    setHistory([]); setNotice("Demo reiniciada. Los precios, rutas y horarios siguen siendo datos sintéticos.");
+    remember("Reinicio de la demo"); setTripOverride(null); setActivities(DEMO_ACTIVITIES); setPlan(buildTripPlan(DEMO_TRIP, DEMO_ACTIVITIES, { now: new Date().toISOString() }));
+    setNotice("Demo reiniciada. Los precios, rutas y horarios siguen siendo datos sintéticos.");
   }
   async function askTwin(requestedMessage = chat) {
     if (!requestedMessage.trim() || chatBusy) return;
@@ -192,7 +241,7 @@ export default function TripTwinPage() {
     const alternative = cityPlaceToActivity(weatherSuggestion.alternative, workspace.weatherUpdatedAt ?? new Date().toISOString());
     const replacement = { ...alternative, durationMinutes: weatherSuggestion.activity.durationMinutes, importance: weatherSuggestion.activity.importance };
     const next = activities.map((activity) => activity.id === weatherSuggestion.activity.id ? replacement : activity);
-    setHistory((old) => [...old, plan]);
+    remember("Alternativa por clima");
     setActivities(next);
     setPlan(buildTripPlan(currentTrip, next, { version: plan.version + 1, parentPlanId: plan.id, now: new Date().toISOString() }));
     setSelectedId(replacement.id); setDelayId(replacement.id); setWeatherDismissed(true);
@@ -240,7 +289,7 @@ export default function TripTwinPage() {
 
       <section className="tt-itinerary tt-card" id="tt-itinerary"><header className="tt-section-heading"><div><h2>← Itinerario</h2><p>{workspace ? `${new Intl.DateTimeFormat("es-CL", { dateStyle: "full", timeZone: currentTrip.timeZone }).format(new Date(currentTrip.startAt))} · itinerario de ciudad` : tripOverride ? `Desde el ${new Intl.DateTimeFormat("es-CL", { dateStyle: "full", timeZone: tripOverride.timeZone }).format(new Date(tripOverride.startAt))} · itinerario importado` : "Miércoles 4 de noviembre · horario de demostración"}</p></div><button onClick={reset}>Reiniciar</button></header><div className="tt-itinerary-body"><div className="tt-timeline">{plan.items.length ? plan.items.map((item, index) => { const a = activityById.get(item.activityId) ?? DEMO_ACTIVITIES.find((x) => x.id === item.activityId); if (!a) return null; return <article className={`tt-timeline-item tt-timeline-select${selectedId === a.id ? " is-selected" : ""}`} key={item.activityId}><div className="tt-timeline-content"><button className="tt-timeline-pick" onClick={() => setSelectedId(a.id)} aria-pressed={selectedId === a.id}><time><Clock value={item.plannedStart} zone={currentTrip.timeZone}/></time><div className="tt-timeline-dot"/><div className="tt-timeline-detail"><b>{a.name}</b><small><Clock value={item.plannedEnd} zone={currentTrip.timeZone}/> fin · {a.durationMinutes} min</small><small>Traslado: {item.travelMinutesFromPrevious === null ? "sin datos" : `${item.travelMinutesFromPrevious} min`}</small></div></button>{workspace && <div className="tt-duration-control"><button type="button" aria-label={`Restar 15 minutos a ${a.name}`} disabled={a.durationMinutes <= 15} onClick={() => adjustDuration(a.id, -15)}>−</button><span>{a.durationMinutes} min · ajustar bloque</span><button type="button" aria-label={`Sumar 15 minutos a ${a.name}`} onClick={() => adjustDuration(a.id, 15)}>+</button></div>}</div><div className="tt-order-controls"><button aria-label={`Mover ${a.name} hacia arriba`} disabled={index === 0} onClick={() => moveActivity(a.id, -1)}>↑</button><button aria-label={`Mover ${a.name} hacia abajo`} disabled={index === plan.items.length - 1} onClick={() => moveActivity(a.id, 1)}>↓</button></div></article>; }) : <p>No quedan actividades. Reinicia la demo para empezar de nuevo.</p>}</div><div className="tt-map"><iframe title={`Mapa OpenStreetMap de ${selected?.name ?? workspace?.city ?? "São Paulo"}`} src={`https://www.openstreetmap.org/export/embed.html?bbox=${(selected?.location.longitude ?? workspace?.coordinates.longitude ?? -46.65) - 0.025}%2C${(selected?.location.latitude ?? workspace?.coordinates.latitude ?? -23.56) - 0.018}%2C${(selected?.location.longitude ?? workspace?.coordinates.longitude ?? -46.65) + 0.025}%2C${(selected?.location.latitude ?? workspace?.coordinates.latitude ?? -23.56) + 0.018}&layer=mapnik&marker=${selected?.location.latitude ?? workspace?.coordinates.latitude ?? -23.56}%2C${selected?.location.longitude ?? workspace?.coordinates.longitude ?? -46.65}`} loading="lazy"/><a className="tt-map-open" href={`https://www.openstreetmap.org/?mlat=${selected?.location.latitude ?? workspace?.coordinates.latitude ?? -23.56}&mlon=${selected?.location.longitude ?? workspace?.coordinates.longitude ?? -46.65}#map=14/${selected?.location.latitude ?? workspace?.coordinates.latitude ?? -23.56}/${selected?.location.longitude ?? workspace?.coordinates.longitude ?? -46.65}`} target="_blank" rel="noreferrer">Abrir mapa completo ↗</a><span className="tt-map-disclaimer">Mapa de OpenStreetMap · Los tiempos de traslado no están conectados</span></div></div></section>
 
-      <section className="tt-replan tt-card" id="tt-replan"><header className="tt-section-heading"><div><h2>↖ Replanificación</h2><p>Prueba cómo cambia el plan ante un imprevisto</p></div><span className="tt-version">v{plan.version}</span></header><div className="tt-alert-banner"><b>{workspace ? "Revisa el contexto del viaje" : "Simula una incidencia en tu viaje"}</b><small>{workspace ? "Las sugerencias de clima requieren tu decisión." : "Elige una actividad para cancelarla o retrasarla."}</small></div>{weatherSuggestion && <div role="status" className="mt-3 rounded-xl border border-amber-400/40 bg-amber-300/10 p-3"><p className="text-[11px] font-extrabold uppercase tracking-wide text-amber-200">Alternativa por pronóstico · Open-Meteo</p><p className="mt-2 text-xs leading-5 text-slate-200">{weatherSuggestion.explanation}</p><p className="mt-2 text-xs"><b>{weatherSuggestion.activity.name}</b> → <b>{weatherSuggestion.alternative.name}</b> · lugar mapeado por OpenStreetMap</p><div className="mt-3 flex flex-wrap gap-2"><button className="tt-primary" onClick={applyWeatherAlternative}>Aplicar alternativa</button><button className="rounded-lg border border-slate-500 px-3 py-2 text-[10px] font-bold text-slate-200" onClick={() => { setWeatherDismissed(true); setNotice("Se mantiene el itinerario actual. Puedes revisar la sugerencia de clima después."); }}>Mantener mi plan</button></div></div>}<div className="tt-replan-controls">{activities.filter((a) => a.importance !== "fixed").map((a) => <button key={a.id} onClick={() => applyChange({ type: "activity_cancelled", activityId: a.id })}><span><b>{a.name}</b><small>Cancelar actividad</small></span><span>×</span></button>)}<label htmlFor="tt-delay">Simular demora</label><div className="tt-delay-row"><select id="tt-delay" value={delayId} onChange={(e) => setDelayId(e.target.value)}>{activities.filter((a) => a.importance !== "fixed").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select><button className="tt-primary" disabled={!activities.some((a) => a.id === delayId)} onClick={() => applyChange({ type: "delay", activityId: delayId, delayMinutes: 30 })}>+30 min</button></div><div className="tt-result-note">{notice}</div></div>{!workspace && <div className="tt-alternatives"><h3>Opciones de demostración</h3>{["Museo del Fútbol", "Tour gastronómico por Liberdade", "Compras en Rua Oscar Freire"].map((name, i) => <div className="tt-option" key={name}><span className="tt-option-emoji">{["🏛️","🍜","🛍️"][i]}</span><div><b>{name}</b><small>Idea de ejemplo · verifica horarios y precios por tu cuenta</small></div><button onClick={() => addSuggestion(name, i === 0 ? { latitude: -23.5275, longitude: -46.6782 } : i === 1 ? { latitude: -23.5558, longitude: -46.6359 } : { latitude: -23.568, longitude: -46.668 })}>Añadir al plan</button></div>)}</div>}<div className="tt-confidence"><div><small>Conflictos</small><b>{hardCount}</b></div><div><small>Advertencias</small><b>{warningCount}</b></div><div><small>Cambios en esta sesión</small><b>{history.length}</b></div></div></section>
+      <section className="tt-replan tt-card" id="tt-replan"><header className="tt-section-heading"><div><h2>↖ Replanificación</h2><p>Prueba cómo cambia el plan ante un imprevisto</p></div><div className="tt-history-controls"><button type="button" onClick={doUndo} disabled={hist.past.length === 0} aria-label="Deshacer último cambio">↶ Deshacer</button><button type="button" onClick={doRedo} disabled={hist.future.length === 0} aria-label="Rehacer cambio">↷ Rehacer</button><span className="tt-version">v{plan.version}</span></div></header><div className="tt-alert-banner"><b>{workspace ? "Revisa el contexto del viaje" : "Simula una incidencia en tu viaje"}</b><small>{workspace ? "Las sugerencias de clima requieren tu decisión." : "Elige una actividad para cancelarla o retrasarla."}</small></div>{weatherSuggestion && <div role="status" className="mt-3 rounded-xl border border-amber-400/40 bg-amber-300/10 p-3"><p className="text-[11px] font-extrabold uppercase tracking-wide text-amber-200">Alternativa por pronóstico · Open-Meteo</p><p className="mt-2 text-xs leading-5 text-slate-200">{weatherSuggestion.explanation}</p><p className="mt-2 text-xs"><b>{weatherSuggestion.activity.name}</b> → <b>{weatherSuggestion.alternative.name}</b> · lugar mapeado por OpenStreetMap</p><div className="mt-3 flex flex-wrap gap-2"><button className="tt-primary" onClick={applyWeatherAlternative}>Aplicar alternativa</button><button className="rounded-lg border border-slate-500 px-3 py-2 text-[10px] font-bold text-slate-200" onClick={() => { setWeatherDismissed(true); setNotice("Se mantiene el itinerario actual. Puedes revisar la sugerencia de clima después."); }}>Mantener mi plan</button></div></div>}<div className="tt-replan-controls">{activities.filter((a) => a.importance !== "fixed").map((a) => <button key={a.id} onClick={() => applyChange({ type: "activity_cancelled", activityId: a.id })}><span><b>{a.name}</b><small>Cancelar actividad</small></span><span>×</span></button>)}<label htmlFor="tt-delay">Simular demora</label><div className="tt-delay-row"><select id="tt-delay" value={delayId} onChange={(e) => setDelayId(e.target.value)}>{activities.filter((a) => a.importance !== "fixed").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select><button className="tt-primary" disabled={!activities.some((a) => a.id === delayId)} onClick={() => applyChange({ type: "delay", activityId: delayId, delayMinutes: 30 })}>+30 min</button></div><div className="tt-result-note">{notice}</div></div>{!workspace && <div className="tt-alternatives"><h3>Opciones de demostración</h3>{["Museo del Fútbol", "Tour gastronómico por Liberdade", "Compras en Rua Oscar Freire"].map((name, i) => <div className="tt-option" key={name}><span className="tt-option-emoji">{["🏛️","🍜","🛍️"][i]}</span><div><b>{name}</b><small>Idea de ejemplo · verifica horarios y precios por tu cuenta</small></div><button onClick={() => addSuggestion(name, i === 0 ? { latitude: -23.5275, longitude: -46.6782 } : i === 1 ? { latitude: -23.5558, longitude: -46.6359 } : { latitude: -23.568, longitude: -46.668 })}>Añadir al plan</button></div>)}</div>}<div className="tt-confidence"><div><small>Conflictos</small><b>{hardCount}</b></div><div><small>Advertencias</small><b>{warningCount}</b></div><div><small>Cambios guardados</small><b>{hist.past.length}</b></div></div>{hist.past.length > 0 && <div className="tt-history-list" aria-label="Historial de cambios"><h3>Historial</h3><ol>{[...hist.past].reverse().slice(0, 5).map((entry, i) => <li key={`${entry.at}-${i}`}><b>{entry.label}</b><small>v{entry.plan.version}</small></li>)}</ol></div>}</section>
       <footer className="tt-footer">TRAVEL PULSE · TRIP TWIN <span>Prototipo visual interactivo · Datos sintéticos</span></footer>
     </div>
   </main>;

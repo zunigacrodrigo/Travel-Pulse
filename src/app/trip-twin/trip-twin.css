@@ -42,3 +42,11 @@
 @media(max-width:560px){.tt-map{min-height:290px}}
 .tt-duration-control{display:flex;align-items:center;gap:6px;margin-top:5px;color:#9ab0ca;font-size:9px}.tt-duration-control button{display:grid;place-items:center;width:23px;height:23px;border:1px solid #31536d;border-radius:6px;background:#102b49;color:#d6ebff;font-size:13px;cursor:pointer}.tt-duration-control button:disabled{opacity:.4;cursor:not-allowed}
 .tt-timeline-content{min-width:0}
+
+.tt-history-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tt-history-controls button { min-height: 36px; padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.5); background: transparent; color: inherit; font-weight: 700; font-size: 12px; cursor: pointer; }
+.tt-history-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+.tt-history-list { margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.3); }
+.tt-history-list h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.tt-history-list ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.tt-history-list li { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
