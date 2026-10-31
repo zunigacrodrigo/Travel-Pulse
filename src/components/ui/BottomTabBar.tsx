@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { Bookmark, Compass, Sparkle, WifiOff } from "./Icons";
+import { Bookmark, Compass, Sparkle, UserIcon, WifiOff } from "./Icons";
 
-export type TabKey = "buscar" | "live" | "sorpresa" | "guardados";
+export type TabKey = "buscar" | "live" | "sorpresa" | "guardados" | "perfil";
 
 const TABS: Array<{ key: TabKey; label: string; href: string; Icon: typeof Compass }> = [
   { key: "buscar", label: "Buscar", href: "/", Icon: Compass },
   { key: "live", label: "Pulso", href: "/live", Icon: WifiOff },
   { key: "sorpresa", label: "Sorpresa", href: "/sorpresa", Icon: Sparkle },
   { key: "guardados", label: "Guardados", href: "/guardados", Icon: Bookmark },
+  { key: "perfil", label: "Mi DNA", href: "/perfil", Icon: UserIcon },
 ];
 
 export function BottomTabBar({ active }: { active: TabKey }) {
@@ -23,7 +24,7 @@ export function BottomTabBar({ active }: { active: TabKey }) {
             key={key}
             href={href}
             aria-current={on ? "page" : undefined}
-            className={`flex min-h-11 min-w-[72px] flex-col items-center justify-center gap-[3px] text-[12px] ${
+            className={`flex min-h-11 min-w-[64px] flex-col items-center justify-center gap-[3px] text-[12px] ${
               on ? "font-semibold text-signal" : "text-tab-idle"
             }`}
           >

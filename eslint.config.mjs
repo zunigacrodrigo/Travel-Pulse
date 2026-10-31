@@ -13,7 +13,8 @@ const eslintConfig = [
     },
   },
   {
-    ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts"],
+    // qa/ son scripts de verificación en Node (CommonJS, Playwright global); no forman parte de la aplicación.
+    ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "qa/**"],
   },
 ];
 

@@ -95,6 +95,12 @@ export const Minus = (p: IconProps) => (
     <path d="M5 12h14" />
   </Svg>
 );
+export const UserIcon = (p: IconProps) => (
+  <Svg {...p} strokeWidth={p.strokeWidth ?? 2.2}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+  </Svg>
+);
 export const Download = (p: IconProps) => (
   <Svg {...p} strokeWidth={p.strokeWidth ?? 2.2}>
     <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />

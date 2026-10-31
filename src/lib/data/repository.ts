@@ -25,6 +25,7 @@ import {
   type Trend,
   type TripRequest,
 } from "@/lib/types";
+import { applyLiveRisk, getLiveSources, liveEnabled, withLiveSources } from "@/lib/sources";
 import { seedDataset, withMonthContext } from "./seed";
 
 if (typeof window !== "undefined") {
@@ -515,6 +516,27 @@ export const supabaseRepository: DataRepository = {
 /* Selección                                                           */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Decora el repositorio con las fuentes en vivo (avisos FCDO). Nunca espera a la
+ * red: usa lo último obtenido y dispara la actualización en segundo plano.
+ * Sin datos vivos (o en pruebas / LIVE_SOURCES=0) devuelve el dataset tal cual.
+ */
+function withLive(base: DataRepository): DataRepository {
+  if (!liveEnabled()) return base;
+  const live = getLiveSources();
+  return {
+    ...base,
+    async getDataset(origin, month) {
+      void live.refresh().catch(() => undefined);
+      return applyLiveRisk(await base.getDataset(origin, month), live.peek());
+    },
+    async getSources() {
+      const list = await base.getSources();
+      return Object.keys(live.peek().advisories).length > 0 ? withLiveSources(list) : list;
+    },
+  };
+}
+
 export function getRepository(): DataRepository {
-  return process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY ? supabaseRepository : memoryRepository;
+  return withLive(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY ? supabaseRepository : memoryRepository);
 }

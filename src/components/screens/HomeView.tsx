@@ -5,6 +5,8 @@ import Link from "next/link";
 import { GlobeHero } from "../lux/GlobeHero";
 import { useId, useState } from "react";
 import { capitalize, formatUsd, MONTHS, originName } from "@/lib/client/format";
+import { useDna } from "@/lib/client/dna";
+import { dnaToRequest } from "@/lib/client/dna-core";
 import { encodeRequest, storeLastRequest } from "@/lib/client/query";
 import { INTEREST_LABELS, INTERESTS, type Interest, type TripRequest } from "@/lib/types";
 import { Globe } from "../Globe";
@@ -24,12 +26,15 @@ export function HomeView({ initial }: { initial: TripRequest }) {
   const router = useRouter();
   const [req, setReq] = useState<TripRequest>(initial);
   const [city, setCity] = useState("Santiago, Chile");
+  const [formOpen, setFormOpen] = useState(false);
+  const dna = useDna();
   const ids = useId();
   const budgetLabelId = `${ids}-budget`;
   const monthId = `${ids}-month`;
   const patch = (p: Partial<TripRequest>) => setReq((r) => ({ ...r, ...p }));
   const toggleInterest = (i: Interest) => setReq((r) => ({ ...r, interests: r.interests.includes(i) ? r.interests.filter((x) => x !== i) : [...r.interests, i] }));
   const budget = Math.min(BUDGET_MAX, Math.max(BUDGET_MIN, req.budgetUsd));
+  const applyDna = () => { if (dna) { setReq((r) => dnaToRequest(dna, r.month)); setFormOpen(true); } };
   const submit = (e: React.FormEvent) => { e.preventDefault(); storeLastRequest(req); router.push(`/resultados?q=${encodeRequest(req)}`); };
   const openCity = (e: React.FormEvent) => { e.preventDefault(); const query = city.trim(); if (query) router.push(`/ciudad?city=${encodeURIComponent(query)}`); };
 
@@ -62,8 +67,10 @@ export function HomeView({ initial }: { initial: TripRequest }) {
         <Link href="/ciudad?city=Santiago%2C%20Chile" className="rounded-2xl border border-line bg-surface p-5 hover:border-signal"><p className="text-xs font-bold uppercase tracking-widest text-mid">Explorar ciudad</p><h2 className="mt-2 font-display text-xl font-extrabold">World Monitor + Pulso</h2><p className="mt-2 text-sm leading-6 text-fg2">Consulta clima, lugares mapeados y reportes con sus límites a la vista.</p></Link>
         <Link href="/trip-twin" className="rounded-2xl border border-line bg-surface p-5 hover:border-signal"><p className="text-xs font-bold uppercase tracking-widest text-mid">Plan vivo</p><h2 className="mt-2 font-display text-xl font-extrabold">Continúa en Mi viaje</h2><p className="mt-2 text-sm leading-6 text-fg2">Guarda lugares y prueba cambios del itinerario con explicación y aprobación.</p></Link>
         <Link href="/sorpresa" className="rounded-2xl border border-line bg-surface p-5 hover:border-signal"><p className="text-xs font-bold uppercase tracking-widest text-mid">Descubrimiento</p><h2 className="mt-2 font-display text-xl font-extrabold">Encuentra un destino</h2><p className="mt-2 text-sm leading-6 text-fg2">Si aún no tienes ciudad, explora alternativas para tu próximo viaje.</p></Link>
+        <Link href="/radar" className="rounded-2xl border border-line bg-surface p-5 hover:border-signal"><p className="text-xs font-bold uppercase tracking-widest text-mid">Radar en vivo</p><h2 className="mt-2 font-display text-xl font-extrabold">Riesgo y sismos hoy</h2><p className="mt-2 text-sm leading-6 text-fg2">Avisos oficiales de viaje y sismos recientes por destino, con la fuente y la hora de cada dato.</p></Link>
       </section>
-      <details className="mx-auto mt-8 max-w-6xl rounded-2xl border border-line bg-surface p-5">
+      {dna ? <div className="mx-auto mt-8 flex max-w-6xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4"><p className="text-sm text-fg2">Tienes un <b className="text-fg">Travel DNA</b> guardado: {formatUsd(dna.budgetUsd)}, {dna.days} días{dna.interests.length ? `, ${dna.interests.map((i) => INTEREST_LABELS[i].toLowerCase()).join(", ")}` : ""}.</p><div className="flex gap-2"><Button type="button" onClick={applyDna} className="min-h-11 px-4">Usar mi Travel DNA</Button><Link href="/perfil" className="inline-flex min-h-11 items-center px-3 text-sm font-semibold underline underline-offset-2">Editar</Link></div></div> : null}
+      <details open={formOpen} onToggle={(e) => setFormOpen(e.currentTarget.open)} className="mx-auto mt-8 max-w-6xl rounded-2xl border border-line bg-surface p-5">
         <summary className="cursor-pointer list-none font-display text-lg font-extrabold">¿Todavía no tienes destino? Buscar por presupuesto y preferencias <span className="float-right text-signal">＋</span></summary>
         <form onSubmit={submit} className="mt-5 space-y-4">
           <div className="flex flex-wrap items-end gap-6"><div><p className="text-xs text-mid">Salgo desde</p><p className="font-display text-xl font-extrabold">{req.origin} <span className="font-sans text-sm font-medium">{originName(req.origin)}</span></p></div><label className="text-xs text-mid" htmlFor={monthId}>Mes<div className="relative mt-1"><select id={monthId} value={req.month} onChange={(e) => patch({ month: Number(e.target.value) })} className="min-h-11 appearance-none bg-transparent pr-6 font-display text-lg font-bold text-fg">{MONTHS.map((m,i) => <option key={m} value={i+1}>{capitalize(m)}</option>)}</select><ChevronDown size={16} className="pointer-events-none absolute bottom-3.5 right-0 text-mid"/></div></label></div>

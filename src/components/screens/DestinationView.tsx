@@ -16,6 +16,7 @@ import { FlapScore } from "../FlapScore";
 import { RealityCheckTable } from "../RealityCheckTable";
 import { SaveButton } from "../SaveButton";
 import { ErrorPanel } from "../StatePanels";
+import { WhatIfPanel } from "../WhatIfPanel";
 import { BackButton } from "../ui/BackButton";
 import { Button } from "../ui/Button";
 import { Warning } from "../ui/Icons";
@@ -249,6 +250,8 @@ function Loaded({ data, request, q }: { data: DestinationDetailResponse; request
             ) : null}
 
             <CostSection flight={r.cost.flightUsd} stay={r.cost.stayUsd} total={r.cost.totalUsd} />
+
+            <WhatIfPanel destinationId={d.id} destinationName={d.name} request={request} />
 
             <Button href={`/live?city=${encodeURIComponent(`${d.name}, ${d.country}`)}`} variant="outlineBold" size="md">
               Explorar {d.name} en el mapa
