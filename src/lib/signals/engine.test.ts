@@ -24,7 +24,7 @@ describe("Travel Pulse signal engine", () => {
     expect(signalStatus(base, Date.parse("2026-10-27T15:00:00.000Z"))).toBe("caducada");
   });
   it("increases explainable confidence with evidence and corroboration", () => {
-    expect(signalConfidence({ confirmations: 3, evidence: "foto", source: "comunidad" })).toBeGreaterThan(signalConfidence({ confirmations: 0, evidence: "observación directa", source: "demo" }));
+    expect(signalConfidence({ confirmations: 3, evidence: "foto", source: "comunidad" })).toBeGreaterThan(signalConfidence({ confirmations: 0, evidence: "observación directa", source: "comunidad" }));
     expect(signalConfidence({ confirmations: 0, evidence: "foto", source: "comunidad" })).toBe(signalConfidence({ confirmations: 0, evidence: "observación directa", source: "comunidad" }));
   });
 });

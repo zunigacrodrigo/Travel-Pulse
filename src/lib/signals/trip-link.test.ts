@@ -11,7 +11,7 @@ describe("pickRelevantSignal", () => {
     expect(pickRelevantSignal([older, base], "Santiago, Chile", NOW)?.id).toBe("s1");
   });
   it("ignora señales caducadas, de otra ciudad y los ejemplos", () => {
-    const rows = [{ ...base, id: "x1", expiresAt: "2026-11-04T14:00:00Z" }, { ...base, id: "x2", city: "Valparaíso" }, { ...base, id: "x3", source: "demo" }];
+    const rows = [{ ...base, id: "x1", expiresAt: "2026-11-04T14:00:00Z" }, { ...base, id: "x2", city: "Valparaíso" }, { ...base, id: "x3", source: "ejemplo" as never }];
     expect(pickRelevantSignal(rows, "Santiago, Chile", NOW)).toBeNull();
   });
   it("tolera datos inválidos del almacenamiento", () => {

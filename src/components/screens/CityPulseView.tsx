@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DEMO_SIGNALS } from "@/lib/signals/demo";
 import { sameCity, signalConfidence, signalStatus } from "@/lib/signals/engine";
 import type { SignalStatus, TravelSignal } from "@/lib/signals/types";
 import { GlobeHero } from "../lux/GlobeHero";
@@ -39,7 +38,7 @@ function PulseLine({ status }: { status: SignalStatus }) {
 function loadSignals(city: string): TravelSignal[] {
   let saved: TravelSignal[] = [];
   try { const raw = JSON.parse(localStorage.getItem(KEY) ?? "[]"); if (Array.isArray(raw)) saved = raw as TravelSignal[]; } catch { saved = []; }
-  return [...saved, ...DEMO_SIGNALS].filter((s) => sameCity(s.city, city)).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  return saved.filter((s) => sameCity(s.city, city)).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
 export function CityPulseView() {
@@ -160,7 +159,7 @@ export function CityPulseView() {
               {signals.map((s) => { const st = signalStatus(s); return (
                 <article key={s.id} className={`${card} ${st === "caducada" ? "opacity-60" : ""}`}>
                   <div className="flex items-center gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white" style={{ background: TONE[s.type] ?? "#2f6fe0" }} aria-hidden="true">{s.type[0]}</span><div className="min-w-0 flex-1"><h3 className="font-display text-base font-extrabold leading-tight text-fg">{s.title}</h3><p className="text-xs text-mid">{s.place}, {ago(s.createdAt)}</p></div><span className="shrink-0 rounded-md border border-signal/60 px-2 py-1 text-[10px] font-bold text-signal">{s.type}</span></div>
-                  <div className="mt-3 flex items-center gap-2"><PulseLine status={st} /><span className="text-xs text-mid">{st === "reciente" ? "Reciente" : st === "por confirmar" ? "Por confirmar" : "Caducada"}, confianza {signalConfidence(s)} % (estimación){s.source === "demo" ? ", ejemplo" : ""}</span></div>
+                  <div className="mt-3 flex items-center gap-2"><PulseLine status={st} /><span className="text-xs text-mid">{st === "reciente" ? "Reciente" : st === "por confirmar" ? "Por confirmar" : "Caducada"}, confianza {signalConfidence(s)} % (estimación)</span></div>
                   <p className="mt-2 text-sm text-fg2">{s.detail}</p>
                 </article>); })}
               <p className="text-xs text-mid">Las señales de este dispositivo no se comparten con otros viajeros. Los ejemplos están marcados.</p>

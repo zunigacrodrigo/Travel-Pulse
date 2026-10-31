@@ -10,7 +10,8 @@ export type TravelSignal = {
   type: SignalType;
   createdAt: string;
   expiresAt: string;
-  source: "comunidad" | "demo";
+  /** Solo reportes de viajeros. No existen señales de ejemplo: nada simulado. */
+  source: "comunidad";
   evidence: "observación directa" | "foto" | "enlace";
   confirmations: number;
   reporter: string;
