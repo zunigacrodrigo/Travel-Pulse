@@ -19,6 +19,11 @@ export function saveDna(dna: TravelDna): TravelDna {
   return next;
 }
 
+/** Guarda un perfil tal cual, conservando su fecha de edición (sincronización con la nube). */
+export function replaceDna(dna: TravelDna): void {
+  store.set(dna);
+}
+
 /** Borra el perfil por completo, incluida la clave del almacenamiento local. */
 export function clearDna(): void {
   store.set(null);

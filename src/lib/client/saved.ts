@@ -18,7 +18,7 @@ export interface SavedTrip {
   poster?: PosterPalette;
 }
 
-function validateTrips(raw: unknown): SavedTrip[] {
+export function validateTrips(raw: unknown): SavedTrip[] {
   if (!Array.isArray(raw)) return [];
   const out: SavedTrip[] = [];
   for (const item of raw) {
@@ -52,8 +52,34 @@ export function saveTrip(trip: SavedTrip): void {
   store.set([trip, ...rest]);
 }
 
+/** Reemplaza la lista completa (sincronización con la nube). */
+export function replaceTrips(list: SavedTrip[]): void {
+  store.set(list);
+}
+
 export function removeTrip(destinationId: string): void {
   store.set(store.get().filter((t) => t.destinationId !== destinationId));
+  void removeFromCloud(destinationId);
+}
+
+/**
+ * Con sesión iniciada, quita también el guardado de la nube; si no, la próxima sincronización
+ * lo traería de vuelta. Es un mejor esfuerzo: sin sesión, sin nube o sin red no pasa nada.
+ * Import dinámico para no crear un ciclo con la capa de sincronización.
+ */
+async function removeFromCloud(destinationId: string): Promise<void> {
+  try {
+    const { getCloud } = await import("@/lib/cloud/client");
+    const db = getCloud();
+    if (!db) return;
+    const { data } = await db.auth.getSession();
+    const userId = data.session?.user.id;
+    if (!userId) return;
+    const { supabaseStore } = await import("@/lib/cloud/supabase-store");
+    await supabaseStore(db).deleteSaved(userId, destinationId);
+  } catch {
+    /* sin red o sin sesión: queda solo el borrado local */
+  }
 }
 
 /** Lista guardada; null mientras no se ha hidratado el cliente. */

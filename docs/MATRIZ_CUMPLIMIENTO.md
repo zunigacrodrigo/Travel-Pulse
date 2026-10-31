@@ -1,6 +1,6 @@
 # Matriz de cumplimiento — Prompt Maestro 2.0
 
-Fecha: 31 de octubre de 2026 · Versión: 0.3.2 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
+Fecha: 31 de octubre de 2026 · Versión: 0.4.0 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
 
 Estados (del prompt, sección 32): **Implementado y verificado** · Implementado sin validar · **Parcial** · **Pendiente** · Bloqueado · No viable en el entorno actual.
 
@@ -60,3 +60,12 @@ No declaro el producto terminado: los gates C y D están abiertos y B está parc
 Los módulos no son pantallas aisladas. Flujo actual verificado de punta a punta:
 **Travel DNA → precarga la búsqueda → ranking (riesgo oficial vivo) → ficha del destino → What-If → comparación con tu plan.** Paralelo: **Inicio → Radar en vivo → ficha del destino.**
 Falta cerrar el ciclo hacia Trip Twin: del destino elegido al itinerario editable.
+
+## 5. Cuentas y nube (0.4.0)
+
+| Pieza | Estado |
+|---|---|
+| Esquema y RLS (`0004`) | **Implementado y verificado** contra Postgres 16 real: 24 comprobaciones con dos usuarios |
+| Sincronización DNA, guardados y viaje activo | **Implementado y verificado** con fakes (13 pruebas) y en navegador con Supabase simulado (19 de 19) |
+| Contra un proyecto Supabase real y correo real | **Implementado sin validar** en producción: requiere que apliques `docs/CONFIGURAR_NUBE.md` |
+| PulseMesh en servidor | Pendiente (sigue en el navegador) |

@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+// Origen de Supabase para permitir solo esa conexión en `connect-src` (vacío si no hay nube configurada).
+const supabaseOrigin = (() => {
+  try {
+    const u = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
+    return u.protocol === "https:" ? u.origin : "";
+  } catch {
+    return "";
+  }
+})();
+
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -14,7 +25,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://images.unsplash.com",
       "font-src 'self'",
-      "connect-src 'self'",
+      `connect-src 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`,
       "frame-src 'self' https://www.openstreetmap.org",
       "frame-ancestors 'none'",
       "base-uri 'self'",

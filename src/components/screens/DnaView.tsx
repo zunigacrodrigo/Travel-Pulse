@@ -277,6 +277,9 @@ function Editor({ initial, exists }: { initial: TravelDna; exists: boolean }) {
         )}
       </section>
 
+      <Link href="/cuenta" className="text-[13px] font-semibold underline underline-offset-2">
+        Respaldar en mi cuenta (opcional)
+      </Link>
       <Link href="/" className="text-[13px] font-semibold underline underline-offset-2">
         Volver al inicio
       </Link>
