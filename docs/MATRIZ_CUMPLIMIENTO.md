@@ -1,6 +1,6 @@
 # Matriz de cumplimiento — Prompt Maestro 2.0
 
-Fecha: 31 de octubre de 2026 · Versión: 0.5.0 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
+Fecha: 31 de octubre de 2026 · Versión: 0.5.1 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
 
 Estados (del prompt, sección 32): **Implementado y verificado** · Implementado sin validar · **Parcial** · **Pendiente** · Bloqueado · No viable en el entorno actual.
 
@@ -84,3 +84,15 @@ Regla del dueño: solo datos reales. Detalle en `docs/CATALOGO_FUENTES.md`.
 | Trip Twin de demostración y `client/mock.ts` (modo demo) | **Pendiente de eliminar:** siguen siendo datos sintéticos |
 | What-If y costo total en la ficha | **No viable** hasta conectar precios reales |
 | Puntaje publicado | Ningún destino alcanza el 40 % de confianza hoy |
+
+## 7. PulseMesh (0.5.1)
+
+| Pieza | Estado |
+|---|---|
+| Reportes de comunidad inventados | **Eliminados** (Pulso y vista de ciudad ya no mezclan datos de ejemplo) |
+| Base de datos de reportes, confirmaciones independientes, caducidad y marcas | **Implementado y verificado** en Postgres real: 66 comprobaciones y prueba de mutación (3 de 3 detectadas) |
+| Reportar y confirmar desde la app (API y pantallas) | **Pendiente** |
+| Agrupar observaciones, contrastar con fuentes oficiales y estructurar con IA | **Pendiente** (la IA nunca se ha probado con clave real) |
+| Defensa contra cuentas múltiples y moderación | **Pendiente** |
+| Seguridad como categoría | **Fuera del piloto** hasta tener moderación |
+| Piloto | Santiago, São Paulo, Valparaíso |

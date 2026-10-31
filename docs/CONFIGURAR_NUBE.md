@@ -9,7 +9,7 @@ Con sesión iniciada (enlace por correo, sin contraseña) se sincronizan **Trave
 
 1. **Proyecto de Supabase.** Crea uno exclusivo para Travel Pulse.
 2. **Aplicar el esquema, en orden**, con la CLI (`supabase link --project-ref <ref>` y `supabase db push`) o pegando en el editor SQL:
-   `0001_init.sql` → `0002_gap_view.sql` → `0003_mark_seed_prices_as_estimates.sql` → **`0004_user_cloud_data.sql`**.
+   `0001_init.sql` → `0002_gap_view.sql` → `0003_mark_seed_prices_as_estimates.sql` → `0004_user_cloud_data.sql` → **`0005_pulsemesh.sql`**.
    Luego carga el catálogo: `supabase/seed.sql` (los guardados dependen de que existan los destinos).
 3. **Autenticación → Providers → Email:** activa el acceso por enlace mágico.
 4. **Autenticación → URL Configuration:** *Site URL* = el dominio de producción; en *Redirect URLs* agrega `https://<tu-dominio>/cuenta` y, para pruebas, `http://localhost:3000/cuenta` y las URLs de previsualización de Vercel.
@@ -30,3 +30,16 @@ límites de 50 viajes y 200 guardados por usuario; tamaños acotados; `delete_my
 - La entrega del correo depende del proveedor de correo de tu proyecto (el integrado de Supabase tiene límites bajos; para producción conviene un SMTP propio).
 - Borrar una cuenta de acceso por completo no está en la app: «Borrar mis datos en la nube» elimina los datos, no el inicio de sesión.
 - Si quitas un guardado sin red estando con sesión, la nube lo conserva y volverá en la próxima sincronización.
+
+## PulseMesh (viajeros como sensores) — base de datos lista, app pendiente
+`0005_pulsemesh.sql` crea los reportes de viajeros, sus confirmaciones y las marcas de la comunidad. Piloto: **Santiago, São Paulo y Valparaíso**; categorías **condiciones, precios, afluencia y descubrimientos** (seguridad queda fuera hasta tener moderación).
+
+Reglas que impone la base de datos (66 comprobaciones en `supabase/tests/`, con prueba de mutación):
+- La ubicación se guarda con 2 decimales (~1 km) aunque el cliente envíe más precisión.
+- La lectura pública pasa por la vista `pulse_signals_public`, **sin identidad del autor**; nadie ve quién confirmó.
+- **Una persona, un voto:** no se confirma el propio reporte ni se confirma dos veces. El estado «corroborada» exige 3 contribuyentes distintos; «en disputa», 2 o más que contradicen.
+- Los reportes son inmutables y caducan solos (afluencia 6 h, condiciones 24 h, precios 14 días, descubrimientos 30 días); la vigencia la fija el servidor.
+- Límites: 20 reportes y 100 confirmaciones por día; 3 marcas de personas distintas ocultan un reporte.
+- `delete_my_cloud_data()` también borra los reportes, confirmaciones y marcas de la persona.
+
+**Límite conocido:** la base de datos no puede impedir que una misma persona use varias cuentas. La independencia es por cuenta; la defensa contra cuentas múltiples (verificación, reputación gradual, detección de patrones) está por construir.

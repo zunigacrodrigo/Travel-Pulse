@@ -40,12 +40,15 @@ if len(s) == n0 or "geography" in s:
     sys.exit("No se pudo adaptar 0001 para PostgreSQL sin PostGIS")
 print(s)
 PY
-chmod 644 "$DIR/0001.sql"; cp "$MIG/0004_user_cloud_data.sql" "$DIR/0004.sql"; chmod 644 "$DIR/0004.sql"
+chmod 644 "$DIR/0001.sql"; cp "$MIG/0004_user_cloud_data.sql" "$DIR/0004.sql"; cp "$MIG/0005_pulsemesh.sql" "$DIR/0005.sql"; chmod 644 "$DIR/0004.sql" "$DIR/0005.sql"
 run "$P -d t -f $DIR/0001.sql" >/dev/null
 run "$P -d t -f $DIR/0004.sql" >/dev/null
-echo "Migraciones 0001 y 0004 aplicadas."
+run "$P -d t -f $DIR/0005.sql" >/dev/null
+echo "Migraciones 0001, 0004 y 0005 aplicadas."
 cp "$HERE/rls.sql" "$DIR/rls.sql"; chmod 644 "$DIR/rls.sql"
 run "$P -d t -f $DIR/rls.sql" 2>&1
+cp "$HERE/rls_pulsemesh.sql" "$DIR/rls_pulsemesh.sql"; chmod 644 "$DIR/rls_pulsemesh.sql"
+run "$P -d t -f $DIR/rls_pulsemesh.sql" 2>&1
 
 # El seed generado (datos reales + ausencias declaradas) debe cargarse sin errores y sin precios inventados.
 cp "$HERE/../seed.sql" "$DIR/seed.sql"; chmod 644 "$DIR/seed.sql"

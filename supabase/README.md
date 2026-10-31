@@ -8,6 +8,7 @@ Esquema Postgres + PostGIS para las tablas de Fase 1 (documento maestro, seccion
 |---|---|
 | `migrations/0001_init.sql` | Extensiones, tablas, índices, triggers y políticas RLS |
 | `migrations/0004_user_cloud_data.sql` | Travel DNA, guardados con instantánea y `user_trips` por usuario (RLS, límites, `delete_my_cloud_data`). Ver `docs/CONFIGURAR_NUBE.md` |
+| `migrations/0005_pulsemesh.sql` | PulseMesh: reportes de viajeros, confirmaciones independientes, caducidad, marcas y vista pública sin identidades |
 | `tests/rls.sh` | Prueba las políticas RLS contra un Postgres temporal con dos usuarios |
 | `migrations/0002_gap_view.sql` | Expectation Gap agregado: vista interna y funciones públicas (solo n ≥ 10) |
 | `seed.sql` | Datos curados V1 (30 destinos), **generado**; no editar a mano |
