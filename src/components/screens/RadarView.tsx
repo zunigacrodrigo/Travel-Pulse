@@ -10,6 +10,7 @@ import { getRadar, type RadarResponse } from "@/lib/client/api";
 import { useAsync } from "@/lib/client/hooks";
 import type { FeedStatus } from "@/lib/sources/live";
 import type { DestinationLive } from "@/lib/sources/overlay";
+import { summarizeRadar, type RadarSummary, type RiskLevel } from "@/lib/sources/radar-summary";
 import { PageHeader } from "../ui/PageHeader";
 import { Button } from "../ui/Button";
 
@@ -101,6 +102,74 @@ function RadarMap({ data }: { data: RadarResponse }) {
   );
 }
 
+
+const polar = (cx: number, cy: number, r: number, deg: number) => [cx + r * Math.cos((deg * Math.PI) / 180), cy - r * Math.sin((deg * Math.PI) / 180)] as const;
+function arc(a0: number, a1: number) {
+  const [x0, y0] = polar(100, 100, 78, a0);
+  const [x1, y1] = polar(100, 100, 78, a1);
+  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A 78 78 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+
+/** Medidor del nivel más alto observado entre los destinos. No es un promedio ni una predicción. */
+function RiskGauge({ summary }: { summary: RadarSummary }) {
+  const id = useId();
+  const levels: RiskLevel[] = [1, 2, 3, 4];
+  const max = summary.maxLevel;
+  const needle = max ? polar(100, 100, 62, 180 - (max - 0.5) * 45) : null;
+  return (
+    <section aria-labelledby={`${id}-h`} className="rounded-2xl bg-panel p-4 text-panel-fg">
+      <h2 id={`${id}-h`} className="text-[11px] font-bold uppercase tracking-[0.12em] text-panel-mid">
+        Nivel más alto observado
+      </h2>
+      <svg viewBox="0 0 200 118" role="img" aria-label={max ? `Medidor: nivel ${max} de 4, ${LEVEL_LABEL[max]}` : "Medidor sin datos"} className="mx-auto mt-2 h-auto w-full max-w-[240px]">
+        {levels.map((l) => (
+          <path key={l} d={arc(180 - (l - 1) * 45 - 2, 180 - l * 45 + 2)} fill="none" stroke={LEVEL_FILL[l]} strokeWidth={14} strokeLinecap="butt" opacity={max === l ? 1 : 0.35} />
+        ))}
+        {needle ? <line x1={100} y1={100} x2={needle[0]} y2={needle[1]} stroke="var(--c-panel-fg)" strokeWidth={3} strokeLinecap="round" /> : null}
+        <circle cx={100} cy={100} r={6} fill="var(--c-panel-fg)" />
+      </svg>
+      <p className="text-center font-display text-[22px] font-extrabold leading-tight">{max ? `Nivel ${max} · ${LEVEL_LABEL[max]}` : "Sin datos"}</p>
+      <ul className="mt-3 grid grid-cols-4 gap-1 text-center text-[11px] text-panel-fg2" aria-label="Destinos por nivel">
+        {levels.map((l) => (
+          <li key={l} className="rounded-lg bg-white/5 py-1.5">
+            <b className="block text-[15px] text-panel-fg">{summary.counts[l]}</b>
+            Nivel {l}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[11px] leading-4 text-panel-mid">Es el nivel más alto entre {summary.withData} destinos con dato, según el aviso del FCDO. No es una predicción.</p>
+    </section>
+  );
+}
+
+function ActiveAlerts({ summary }: { summary: RadarSummary }) {
+  const id = useId();
+  return (
+    <section aria-labelledby={`${id}-h`} className="rounded-2xl bg-panel p-4 text-panel-fg">
+      <h2 id={`${id}-h`} className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.12em] text-panel-mid">
+        Alertas activas <span className="rounded-full bg-white/10 px-2 py-0.5 text-panel-fg">{summary.alerts.length}</span>
+      </h2>
+      {summary.alerts.length === 0 ? (
+        <p className="mt-3 text-[13px] text-panel-fg2">No hay avisos de nivel 2 o más ni sismos relevantes cerca de los destinos.</p>
+      ) : (
+        <ul className="mt-3 flex max-h-[260px] flex-col gap-2 overflow-y-auto pr-1">
+          {summary.alerts.map((a) => (
+            <li key={a.id} className="rounded-xl border border-white/10 bg-white/5 p-2.5" style={{ borderLeft: `4px solid ${a.level ? LEVEL_FILL[a.level] : "var(--c-panel-fg)"}` }}>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-panel-mid">{a.kind === "advisory" ? `Aviso · nivel ${a.level}` : "Sismo"}</p>
+              {a.href ? (
+                <Link href={a.href} className="text-[13px] font-bold underline-offset-2 hover:underline">{a.title}</Link>
+              ) : (
+                <p className="text-[13px] font-bold">{a.title}</p>
+              )}
+              <p className="text-[12px] leading-4 text-panel-fg2">{a.detail}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function Row({ d }: { d: DestinationLive }) {
   const q = d.quakes;
   return (
@@ -149,6 +218,7 @@ function Row({ d }: { d: DestinationLive }) {
 
 export function RadarView() {
   const radar = useAsync<RadarResponse>((signal) => getRadar(signal), "radar");
+  const summary = useMemo(() => summarizeRadar(radar.data?.destinations ?? []), [radar.data]);
   const rows = useMemo(
     () =>
       [...(radar.data?.destinations ?? [])].sort(
@@ -185,16 +255,22 @@ export function RadarView() {
                 Las fuentes en vivo están desactivadas en este servidor; se muestran los datos de nuestra base.
               </p>
             ) : null}
-            <ul aria-label="Estado de las fuentes" className="grid gap-2 sm:grid-cols-2">
+            <ul aria-label="Estado de las fuentes" className="flex flex-col gap-2">
               <StatusChip name="Avisos FCDO" s={radar.data.status.fcdo} />
               <StatusChip name="Sismos USGS" s={radar.data.status.usgs} />
             </ul>
-            <RadarMap data={radar.data} />
+            <div className="flex flex-col gap-4">
+              <RadarMap data={radar.data} />
+              <div className="flex flex-col gap-4">
+                <RiskGauge summary={summary} />
+                <ActiveAlerts summary={summary} />
+              </div>
+            </div>
             <section aria-labelledby="radar-list">
               <h2 id="radar-list" className="mb-2 font-display text-[18px] font-extrabold">
                 Destinos por nivel de riesgo
               </h2>
-              <ul className="grid gap-3 md:grid-cols-2">
+              <ul className="flex flex-col gap-3">
                 {rows.map((d) => (
                   <Row key={d.id} d={d} />
                 ))}

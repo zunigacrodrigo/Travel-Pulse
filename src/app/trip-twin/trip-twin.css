@@ -50,3 +50,17 @@
 .tt-history-list h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
 .tt-history-list ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .tt-history-list li { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+
+.tt-budget { margin: 16px 0; padding: 14px; border-radius: 14px; border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(10, 20, 38, 0.5); }
+.tt-budget header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.tt-budget h3 { margin: 0; font-size: 14px; }
+.tt-budget header small { color: #8fa3ba; font-size: 12px; }
+.tt-budget-track { height: 8px; border-radius: 999px; background: rgba(148, 163, 184, 0.2); margin: 10px 0; overflow: hidden; }
+.tt-budget-track span { display: block; height: 100%; background: #46d4f2; border-radius: 999px; }
+.tt-budget-track span.over { background: #ff8a78; }
+.tt-budget ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.tt-budget li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 13px; }
+.tt-budget li small { display: block; color: #8fa3ba; font-size: 11px; }
+.tt-budget-bar { height: 6px; border-radius: 999px; background: rgba(148, 163, 184, 0.2); overflow: hidden; }
+.tt-budget-bar span { display: block; height: 100%; background: #46d4f2; }
+.tt-budget-note { margin: 10px 0 0; font-size: 11px; color: #8fa3ba; }

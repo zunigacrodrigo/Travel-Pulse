@@ -1,6 +1,6 @@
 # Matriz de cumplimiento — Prompt Maestro 2.0
 
-Fecha: 31 de octubre de 2026 · Versión: 0.3.1 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
+Fecha: 31 de octubre de 2026 · Versión: 0.3.2 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
 
 Estados (del prompt, sección 32): **Implementado y verificado** · Implementado sin validar · **Parcial** · **Pendiente** · Bloqueado · No viable en el entorno actual.
 
@@ -21,7 +21,7 @@ Estados (del prompt, sección 32): **Implementado y verificado** · Implementado
 | 9 | PulseMesh | Parcial | `/live` y `/api/signals`: señales con vigencia y confianza, solo en el navegador | Sin servidor, moderación ni corroboración entre usuarios | 5 |
 | 10 | Reality Check | Parcial | `realityCheck` compara el destino con una alternativa similar; Expectation Gap antes/durante/después | No contrasta información publicada con reportes recientes | 4 |
 | 11 | Safety Intelligence | Parcial | Factor "riesgo" con nivel 1–4 (excluye el 4) alimentado por el aviso del FCDO en vivo (14 países), con fuente, fecha de consulta y degradación declarada; sismos USGS por destino en `/radar` | **Fuentes reales no probadas desde este entorno** (sin salida a internet): verificado con servidor falso de la misma forma; un solo gobierno como fuente; sin alertas locales ni clima extremo | 4 |
-| 12 | Travel Radar | Parcial | `/radar` + `/api/radar`: mapa mundial, riesgo oficial y sismos por destino, estado y hora de cada fuente (11 pruebas E2E con fuentes simuladas, móvil y escritorio) | Detección de **cambios** en el tiempo (series): no existe; sin tendencias | 6 |
+| 12 | Travel Radar | Parcial | **0.3.2: medidor del nivel más alto observado y lista de alertas activas (verificado en móvil, tablet y escritorio).** `/radar` + `/api/radar`: mapa mundial, riesgo oficial y sismos por destino, estado y hora de cada fuente (11 pruebas E2E con fuentes simuladas, móvil y escritorio) | Detección de **cambios** en el tiempo (series): no existe; sin tendencias | 6 |
 | 13 | What-If Simulator | **Implementado y verificado** (nivel destino) | `whatif.ts` (13 pruebas), `/api/what-if` (9 caminos probados), panel en la ficha, E2E móvil y escritorio | What-If a nivel itinerario (quitar una actividad, "si llueve") no existe | 3 |
 | 14 | Hidden / Rising Gems | Pendiente | Sorpresa elige al azar entre candidatos; no mide interés creciente | Señales de tendencia reales | 6 |
 | 15 | Traveler Radar | Pendiente | — | Comunidad y privacidad | 7 |

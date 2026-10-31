@@ -4,7 +4,7 @@ const minute = 60_000;
 const iso = (ms: number) => new Date(ms).toISOString();
 const intersects = (aStart: number, aEnd: number, bStart: number, bEnd: number) => aStart < bEnd && bStart < aEnd;
 
-function activityCost(activity: Activity, travelers: number): number | null {
+export function activityCost(activity: Activity, travelers: number): number | null {
   if (activity.cost.amount === null || activity.cost.basis === "unknown") return null;
   return activity.cost.basis === "per_person" ? activity.cost.amount * travelers : activity.cost.amount;
 }

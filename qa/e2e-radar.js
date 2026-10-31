@@ -32,7 +32,7 @@ const step = async (n, fn) => { try { await fn(); results.push(['PASS', n]); } c
       assert.ok(await p.locator('svg g circle').count() >= 10);
     });
     await step(`A[${tag}]: Cusco muestra aviso FCDO con fecha, enlace y sismo M6,1`, async () => {
-      const row = p.locator('li', { has: p.getByRole('link', { name: 'Cusco' }) });
+      const row = p.locator('#radar-list ~ ul > li', { has: p.getByRole('link', { name: 'Cusco' }) });
       const t = await row.innerText();
       assert.match(t, /Precaución/); assert.match(t, /Aviso del FCDO \(Reino Unido\), consultado el \d{4}-\d{2}-\d{2}/);
       assert.match(t, /M6,1/);
@@ -62,7 +62,7 @@ const step = async (n, fn) => { try { await fn(); results.push(['PASS', n]); } c
       await list.waitFor();
       const t = await list.innerText();
       assert.match(t, /Avisos FCDO: sin conexión/); assert.match(t, /Sismos USGS: sin conexión/);
-      const row = p.locator('li', { has: p.getByRole('link', { name: 'Cusco' }) });
+      const row = p.locator('#radar-list ~ ul > li', { has: p.getByRole('link', { name: 'Cusco' }) });
       assert.match(await row.innerText(), /no se pudo verificar en vivo/);
     });
     await p.screenshot({ path: `${OUT}/radar-sin-conexion.png`, fullPage: true });
