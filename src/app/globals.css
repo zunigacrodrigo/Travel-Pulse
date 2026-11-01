@@ -457,3 +457,13 @@ h3 {
 .tp-lift { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
 .tp-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -12px rgba(70, 212, 242, .35); border-color: var(--signal); }
 @media (prefers-reduced-motion: reduce) { .tp-lift:hover { transform: none; } }
+
+/* «Mi día en la ciudad»: pantalla de escritorio de tres paneles. En móvil se apila y conserva la barra inferior. */
+@media (min-width: 1024px) {
+  body:has(.day-route) .app-frame { max-width: 1600px; }
+  body:has(.day-route) .tabbar { display: none; }
+}
+.day-route .leaflet-container { background: #0e1b2d; font-family: inherit; border-radius: 16px; }
+.day-route .leaflet-tile-pane { filter: brightness(.82) contrast(1.08) saturate(.9); }
+.day-pin { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: #46d4f2; color: #06121f; font: 800 14px/1 var(--font-archivo), sans-serif; border: 2px solid #06121f; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.day-pin.is-origin { background: #fff; }

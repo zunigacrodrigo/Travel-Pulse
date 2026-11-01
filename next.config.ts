@@ -23,7 +23,7 @@ const securityHeaders = [
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://images.unsplash.com",
+      "img-src 'self' data: blob: https://images.unsplash.com https://tile.openstreetmap.org https://thumb.wikimedia.org https://upload.wikimedia.org",
       "font-src 'self'",
       `connect-src 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`,
       "frame-src 'self' https://www.openstreetmap.org",

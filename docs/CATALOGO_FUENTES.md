@@ -32,3 +32,21 @@ Con 4 de 8 factores reales la confianza ronda 35-37 %, bajo el umbral de 40 %. C
 
 ## Variables de entorno
 `LIVE_SOURCES=0` desactiva las fuentes vivas · `TP_FCDO_BASE` / `TP_USGS_BASE` apuntan a otro servidor (pruebas, `qa/mock-sources.js`). Para refrescar clima e interés: `NODE_USE_ENV_PROXY=1 node scripts/fetch-real-data.mjs` (reanudable).
+
+## «Mi día en la ciudad» (0.7.0): fuentes y hallazgos verificados con datos reales (1-nov-2026)
+
+| Dato | Fuente | Estado y límites |
+|---|---|---|
+| Lugares (museos, galerías y centros culturales, restaurantes, pubs, parques) | OpenStreetMap vía **Nominatim** (ODbL) | ✅ Consulta con pausa de 1 s y caché de 6 h. **Overpass no responde desde el entorno de desarrollo**; no se usa. |
+| Horario de apertura | Etiqueta `opening_hours` de OSM | ⚠️ Museos ~50 %, restaurantes y pubs ~15 %. Se interpreta con un intérprete propio (21 pruebas con horarios reales). **Lo no interpretable se muestra como «horario sin confirmar»; nunca se supone abierto.** |
+| Traslados | **OSRM de FOSSGIS** (`routing.openstreetmap.de`) | ✅ A pie y en auto por separado. **El servidor de demostración de project-osrm.org ignora el modo y devuelve tiempos en auto** (9,6 min para 2,6 km «a pie»): no se usa. Los tiempos en auto no incluyen tráfico. |
+| Pronóstico por hora | Open-Meteo | ✅ Hasta ~15 días. Fuera de alcance: se dice y no se evalúa la lluvia. |
+| Foto y descripción | Wikipedia (artículo enlazado por la etiqueta `wikipedia` de OSM) | ✅ Solo para lugares notables (museos 25/40, centros 5/9; restaurantes y pubs: ninguno). Las miniaturas vienen de **`thumb.wikimedia.org`**. Se muestra siempre la atribución. |
+| Fila, precio pagado, «está bueno», «cerró» | Viajeros (PulseMesh) | Base lista; vacío hasta que haya reportes. |
+| Precio de entradas y comidas | — | ❌ Sin fuente real. |
+
+### Lo que descubrió probar con datos reales (y se corrigió)
+- Las galerías de São Paulo casi no están como `tourism=gallery`: son `amenity=arts_centre` (Tomie Ohtake, CCBB, SESC Paulista…); las galerías de arte salen buscando en portugués («galeria de arte»).
+- Un horario como `Tu-Fr 18:00-03:30` mostraba «cierra 00:00»: se recortaba a medianoche.
+- Un «almuerzo» se programaba a las 18:00 porque el primer restaurante abría a esa hora: ahora una espera de más de 60 min descarta el lugar salvo que no haya otra opción, y se avisa.
+- Los resultados de Nominatim para la misma consulta pueden variar entre llamadas: el plan puede cambiar al reiniciar el servidor (la caché dura 6 h por proceso).

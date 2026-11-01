@@ -95,6 +95,13 @@ export const Minus = (p: IconProps) => (
     <path d="M5 12h14" />
   </Svg>
 );
+export const Calendar = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+    <path d="M3.5 10h17M8 3v4M16 3v4" />
+  </Svg>
+);
+
 export const UserIcon = (p: IconProps) => (
   <Svg {...p} strokeWidth={p.strokeWidth ?? 2.2}>
     <circle cx="12" cy="8" r="4" />

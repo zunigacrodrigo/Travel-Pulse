@@ -1,6 +1,6 @@
 # Matriz de cumplimiento — Prompt Maestro 2.0
 
-Fecha: 31 de octubre de 2026 · Versión: 0.6.0 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
+Fecha: 31 de octubre de 2026 · Versión: 0.7.0 · Base: repositorio público (fa2a030) + parche de auditoría del 28-oct + incremento de esta sesión.
 
 Estados (del prompt, sección 32): **Implementado y verificado** · Implementado sin validar · **Parcial** · **Pendiente** · Bloqueado · No viable en el entorno actual.
 
@@ -96,3 +96,21 @@ Regla del dueño: solo datos reales. Detalle en `docs/CATALOGO_FUENTES.md`.
 | Defensa contra cuentas múltiples y moderación | **Pendiente** |
 | Seguridad como categoría | **Fuera del piloto** hasta tener moderación |
 | Piloto | Santiago, São Paulo, Valparaíso |
+
+## 8. «Mi día en la ciudad» (0.7.0): primera experiencia nueva
+
+Especificación y criterios en `docs/PRD_DIA_EN_LA_CIUDAD.md`.
+
+| Criterio del PRD | Estado |
+|---|---|
+| Armar el día con horarios reales: nada fuera de horario, horario desconocido = «sin confirmar» | **Implementado y verificado** (planificador con mutaciones: 3 de 3 detectadas; intérprete de horarios con 21 pruebas sobre datos reales) |
+| Traslados reales a pie y en auto sin tráfico | **Implementado y verificado** (OSRM de FOSSGIS; se descartó el servidor de demostración por devolver tiempos en auto) |
+| Pantalla de escritorio de tres paneles (barra lateral, itinerario, mapa con clima y viajeros) y apilada en móvil | **Implementado y verificado** (37 comprobaciones en navegador, móvil y escritorio) |
+| Mapa real con paradas numeradas | **Implementado y verificado** |
+| Foto y descripción de Wikipedia con atribución | **Implementado y verificado** (solo lugares con artículo) |
+| Lluvia por hora, «está lloviendo» (cambia al aire libre por techo) y «quiero un pub» | **Implementado y verificado** |
+| Cambiar un lugar por otro cercano, quitarlo, ver por qué se eligió | **Implementado y verificado** |
+| Señales de viajeros por lugar y por zona | **Parcial:** panel de reportes de la ciudad; **no por lugar**; vacío hasta que haya reportes y Supabase conectado |
+| Guardar y deshacer el día (historial de Trip Twin) | **Pendiente** |
+| Precio de entradas y comidas; eventos de la Fórmula 1; aforo en tiempo real | **No viable hoy** (sin fuente real) |
+| Probado en producción con Supabase real | **Pendiente** |
