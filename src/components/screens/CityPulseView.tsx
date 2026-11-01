@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getCloud } from "@/lib/cloud/client";
 import { sameCity, signalConfidence, signalStatus } from "@/lib/signals/engine";
 import type { SignalStatus, TravelSignal } from "@/lib/signals/types";
+import { PulseMeshPanel } from "../PulseMeshPanel";
 import { GlobeHero } from "../lux/GlobeHero";
 import { ThemeToggle } from "../ui/ThemeToggle";
 
@@ -96,7 +98,7 @@ export function CityPulseView() {
   const bbox = data ? `${data.coordinates.lon - 0.06},${data.coordinates.lat - 0.04},${data.coordinates.lon + 0.06},${data.coordinates.lat + 0.04}` : "";
 
   return (
-    <main className="flex-1 px-5 pb-28 pt-5">
+    <main className="flex-1 overflow-x-clip px-5 pb-28 pt-5">
       <div className="flex items-center justify-between"><Link href="/" className="font-display text-xl font-extrabold text-fg">Travel <span className="text-signal">Pulse</span></Link><ThemeToggle /></div>
       <form onSubmit={submit} className="mt-4 flex gap-2" role="search">
         <label htmlFor="cp-city" className="sr-only">Ciudad y país</label>
@@ -155,14 +157,16 @@ export function CityPulseView() {
               <ul className="mt-3 list-disc pl-5 text-xs text-mid">{data.limitations.map((l) => <li key={l}>{l}</li>)}</ul></div>)}
 
             {tab === "Señales" && (<>
-              {signals.length === 0 && <p className="text-sm text-fg2">Aún no hay señales de viajeros en {data.city}. Sé la primera persona en <Link className="font-semibold underline" href={`/live?city=${q}`}>reportar una</Link>.</p>}
+              <PulseMeshPanel cityName={data.city} country={data.country} />
+              {signals.length > 0 && <h3 className="mt-2 font-display text-base font-extrabold text-fg">Notas guardadas en este dispositivo</h3>}
+              {signals.length === 0 && getCloud() === null && <p className="text-sm text-fg2">Aún no hay notas en {data.city}. Puedes <Link className="font-semibold underline" href={`/live?city=${q}`}>guardar una</Link>; quedará solo en este dispositivo.</p>}
               {signals.map((s) => { const st = signalStatus(s); return (
                 <article key={s.id} className={`${card} ${st === "caducada" ? "opacity-60" : ""}`}>
                   <div className="flex items-center gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white" style={{ background: TONE[s.type] ?? "#2f6fe0" }} aria-hidden="true">{s.type[0]}</span><div className="min-w-0 flex-1"><h3 className="font-display text-base font-extrabold leading-tight text-fg">{s.title}</h3><p className="text-xs text-mid">{s.place}, {ago(s.createdAt)}</p></div><span className="shrink-0 rounded-md border border-signal/60 px-2 py-1 text-[10px] font-bold text-signal">{s.type}</span></div>
                   <div className="mt-3 flex items-center gap-2"><PulseLine status={st} /><span className="text-xs text-mid">{st === "reciente" ? "Reciente" : st === "por confirmar" ? "Por confirmar" : "Caducada"}, confianza {signalConfidence(s)} % (estimación)</span></div>
                   <p className="mt-2 text-sm text-fg2">{s.detail}</p>
                 </article>); })}
-              <p className="text-xs text-mid">Las señales de este dispositivo no se comparten con otros viajeros. Los ejemplos están marcados.</p>
+              <p className="text-xs text-mid">Las notas de este dispositivo no se comparten con otros viajeros.</p>
             </>)}
           </section>
         </>

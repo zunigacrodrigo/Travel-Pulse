@@ -31,7 +31,7 @@ límites de 50 viajes y 200 guardados por usuario; tamaños acotados; `delete_my
 - Borrar una cuenta de acceso por completo no está en la app: «Borrar mis datos en la nube» elimina los datos, no el inicio de sesión.
 - Si quitas un guardado sin red estando con sesión, la nube lo conserva y volverá en la próxima sincronización.
 
-## PulseMesh (viajeros como sensores) — base de datos lista, app pendiente
+## PulseMesh (viajeros como sensores)
 `0005_pulsemesh.sql` crea los reportes de viajeros, sus confirmaciones y las marcas de la comunidad. Piloto: **Santiago, São Paulo y Valparaíso**; categorías **condiciones, precios, afluencia y descubrimientos** (seguridad queda fuera hasta tener moderación).
 
 Reglas que impone la base de datos (66 comprobaciones en `supabase/tests/`, con prueba de mutación):
@@ -43,3 +43,9 @@ Reglas que impone la base de datos (66 comprobaciones en `supabase/tests/`, con 
 - `delete_my_cloud_data()` también borra los reportes, confirmaciones y marcas de la persona.
 
 **Límite conocido:** la base de datos no puede impedir que una misma persona use varias cuentas. La independencia es por cuenta; la defensa contra cuentas múltiples (verificación, reputación gradual, detección de patrones) está por construir.
+
+### Dónde se usa en la app
+Pestaña **Señales** de «Pulso de ciudad» (`/ciudad`). Lectura pública; para **reportar, confirmar, contradecir, marcar o borrar** hace falta iniciar sesión (`/cuenta`). El piloto solo está abierto en Santiago, São Paulo y Valparaíso: en otras ciudades el panel lo dice y no consulta nada.
+- Sin Supabase configurado, el panel explica que los reportes compartidos necesitan cuentas.
+- La ubicación es opcional, aproximada (~1 km) y **se decide en cada reporte**: la casilla no queda activada.
+- Se corrigió la política de permisos del navegador para que la propia app pueda pedir la ubicación (`geolocation=(self)`); cámara y micrófono siguen bloqueados.
