@@ -73,3 +73,28 @@ export async function fetchDayWeather(
   const hours = parseHourly(raw, isoDate);
   return hours.length ? hours : null;
 }
+
+/** Minutos desde medianoche del atardecer («2026-11-05T18:23») de una fecha, o null. */
+export function parseSunset(raw: unknown, isoDate: string): number | null {
+  if (!isRecord(raw) || !isRecord(raw.daily) || !Array.isArray(raw.daily.time) || !Array.isArray(raw.daily.sunset)) return null;
+  const i = (raw.daily.time as unknown[]).indexOf(isoDate);
+  const t = i >= 0 ? raw.daily.sunset[i] : null;
+  const m = typeof t === "string" ? /T(\d{2}):(\d{2})/.exec(t) : null;
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+
+export interface DayConditions { hours: HourWeather[]; sunsetMin: number | null }
+
+/** Pronóstico por hora y hora del atardecer. `null` si la fecha está fuera del alcance. Lanza si la fuente falla. */
+export async function fetchDayConditions(
+  lat: number, lon: number, isoDate: string, timezone: string, now: Date,
+  opts: FetchOptions & { base?: string } = {},
+): Promise<DayConditions | null> {
+  const ahead = (Date.parse(`${isoDate}T12:00:00Z`) - now.getTime()) / 86_400_000;
+  if (!Number.isFinite(ahead) || ahead > MAX_DAYS_AHEAD || ahead < -1) return null;
+  const { base = "https://api.open-meteo.com", ...rest } = opts;
+  const url = `${base}/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation_probability,temperature_2m,precipitation&daily=sunset&timezone=${encodeURIComponent(timezone)}&forecast_days=16`;
+  const raw = await fetchJson(url, { timeoutMs: 15_000, ...rest });
+  const hours = parseHourly(raw, isoDate);
+  return hours.length ? { hours, sunsetMin: parseSunset(raw, isoDate) } : null;
+}
