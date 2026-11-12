@@ -10,6 +10,7 @@
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
+    "e2e": "node scripts/e2e.mjs",
     "start:prod": "cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/ && HOSTNAME=0.0.0.0 node .next/standalone/server.js"
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^9",
     "eslint-config-next": "^16.4.3",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",

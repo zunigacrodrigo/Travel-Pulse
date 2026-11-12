@@ -15,8 +15,6 @@ import type { DestinationLive } from "@/lib/sources/overlay";
 import type { Quake } from "@/lib/sources/usgs";
 import type { WhatIfChange, WhatIfResult } from "@/lib/engine/whatif";
 
-/** El mock solo existe si NEXT_PUBLIC_USE_MOCK=1; por defecto se usa fetch real. */
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "1";
 
 export class ApiError extends Error {
   constructor(
@@ -86,12 +84,10 @@ function qs(params: Record<string, string | number | undefined | null>): string 
 }
 
 export async function getRecommendations(req: TripRequest, signal?: AbortSignal): Promise<RecommendationsResponse> {
-  if (USE_MOCK) return (await import("./mock")).mockRecommendations(req);
   return postJson<RecommendationsResponse>("/api/recommendations", req, signal);
 }
 
 export async function getDestination(id: string, q?: string, signal?: AbortSignal): Promise<DestinationDetailResponse> {
-  if (USE_MOCK) return (await import("./mock")).mockDestination(id, q);
   return request<DestinationDetailResponse>(`/api/destinations/${encodeURIComponent(id)}${qs({ q })}`, { signal });
 }
 
@@ -99,7 +95,6 @@ export async function getCompare(
   p: { a: string; b: string; priority: ComparePriority; q?: string },
   signal?: AbortSignal,
 ): Promise<CompareResponse> {
-  if (USE_MOCK) return (await import("./mock")).mockCompare(p.a, p.b, p.priority, p.q);
   return request<CompareResponse>(`/api/compare${qs({ a: p.a, b: p.b, priority: p.priority, q: p.q })}`, { signal });
 }
 
@@ -107,7 +102,6 @@ export async function postSurprise(
   body: { request: TripRequest; exclude: string[] },
   signal?: AbortSignal,
 ): Promise<SurpriseResponse> {
-  if (USE_MOCK) return (await import("./mock")).mockSurprise(body.request, body.exclude);
   return postJson<SurpriseResponse>("/api/surprise", body, signal);
 }
 
@@ -115,7 +109,6 @@ export async function postWhatIf(
   body: { request: TripRequest; destinationId: string; change: WhatIfChange },
   signal?: AbortSignal,
 ): Promise<WhatIfResult> {
-  if (USE_MOCK) throw new ApiError("NO_DISPONIBLE", "El simulador no está disponible en modo demostración.", 0);
   return postJson<WhatIfResult>("/api/what-if", body, signal);
 }
 
@@ -128,12 +121,10 @@ export interface RadarResponse {
 }
 
 export async function getRadar(signal?: AbortSignal): Promise<RadarResponse> {
-  if (USE_MOCK) throw new ApiError("NO_DISPONIBLE", "El Radar necesita el servidor; no está disponible en modo demo.", 503);
   return request<RadarResponse>("/api/radar", { signal });
 }
 
 export async function getGlobe(origin: string, month: number, signal?: AbortSignal): Promise<GlobeResponse> {
-  if (USE_MOCK) return (await import("./mock")).mockGlobe(month);
   return request<GlobeResponse>(`/api/globe${qs({ origin, month })}`, { signal });
 }
 
@@ -141,12 +132,10 @@ export async function postClick(
   body: { destinationId: string; kind: "flight" | "hotel"; requestId?: string },
   signal?: AbortSignal,
 ): Promise<ClickResponse> {
-  if (USE_MOCK) return (await import("./mock")).mockClick(body.destinationId);
   return postJson<ClickResponse>("/api/clicks", body, signal);
 }
 
 export async function postFeedback(body: FeedbackRequest, signal?: AbortSignal): Promise<FeedbackResponse> {
-  if (USE_MOCK) return (await import("./mock")).mockFeedback(body);
   return postJson<FeedbackResponse>("/api/feedback", body, signal);
 }
 

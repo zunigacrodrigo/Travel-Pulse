@@ -8,6 +8,8 @@ import { aiAvailable, estimateCostUsd, recordCall, type AiFeature } from "./tele
 
 export const MODEL_HAIKU = "claude-haiku-5-5";
 export const MODEL_SONNET = "claude-sonnet-5-5";
+export const MODEL_OPUS = "claude-opus-5-5";
+export const MODEL_FABLE = "claude-fable-5-2";
 
 /** Tiempo total por defecto de callJson (incluye el reintento). */
 export const DEFAULT_TIMEOUT_MS = 6000;

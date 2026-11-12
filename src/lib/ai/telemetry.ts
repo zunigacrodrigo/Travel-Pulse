@@ -21,15 +21,21 @@ export interface ModelPricing {
 }
 
 /**
- * PRECIOS PLACEHOLDER: NO son tarifas oficiales. Reemplazar por la lista de precios vigente
- * de Anthropic antes de usar el costo estimado para facturación o alertas reales.
+ * Tarifas por millón de tokens, tomadas de la tabla de modelos de la documentación del SDK de Anthropic
+ * (consultada el 2026-11-03). Haiku 5.5 cuesta eso hasta 100 K tokens de entrada; sobre ese tamaño
+ * ($0.50 / $2.50) la tabla subestima, y ese caso no se da con las peticiones cortas de esta app.
+ * Al cambiar la lista oficial, actualizar aquí y la fecha. El costo es una ESTIMACIÓN para control de gasto,
+ * no una factura: la factura la emite Anthropic.
  */
 export const PRICING_USD_PER_MTOK: Record<string, ModelPricing> = {
-  "claude-haiku-5-5": { inputPerMTok: 1.0, outputPerMTok: 5.0 }, // PLACEHOLDER
-  "claude-sonnet-5-5": { inputPerMTok: 3.0, outputPerMTok: 15.0 }, // PLACEHOLDER
+  "claude-haiku-5-5": { inputPerMTok: 0.1, outputPerMTok: 0.5 },
+  "claude-sonnet-5-5": { inputPerMTok: 2.0, outputPerMTok: 10.0 },
+  "claude-opus-5-5": { inputPerMTok: 4.0, outputPerMTok: 20.0 },
+  "claude-fable-5-2": { inputPerMTok: 8.0, outputPerMTok: 40.0 },
+  "claude-fable-5-1": { inputPerMTok: 10.0, outputPerMTok: 50.0 },
 };
-/** Precio conservador (el más alto) para modelos que no estén en la tabla. */
-export const FALLBACK_PRICING: ModelPricing = { inputPerMTok: 3.0, outputPerMTok: 15.0 }; // PLACEHOLDER
+/** Para un modelo que no esté en la tabla se usa el precio más alto conocido: nunca se subestima el gasto. */
+export const FALLBACK_PRICING: ModelPricing = { inputPerMTok: 10.0, outputPerMTok: 50.0 };
 
 export const DEFAULT_MONTHLY_BUDGET_USD = 50;
 export const BUDGET_WARN_RATIO = 0.7;
