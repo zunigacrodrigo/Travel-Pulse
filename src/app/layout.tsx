@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { AppShell } from "@/components/shell/AppShell";
 
 /* Fuentes empaquetadas (OFL) para no depender de la red al compilar. */
 const archivo = localFont({
@@ -52,9 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="font-sans">
-        <div className="app-frame mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-page text-fg">
-          {children}
-        </div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

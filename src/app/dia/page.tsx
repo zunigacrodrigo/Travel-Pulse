@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { DayView } from "@/components/day/DayView";
-import { BottomTabBar } from "@/components/ui/BottomTabBar";
 import { parseDayQuery } from "@/lib/day/query";
 import { engineNow } from "@/lib/server/http";
 
@@ -14,7 +13,6 @@ export default async function DayPage({ searchParams }: { searchParams: Promise<
   return (
     <>
       <DayView prefill={prefill} />
-      <BottomTabBar active="dia" />
     </>
   );
 }

@@ -1,5 +1,4 @@
 import { HomeView } from "@/components/screens/HomeView";
-import { BottomTabBar } from "@/components/ui/BottomTabBar";
 import { engineNow } from "@/lib/server/http";
 import { firstParam, parseRequest } from "@/lib/client/query";
 
@@ -13,7 +12,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <main className="flex flex-1 flex-col">
         <HomeView initial={initial} defaultDate={new Date(engineNow().getTime() + 86_400_000).toISOString().slice(0, 10)} />
       </main>
-      <BottomTabBar active="buscar" />
     </>
   );
 }

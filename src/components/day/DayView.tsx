@@ -18,33 +18,6 @@ const toHHMM = (min: number) => `${String(Math.floor(min / 60)).padStart(2, "0")
 const longDate = (iso: string) => new Intl.DateTimeFormat("es-CL", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T12:00:00Z`));
 const osmUrl = (id: string) => `https://www.openstreetmap.org/${id}`;
 
-const NAV = [
-  { href: "/", label: "Buscar destino" },
-  { href: "/dia", label: "Mi día en la ciudad", on: true },
-  { href: "/radar", label: "Radar en vivo" },
-  { href: "/live", label: "Pulso de viajeros" },
-  { href: "/sorpresa", label: "Sorpréndeme" },
-  { href: "/trip-twin", label: "Trip Twin" },
-  { href: "/guardados", label: "Guardados" },
-  { href: "/perfil", label: "Mi Travel DNA" },
-];
-
-function DesktopNav() {
-  return (
-    <aside className="hidden border-r border-line bg-surface/40 p-5 lg:block" aria-label="Navegación">
-      <Link href="/" className="font-display text-lg font-extrabold">Travel <span className="text-signal">Pulse</span></Link>
-      <nav className="mt-6 flex flex-col gap-1">
-        {NAV.map((n) => (
-          <Link key={n.href} href={n.href} aria-current={n.on ? "page" : undefined} className={`rounded-xl px-3 py-2.5 text-[14px] ${n.on ? "bg-signal/15 font-bold text-signal" : "text-fg2 hover:bg-surface"}`}>
-            {n.label}
-          </Link>
-        ))}
-      </nav>
-      <p className="mt-8 text-[11px] leading-4 text-mid">Datos reales de OpenStreetMap, Open-Meteo y reportes de viajeros. Lo que no se sabe se dice.</p>
-    </aside>
-  );
-}
-
 const field = "min-h-11 w-full rounded-xl border border-line bg-page px-3 text-[14px]";
 
 function StatusChip({ stop }: { stop: Stop }) {
@@ -180,8 +153,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
   const last = stops[stops.length - 1];
 
   return (
-    <div className="day-route min-h-dvh lg:grid lg:grid-cols-[230px_minmax(0,1fr)]">
-      <DesktopNav />
+    <div className="day-route">
       <main className="flex flex-col gap-5 px-5 pb-28 pt-6 lg:px-8 lg:pb-10">
         <header>
           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-signal">Mi día en la ciudad</p>

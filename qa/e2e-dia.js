@@ -108,9 +108,11 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
         await p.getByText(/Parque \(al aire libre\) → Museo \(bajo techo\)/).waitFor();
       });
       await step(`[${name}] sin desbordamiento horizontal`, async () => assert.equal(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), true));
-      await step(`[${name}] la barra lateral solo existe en escritorio`, async () => {
-        const visible = await p.getByRole('complementary', { name: 'Navegación' }).isVisible().catch(() => false);
-        assert.equal(visible, name === 'escritorio');
+      await step(`[${name}] una sola navegación visible con 4 destinos; el riel lateral solo en escritorio`, async () => {
+        assert.equal(await p.locator('nav[aria-label="Principal"]:visible').count(), 1);
+        assert.equal(await p.locator('nav[aria-label="Principal"]:visible a').count(), 4);
+        assert.equal(await p.locator('aside[aria-label="Principal"]').isVisible(), name === 'escritorio');
+        assert.equal(await p.locator('nav[aria-label="Principal"]:visible [aria-current="page"]').innerText(), 'Mi viaje');
       });
       await p.screenshot({ path: `${OUT}/dia-${name}.png`, fullPage: true }); await ctx.close(); }
 

@@ -14,4 +14,6 @@ export const CITIES: Record<string, City> = {
   "sao-paulo-br": { key: "sao-paulo-br", name: "São Paulo", country: "Brasil", center: { lat: -23.5614, lon: -46.6559 }, anchorName: "Av. Paulista", timezone: "America/Sao_Paulo" },
   "santiago-cl": { key: "santiago-cl", name: "Santiago", country: "Chile", center: { lat: -33.4372, lon: -70.6506 }, anchorName: "Plaza de Armas", timezone: "America/Santiago" },
   "valparaiso-cl": { key: "valparaiso-cl", name: "Valparaíso", country: "Chile", center: { lat: -33.0458, lon: -71.6197 }, anchorName: "Plaza Sotomayor", timezone: "America/Santiago" },
+  // Centro: Plaza Colón, coordenadas de OpenStreetMap (Nominatim, consultado el 12-nov-2026).
+  "antofagasta-cl": { key: "antofagasta-cl", name: "Antofagasta", country: "Chile", center: { lat: -23.6464, lon: -70.398 }, anchorName: "Plaza Colón", timezone: "America/Santiago" },
 };

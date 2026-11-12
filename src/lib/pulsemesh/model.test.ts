@@ -11,6 +11,8 @@ describe("pilotCity", () => {
     expect(pilotCity("São Paulo")?.key).toBe("sao-paulo-br");
     expect(pilotCity("sao paulo, Brasil")?.key).toBe("sao-paulo-br");
     expect(pilotCity("Valparaíso")?.key).toBe("valparaiso-cl");
+    expect(pilotCity("Antofagasta")?.key).toBe("antofagasta-cl");
+    expect(pilotCity("Antofagasta, Chile")?.key).toBe("antofagasta-cl");
   });
   it("no confunde otras ciudades", () => {
     expect(pilotCity("Santiago de Compostela")).toBeNull();

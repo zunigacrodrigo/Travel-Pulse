@@ -89,10 +89,10 @@ const step = async (name, fn) => {
     await p.goto(BASE + '/', { waitUntil: 'networkidle' });
     assert.equal(await p.getByRole('button', { name: 'Usar mi Travel DNA' }).count(), 0);
   });
-  await step('Nav: la pestaña «Mi DNA» existe y marca la página activa', async () => {
+  await step('Nav: «Yo» existe y marca la página activa', async () => {
     await p.goto(BASE + '/perfil', { waitUntil: 'networkidle' });
-    assert.equal(await p.getByRole('link', { name: 'Mi DNA' }).getAttribute('aria-current'), 'page');
-    const box = await p.locator('nav[aria-label="Principal"]').boundingBox();
+    assert.equal(await p.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Yo' }).getAttribute('aria-current'), 'page');
+    const box = await p.locator('nav[aria-label="Principal"]:visible').boundingBox();
     assert.ok(box.width <= 390, 'tabbar desborda');
     const sw = await p.evaluate(() => document.documentElement.scrollWidth);
     assert.ok(sw <= 390, 'scroll horizontal: ' + sw);

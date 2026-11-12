@@ -1,12 +1,5 @@
 @import "tailwindcss";
 
-@media (min-width: 768px) {
-  .app-frame:has(.city-first-home),
-  .app-frame:has(.city-monitor-screen) {
-    max-width: none;
-  }
-}
-
 /*
  * Travel Pulse - sistema visual "tablero de salidas + pase de abordar + afiche plano".
  * Los tokens semanticos (--c-*) cambian con el tema; los tokens de marca son fijos.
@@ -220,18 +213,6 @@ h3 {
   --c-focus: #0b1626;
 }
 
-/* Marco de la app en escritorio */
-.app-frame {
-  box-shadow: 0 0 0 1px var(--c-line);
-}
-
-/* Sorpresa pasa de marco de móvil a lienzo responsive al salir del teléfono. */
-@media (min-width: 560px) {
-  body:has(.surprise-route) .app-frame {
-    max-width: 100%;
-    box-shadow: none;
-  }
-}
 
 .surprise-route {
   min-height: 620px;
@@ -296,7 +277,6 @@ h3 {
 }
 
 @media (min-width: 800px) {
-  body:has(.surprise-route) .app-frame { max-width: 1280px; }
   .surprise-route { min-height: calc(100dvh - 72px); padding: 30px clamp(32px, 6vw, 88px) 42px; }
   .surprise-stage { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); align-items: center; gap: clamp(36px, 7vw, 100px); margin-top: 28px; }
   .surprise-heading { font-size: clamp(64px, 7.2vw, 88px); }
@@ -312,12 +292,6 @@ h3 {
   .surprise-poster { animation: surprise-float 7s ease-in-out infinite; }
   @keyframes surprise-float { 0%,100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(-1deg) translateY(-5px); } }
   @media (min-width: 800px) { @keyframes surprise-float { 0%,100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(-2deg) translateY(-8px); } } }
-}
-
-@media (max-width: 430px) {
-  .app-frame {
-    box-shadow: none;
-  }
 }
 
 /* ---------- Slider (input range real) ---------- */
@@ -459,10 +433,6 @@ h3 {
 @media (prefers-reduced-motion: reduce) { .tp-lift:hover { transform: none; } }
 
 /* «Mi día en la ciudad»: pantalla de escritorio de tres paneles. En móvil se apila y conserva la barra inferior. */
-@media (min-width: 1024px) {
-  body:has(.day-route) .app-frame { max-width: 1600px; }
-  body:has(.day-route) .tabbar { display: none; }
-}
 .day-route .leaflet-container { background: #0e1b2d; font-family: inherit; border-radius: 16px; }
 .day-route .leaflet-tile-pane { filter: brightness(.82) contrast(1.08) saturate(.9); }
 .day-pin { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: #46d4f2; color: #06121f; font: 800 14px/1 var(--font-archivo), sans-serif; border: 2px solid #06121f; box-shadow: 0 2px 8px rgba(0,0,0,.5); }

@@ -55,6 +55,7 @@ export const PILOT_CITIES: readonly PilotCity[] = [
   { key: "santiago-cl", name: "Santiago", country: "Chile", currency: "CLP", names: ["santiago", "santiago de chile"], countries: ["chile"] },
   { key: "sao-paulo-br", name: "São Paulo", country: "Brasil", currency: "BRL", names: ["sao paulo"], countries: ["brasil", "brazil"] },
   { key: "valparaiso-cl", name: "Valparaíso", country: "Chile", currency: "CLP", names: ["valparaiso"], countries: ["chile"] },
+  { key: "antofagasta-cl", name: "Antofagasta", country: "Chile", currency: "CLP", names: ["antofagasta"], countries: ["chile"] },
 ];
 
 const fold = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();

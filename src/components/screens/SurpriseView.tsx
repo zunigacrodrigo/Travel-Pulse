@@ -10,7 +10,6 @@ import type { SurpriseResponse, TripRequest } from "@/lib/types";
 import { FlapScore } from "../FlapScore";
 import { ErrorPanel } from "../StatePanels";
 import { BackButton } from "../ui/BackButton";
-import { BottomTabBar } from "../ui/BottomTabBar";
 import { Button } from "../ui/Button";
 import { Compass, Share, Sparkle, Warning } from "../ui/Icons";
 import { DestinationPoster } from "../DestinationPoster";
@@ -97,7 +96,6 @@ function Start({ request, onGo, loading, q }: { request: TripRequest; onGo: () =
           </aside>
         </div>
       </main>
-      <BottomTabBar active="sorpresa" />
     </>
   );
 }
@@ -156,7 +154,6 @@ export function SurpriseView({ q }: { q?: string }) {
           </div>
           <ErrorPanel error={error} onRetry={() => run(seen)} />
         </main>
-        <BottomTabBar active="sorpresa" />
       </>
     );
   }
@@ -176,7 +173,6 @@ export function SurpriseView({ q }: { q?: string }) {
             </Button>
           </div>
         </main>
-        <BottomTabBar active="sorpresa" />
       </>
     );
   }

@@ -23,7 +23,7 @@ import { Toggle } from "../ui/Toggle";
 
 const BUDGET_MIN = 300;
 const BUDGET_MAX = 5000;
-const CITY_SUGGESTIONS = ["Santiago, Chile", "Valparaíso, Chile", "Buenos Aires, Argentina", "São Paulo, Brasil", "Tokyo, Japan", "Paris, France"];
+const CITY_SUGGESTIONS = ["Santiago, Chile", "Valparaíso, Chile", "Antofagasta, Chile", "Buenos Aires, Argentina", "São Paulo, Brasil", "Tokyo, Japan", "Paris, France"];
 
 export function HomeView({ initial, defaultDate }: { initial: TripRequest; defaultDate: string }) {
   const router = useRouter();
@@ -49,7 +49,7 @@ export function HomeView({ initial, defaultDate }: { initial: TripRequest; defau
   const openCity = (e: React.FormEvent) => { e.preventDefault(); const query = city.trim(); if (query) router.push(`/ciudad?city=${encodeURIComponent(query)}`); };
 
   return (
-    <main className="city-first-home min-h-dvh bg-page px-5 pb-28 pt-[calc(env(safe-area-inset-top)+12px)] text-fg sm:px-8 lg:px-12">
+    <main className="city-first-home min-h-dvh overflow-x-clip bg-page px-5 pb-28 pt-[calc(env(safe-area-inset-top)+12px)] text-fg sm:px-8 lg:px-12">
       <header className="mx-auto flex max-w-6xl items-center justify-between"><Link href="/" className="font-display text-xl font-extrabold tracking-tight">Travel <span className="text-signal">Pulse</span></Link><div className="flex items-center gap-3"><span className="hidden items-center gap-2 text-xs text-mid sm:flex"><i className="size-2 rounded-full bg-signal"/>Exploración en beta</span><ThemeToggle/></div></header>
       <section className="relative mx-auto grid max-w-6xl items-center gap-8 py-10 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-16">
         <div className="pointer-events-none absolute -right-28 -top-2 z-0 opacity-60 sm:-right-10 sm:top-2 sm:opacity-80 lg:right-[38%] lg:top-4" aria-hidden="true"><GlobeHero size={300} pin /></div>
@@ -66,7 +66,7 @@ export function HomeView({ initial, defaultDate }: { initial: TripRequest; defau
             </div>
             <fieldset className="mt-4 border-0 p-0"><legend className="text-sm font-bold">¿Qué quieres vivir?</legend><div className="mt-2 flex flex-wrap gap-2">{KINDS.map((k) => <button key={k} type="button" aria-pressed={kinds.includes(k)} onClick={() => toggleKind(k)} className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${kinds.includes(k) ? "border-signal bg-signal/15 text-signal" : "border-line text-fg2"}`}>{KIND_META[k].label}</button>)}</div></fieldset>
             <Button type="submit" disabled={kinds.length === 0} className="mt-5 min-h-12 w-full px-6 sm:w-auto">Armar mi día →</Button>
-            <p className="mt-3 text-xs leading-5 text-mid">Hoy cubre São Paulo, Santiago y Valparaíso. Los precios aún no tienen fuente, así que no los mostramos.</p>
+            <p className="mt-3 text-xs leading-5 text-mid">Hoy cubre São Paulo, Santiago, Valparaíso y Antofagasta. Los precios aún no tienen fuente, así que no los mostramos.</p>
           </form>
           <form onSubmit={openCity} className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center"><label htmlFor={`${ids}-city`} className="text-sm font-semibold text-fg2">¿Solo quieres entender una ciudad?</label><input id={`${ids}-city`} list={`${ids}-cities`} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ciudad, país" className="min-h-11 min-w-0 flex-1 rounded-xl border border-line bg-page px-4 text-sm"/><datalist id={`${ids}-cities`}>{CITY_SUGGESTIONS.map((name) => <option key={name} value={name}/>)}</datalist><Button type="submit" className="min-h-11 px-5">Ver pulso →</Button></form>
         </div>
