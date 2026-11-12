@@ -8,6 +8,7 @@ import { activitySchema, tripPlanSchema, tripSchema, type Activity, type PlanCha
 import { cityPlaceToActivity, getWeatherSuggestion, loadCityWorkspace, saveCityActivities, saveCityTrip, type CityWorkspace } from "@/lib/trip-twin/city-workspace";
 import type { TravelSignal } from "@/lib/signals/types";
 import { pickRelevantSignal } from "@/lib/signals/trip-link";
+import { NO_BUDGET } from "@/lib/trip-twin/import";
 import { budgetBreakdown } from "@/lib/trip-twin/budget";
 import { emptyHistory, parseHistory, pushSnapshot, redo, undo, type History, type Snapshot } from "@/lib/trip-twin/history";
 
@@ -237,7 +238,7 @@ function TripWorkbench({ boot }: { boot: Boot }) {
         <div className="tt-dest-top"><div><div className="tt-eyebrow">{workspace ? "TU VIAJE · CIUDAD" : "TU VIAJE IMPORTADO"}</div><h1>Tu viaje a {workspace?.city ?? tripOverride?.destination ?? currentTrip.destination}</h1><p>{workspace ? `${workspace.country} · ${new Intl.DateTimeFormat("es-CL", { dateStyle: "medium", timeZone: currentTrip.timeZone }).format(new Date(currentTrip.startAt))} · 1 viajero` : `${new Intl.DateTimeFormat("es-CL", { dateStyle: "medium", timeZone: currentTrip.timeZone }).format(new Date(currentTrip.startAt))} · ${currentTrip.travelers} viajero${currentTrip.travelers === 1 ? "" : "s"} · importado por ti`}</p></div><div className="tt-weather"><span>◌</span><div><b>Clima</b><small>{workspace?.weatherSource ? `${workspace.precipitationProbability ?? "—"}% prob. lluvia · Open-Meteo` : "Sin fuente conectada"}</small></div></div></div>
         <div className="tt-hero-photo"><div>PLAN DE VIAJE <h2>{workspace ? `${workspace.city}, ${workspace.country}` : currentTrip.destination}</h2><p>{workspace ? "Lugares de OpenStreetMap; horarios, precios y traslados se muestran como desconocidos." : "Itinerario importado por ti. Las ubicaciones son aproximadas; los traslados, precios y horarios de lugares quedan sin confirmar."}</p></div></div>
         <div className="tt-stats"><div><span className="tt-stat-icon">▤</span><div><small>{workspace ? "Itinerario de ciudad" : "Itinerario importado"}</small><b>{`${new Set(plan.items.map((i) => i.plannedStart.slice(0, 10))).size} día(s)`} · {plan.items.length} actividades</b></div></div><div><span className="tt-stat-icon">＄</span><div><small>{workspace ? "Coste" : "Coste parcial declarado"}</small><b>{plan.estimatedTotalCost === null ? "Aún no disponible" : `${plan.currency} ${plan.estimatedTotalCost.toFixed(0)}`}</b><small>{workspace ? "Precios no conectados" : "Solo lo que tú indicaste"}</small></div></div><div><span className="tt-stat-icon">▰</span><div><small>Traslados</small><b>Sin datos de ruta</b></div></div><div><span className="tt-stat-icon">✦</span><div><small>Recomendaciones</small><b>{workspace ? "Lugares mapeados" : "Aún sin conectar"}</b></div></div></div>
-        <section className="tt-budget" aria-label="Presupuesto por categoría"><header><h3>Presupuesto por categoría</h3><small>{budget.currency} {budget.knownTotal.toFixed(0)} conocidos de {budget.budget.toFixed(0)}{budget.usedPct !== null ? ` · ${budget.usedPct}%` : ""}</small></header>{budget.usedPct !== null && <div className="tt-budget-track" role="img" aria-label={`${budget.usedPct}% del presupuesto cubierto por costos conocidos`}><span style={{ width: `${Math.min(100, budget.usedPct)}%` }} className={budget.usedPct > 100 ? "over" : undefined} /></div>}{budget.rows.length ? <ul>{budget.rows.map((r) => <li key={r.category}><span>{r.category}<small>{r.activities} actividad{r.activities === 1 ? "" : "es"}{r.unknown ? ` · ${r.unknown} sin precio` : ""}</small></span><div className="tt-budget-bar"><span style={{ width: `${budget.knownTotal > 0 ? Math.round((r.known / budget.knownTotal) * 100) : 0}%` }} /></div><b>{r.known > 0 ? `${budget.currency} ${r.known.toFixed(0)}` : "—"}</b></li>)}</ul> : <p>Sin actividades en el itinerario.</p>}<p className="tt-budget-note">{budget.unknownCount ? `${budget.unknownCount} actividad${budget.unknownCount === 1 ? "" : "es"} sin precio: no se estiman, así que el total es parcial.` : "Todos los costos del itinerario están declarados."}</p></section>
+        <section className="tt-budget" aria-label="Presupuesto por categoría"><header><h3>Presupuesto por categoría</h3><small>{budget.currency} {budget.knownTotal.toFixed(0)} conocidos{budget.budget >= NO_BUDGET ? " · sin presupuesto definido" : ` de ${budget.budget.toFixed(0)}${budget.usedPct !== null ? ` · ${budget.usedPct}%` : ""}`}</small></header>{budget.usedPct !== null && budget.budget < NO_BUDGET && <div className="tt-budget-track" role="img" aria-label={`${budget.usedPct}% del presupuesto cubierto por costos conocidos`}><span style={{ width: `${Math.min(100, budget.usedPct)}%` }} className={budget.usedPct > 100 ? "over" : undefined} /></div>}{budget.rows.length ? <ul>{budget.rows.map((r) => <li key={r.category}><span>{r.category}<small>{r.activities} actividad{r.activities === 1 ? "" : "es"}{r.unknown ? ` · ${r.unknown} sin precio` : ""}</small></span><div className="tt-budget-bar"><span style={{ width: `${budget.knownTotal > 0 ? Math.round((r.known / budget.knownTotal) * 100) : 0}%` }} /></div><b>{r.known > 0 ? `${budget.currency} ${r.known.toFixed(0)}` : "—"}</b></li>)}</ul> : <p>Sin actividades en el itinerario.</p>}<p className="tt-budget-note">{budget.unknownCount ? `${budget.unknownCount} actividad${budget.unknownCount === 1 ? "" : "es"} sin precio: no se estiman, así que el total es parcial.` : "Todos los costos del itinerario están declarados."}</p></section>
         <div className="tt-section-heading" style={featuredAttractions.length === 0 ? { display: "none" } : undefined}><div><h2>Tu itinerario destacado</h2><p>Ideas para completar tu viaje</p></div><button onClick={() => setShowAll(!showAll)}>{showAll ? "Ver menos ↑" : "Ver todo →"}</button></div>
         <div className="tt-attraction-grid">{featuredAttractions.slice(0, showAll ? featuredAttractions.length : 2).map((a, i) => <article className="tt-attraction" key={a.id}><div className={`tt-attraction-photo photo-${i}`}>⌖</div><div className="tt-attraction-body"><b>{a.name}</b><small>{a.time}</small><small>{a.meta}</small><strong>{a.price}</strong><span className={`tt-tag tag-${i}`}>{a.tag}</span><button onClick={() => addSuggestion(a.name, a.location, a.category, workspace ? a.id : undefined)}>Añadir al viaje</button></div></article>)}</div>
       </section>
@@ -259,15 +260,15 @@ function TripWorkbench({ boot }: { boot: Boot }) {
 
 function EmptyTrip() {
   return (
-    <main className="tt-shell" style={{ padding: "48px 20px" }}>
-      <div className="tt-card" style={{ maxWidth: 560, margin: "0 auto", padding: 28 }}>
-        <div className="tt-eyebrow">MI VIAJE</div>
-        <h1>Todavía no tienes un viaje guardado</h1>
-        <p>Aquí aparece tu itinerario cuando armas tu día o traes un plan que ya tienes. No mostramos ejemplos: solo lo que es tuyo y lo que tiene fuente.</p>
-        <p style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-          <Link className="tt-primary" href="/dia">Armar mi día</Link>
-          <Link href="/importar">Traer un plan que ya tengo</Link>
-        </p>
+    <main className="min-h-dvh bg-page px-5 pb-28 pt-16 text-fg">
+      <div className="mx-auto max-w-xl rounded-[24px] border border-line bg-surface p-6 sm:p-8">
+        <p className="text-xs font-extrabold uppercase tracking-[.2em] text-signal">Mi viaje</p>
+        <h1 className="mt-3 font-display text-3xl font-extrabold leading-tight">Todavía no tienes un viaje guardado</h1>
+        <p className="mt-3 text-base leading-7 text-fg2">Aquí aparece tu itinerario cuando armas tu día o traes un plan que ya tienes. No mostramos ejemplos: solo lo que es tuyo y lo que tiene fuente.</p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/" className="inline-flex min-h-12 items-center rounded-[14px] bg-signal px-6 font-display text-base font-extrabold text-ink">Armar mi día</Link>
+          <Link href="/importar" className="inline-flex min-h-12 items-center rounded-[14px] border-2 border-border px-5 text-base font-semibold text-fg">Traer un plan que ya tengo</Link>
+        </div>
       </div>
     </main>
   );

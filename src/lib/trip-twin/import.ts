@@ -14,6 +14,8 @@ export type ImportedDay = { index: number; label: string; dateHint: { month: num
 export type ParsedItinerary = { days: ImportedDay[]; notes: string[]; warnings: string[] };
 
 export const DEFAULT_DURATION_MINUTES = 90;
+/** Marca de «el viajero no indicó presupuesto»: el modelo exige un monto, así que se guarda uno que no limita nada. */
+export const NO_BUDGET = 1_000_000;
 const MONTHS: Record<string, number> = { ene: 1, feb: 2, mar: 3, abr: 4, may: 5, jun: 6, jul: 7, ago: 8, sep: 9, set: 9, oct: 10, nov: 11, dic: 12 };
 const NOTE_RE = /^(alojamiento|hotel|hospedaje|presupuesto|preferencias?|notas?|recomendaci[oó]n(?:es)?|vuelos?|transporte|restricciones?)\s*[:\-–—]/i;
 const DAY_RE = /^(?:#{1,4}\s*)?(?:d[ií]a|day)\s+(\d{1,2})\b\s*[:\-–—]?\s*(.*)$/i;
@@ -213,7 +215,7 @@ export function buildImportedTrip(input: ImportInput): { trip: Trip; activities:
     startAt: zonedIso(dates[0]!, earliest, timeZone),
     endAt: zonedIso(dates[dates.length - 1]!, 23 * 60, timeZone),
     timeZone,
-    budget: { amount: input.budget && input.budget > 0 ? input.budget : 1_000_000, currency },
+    budget: { amount: input.budget && input.budget > 0 ? input.budget : NO_BUDGET, currency },
     travelers: input.travelers,
   });
   return { trip, activities };
