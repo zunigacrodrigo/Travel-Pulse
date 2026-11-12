@@ -179,7 +179,6 @@ export function AccountView() {
           <ul className="list-disc pl-5">
             <li>Se guardan solo tus preferencias de Travel DNA, tus destinos guardados y tu viaje activo con su historial.</li>
             <li>Solo tú puedes leerlos: cada fila está protegida por tu cuenta.</li>
-            <li>El itinerario de demostración no se sube; no es información tuya.</li>
             <li>Los destinos guardados de una ciudad explorada fuera del catálogo se quedan en este dispositivo.</li>
             <li>Borrar tus datos en la nube no elimina tu inicio de sesión.</li>
           </ul>

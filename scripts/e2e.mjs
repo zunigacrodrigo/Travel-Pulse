@@ -9,7 +9,7 @@ const PORT = process.env.E2E_PORT ?? "3102";
 const BASE = `http://127.0.0.1:${PORT}`;
 const FAKE_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiJ9.fake";
 const groups = [
-  { name: "base", env: {}, files: ["qa/e2e-dia.js", "qa/e2e-dna-whatif.js", "qa/e2e-trip-twin-undo.js", "qa/e2e-visual-radar-budget.js"] },
+  { name: "base", env: {}, files: ["qa/e2e-dia.js", "qa/e2e-dna-whatif.js", "qa/e2e-trip-twin-undo.js", "qa/e2e-visual-radar-budget.js", "qa/e2e-sin-demo.js"] },
   { name: "nube simulada", env: { NEXT_PUBLIC_SUPABASE_URL: "https://fake-ref.supabase.co", NEXT_PUBLIC_SUPABASE_ANON_KEY: FAKE_JWT }, files: ["qa/e2e-cuenta.js", "qa/e2e-pulsemesh.js"] },
 ];
 

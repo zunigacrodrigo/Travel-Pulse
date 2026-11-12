@@ -3,6 +3,7 @@
 //   PORT=3102 HOSTNAME=127.0.0.1 RATE_LIMIT_DISABLED=1 node .next/standalone/server.js
 // Ejecutar: node qa/e2e-trip-twin-undo.js
 const { chromium } = require('playwright');
+const { seedPlan } = require('./seed-plan');
 const assert = require('node:assert/strict');
 const BASE = process.env.BASE || 'http://localhost:3102';
 const OUT = '/tmp/claude-0/qa/shots';
@@ -19,7 +20,7 @@ const step = async (name, fn) => { try { await fn(); results.push(['PASS', name]
     p.on('console', (m) => { if (m.type() === 'error' && !/ERR_TUNNEL|Failed to load resource/.test(m.text())) errors.push(`[${w}] ${m.text().slice(0, 200)}`); });
     p.on('pageerror', (e) => errors.push(`[${w}] pageerror ${e.message.slice(0, 200)}`));
     const count = () => p.locator('.tt-timeline-item').count();
-    await p.goto(BASE + '/trip-twin'); await p.waitForSelector('.tt-timeline-item');
+    await seedPlan(p, BASE);
     const initial = await count();
     await step(`[${w}] deshacer y rehacer deshabilitados al inicio`, async () => {
       assert.equal(await p.getByRole('button', { name: 'Deshacer último cambio' }).isDisabled(), true);

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { buildTripPlan } from "./engine";
-import { DEMO_ACTIVITIES, DEMO_TRIP } from "./demo";
+import { FIXTURE_ACTIVITIES, FIXTURE_TRIP } from "./__fixtures__/trip";
 import { MAX_HISTORY, parseHistory, pushSnapshot, redo, undo, emptyHistory, type Snapshot } from "./history";
 
 const NOW = "2026-10-27T15:00:00Z";
 
-function snap(label: string, count = DEMO_ACTIVITIES.length): Snapshot {
-  const activities = DEMO_ACTIVITIES.slice(0, count);
-  return { label, at: NOW, trip: DEMO_TRIP, activities, plan: buildTripPlan(DEMO_TRIP, activities, { now: NOW }) };
+function snap(label: string, count = FIXTURE_ACTIVITIES.length): Snapshot {
+  const activities = FIXTURE_ACTIVITIES.slice(0, count);
+  return { label, at: NOW, trip: FIXTURE_TRIP, activities, plan: buildTripPlan(FIXTURE_TRIP, activities, { now: NOW }) };
 }
 
 describe("historial de Trip Twin", () => {

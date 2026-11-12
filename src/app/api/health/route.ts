@@ -5,7 +5,7 @@ import { budgetStatus, llmEnabled } from "@/lib/ai";
 export function GET() {
   return NextResponse.json({
     ok: true,
-    data: process.env.SUPABASE_URL ? "supabase" : "demo",
+    data: process.env.SUPABASE_URL ? "supabase" : "semilla",
     ai: llmEnabled() ? "anthropic" : "respaldo",
     aiBudgetLevel: budgetStatus().level,
   });

@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { _setClientForTests } from "@/lib/ai/client";
 import { resetTelemetry } from "@/lib/ai/telemetry";
-import { DEMO_ACTIVITIES, DEMO_TRIP } from "./demo";
+import { FIXTURE_ACTIVITIES, FIXTURE_TRIP } from "./__fixtures__/trip";
 import { buildTripPlan } from "./engine";
 import { interpretTripTwinMessage } from "./assistant";
 
 const context = {
-  trip: DEMO_TRIP,
-  activities: DEMO_ACTIVITIES,
-  plan: buildTripPlan(DEMO_TRIP, DEMO_ACTIVITIES, { now: "2026-10-28T12:00:00Z" }),
+  trip: FIXTURE_TRIP,
+  activities: FIXTURE_ACTIVITIES,
+  plan: buildTripPlan(FIXTURE_TRIP, FIXTURE_ACTIVITIES, { now: "2026-10-28T12:00:00Z" }),
 };
 
 beforeEach(() => {

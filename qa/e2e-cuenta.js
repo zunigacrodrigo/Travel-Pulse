@@ -60,7 +60,7 @@ const SAVED = [{ destinationId: 'CUZ', name: 'Cusco', code: 'CUZ', score: 71, to
       const up = calls.find((c) => c.m === 'POST' && c.p === '/rest/v1/saved_destinations');
       assert.equal(up.body[0].destination_id, 'CUZ'); assert.equal(up.body[0].user_id, USER.id);
     });
-    await step(`[${name}] el itinerario de demostración no se sube`, async () => {
+    await step(`[${name}] sin viaje propio no se sube ningún viaje`, async () => {
       assert.equal(calls.filter((c) => c.p === '/rest/v1/user_trips' && c.m !== 'GET').length, 0);
     });
     await step(`[${name}] sin errores de sincronización visibles`, async () => {

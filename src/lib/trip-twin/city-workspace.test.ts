@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_ACTIVITIES, DEMO_TRIP } from "./demo";
+import { FIXTURE_ACTIVITIES, FIXTURE_TRIP } from "./__fixtures__/trip";
 import { cityWorkspaceKey, getWeatherSuggestion, type CityWorkspace } from "./city-workspace";
 
 function workspace(overrides: Partial<CityWorkspace> = {}): CityWorkspace {
-  const park = { ...DEMO_ACTIVITIES[0]!, id: "osm-park", name: "Parque", category: "park", location: { latitude: -23.5, longitude: -46.6, placeId: "park" }, demoData: false };
+  const park = { ...FIXTURE_ACTIVITIES[0]!, id: "osm-park", name: "Parque", category: "park", location: { latitude: -23.5, longitude: -46.6, placeId: "park" }, demoData: false };
   return {
     key: "sao paulo,brasil",
     city: "São Paulo",
     country: "Brasil",
     coordinates: { latitude: -23.55, longitude: -46.63 },
     timeZone: "America/Sao_Paulo",
-    trip: DEMO_TRIP,
+    trip: FIXTURE_TRIP,
     activities: [park],
     places: [{ id: "museum", name: "Museu", category: "museum", latitude: -23.56, longitude: -46.65 }],
     precipitationProbability: 85,

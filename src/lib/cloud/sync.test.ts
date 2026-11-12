@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildTripPlan } from "@/lib/trip-twin/engine";
-import { DEMO_ACTIVITIES, DEMO_TRIP } from "@/lib/trip-twin/demo";
+import { FIXTURE_ACTIVITIES, FIXTURE_TRIP } from "@/lib/trip-twin/__fixtures__/trip";
 import { defaultDna, type TravelDna } from "@/lib/client/dna-core";
 import type { SavedTrip } from "@/lib/client/saved";
 import { emptyHistory } from "@/lib/trip-twin/history";
@@ -14,8 +14,8 @@ const saved = (id: string, savedAt: string): SavedTrip => ({
   request: { origin: "SCL", budgetUsd: 1500, days: 8, month: 11, flexibleDates: false, travelers: 1, interests: [] },
 });
 const tripDoc = (now: string, demo: boolean): TripDoc => {
-  const acts = DEMO_ACTIVITIES.map((a) => ({ ...a, demoData: demo }));
-  return { trip: DEMO_TRIP, activities: acts, plan: buildTripPlan(DEMO_TRIP, acts, { now }), history: emptyHistory() };
+  const acts = FIXTURE_ACTIVITIES.map((a) => ({ ...a, demoData: demo }));
+  return { trip: FIXTURE_TRIP, activities: acts, plan: buildTripPlan(FIXTURE_TRIP, acts, { now }), history: emptyHistory() };
 };
 
 function fakes(init: { localDna?: TravelDna | null; cloudDna?: unknown; localSaved?: SavedTrip[]; cloudSaved?: SavedTrip[]; localTrip?: TripDoc | null; cloudTrip?: TripDoc | null; fail?: Partial<Record<keyof CloudStore, boolean>>; profileRows?: number }) {

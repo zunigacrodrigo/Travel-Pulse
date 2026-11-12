@@ -1,6 +1,7 @@
 // Verificación visual de Radar (medidor + alertas) y Trip Twin (presupuesto por categoría).
 // Requiere el servidor en :3102 con fuentes simuladas (ver qa/e2e-radar.js). Capturas en /tmp/claude-0/qa/shots.
 const { chromium } = require('playwright');
+const { seedPlan } = require('./seed-plan');
 const assert = require('node:assert/strict');
 const BASE = process.env.BASE || 'http://localhost:3102';
 const OUT = '/tmp/claude-0/qa/shots'; require('fs').mkdirSync(OUT, { recursive: true });
@@ -25,7 +26,7 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
     });
     await step(`[${name}] Radar: sin desbordamiento`, noOverflow);
     await p.screenshot({ path: `${OUT}/radar-${name}.png`, fullPage: true });
-    await p.goto(BASE + '/trip-twin'); await p.waitForSelector('.tt-budget');
+    await seedPlan(p, BASE); await p.waitForSelector('.tt-budget');
     await step(`[${name}] Trip Twin: presupuesto por categoría con nota de costos sin precio`, async () => {
       assert.ok(await p.locator('.tt-budget li').count() >= 1);
       assert.match(await p.locator('.tt-budget-note').textContent(), /sin precio|declarados/);
