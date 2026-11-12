@@ -8,6 +8,9 @@ import { capitalize, formatUsd, MONTHS, originName } from "@/lib/client/format";
 import { useDna } from "@/lib/client/dna";
 import { dnaToRequest } from "@/lib/client/dna-core";
 import { encodeRequest, storeLastRequest } from "@/lib/client/query";
+import { CITIES } from "@/lib/day/cities";
+import { dayHref } from "@/lib/day/query";
+import { KINDS, KIND_META, type Kind } from "@/lib/day/places";
 import { INTEREST_LABELS, INTERESTS, type Interest, type TripRequest } from "@/lib/types";
 import { Globe } from "../Globe";
 import { Button } from "../ui/Button";
@@ -22,11 +25,18 @@ const BUDGET_MIN = 300;
 const BUDGET_MAX = 5000;
 const CITY_SUGGESTIONS = ["Santiago, Chile", "Valparaíso, Chile", "Buenos Aires, Argentina", "São Paulo, Brasil", "Tokyo, Japan", "Paris, France"];
 
-export function HomeView({ initial }: { initial: TripRequest }) {
+export function HomeView({ initial, defaultDate }: { initial: TripRequest; defaultDate: string }) {
   const router = useRouter();
   const [req, setReq] = useState<TripRequest>(initial);
   const [city, setCity] = useState("Santiago, Chile");
   const [formOpen, setFormOpen] = useState(false);
+  const [tripCity, setTripCity] = useState("sao-paulo-br");
+  const [tripDate, setTripDate] = useState(defaultDate);
+  const [arrive, setArrive] = useState("11:00");
+  const [until, setUntil] = useState("23:00");
+  const [kinds, setKinds] = useState<Kind[]>(["museo", "restaurante", "pub"]);
+  const toggleKind = (k: Kind) => setKinds((c) => (c.includes(k) ? c.filter((x) => x !== k) : [...c, k]));
+  const planDay = (e: React.FormEvent) => { e.preventDefault(); if (kinds.length) router.push(dayHref({ city: tripCity, date: tripDate, start: arrive, end: until, kinds })); };
   const dna = useDna();
   const ids = useId();
   const budgetLabelId = `${ids}-budget`;
@@ -44,21 +54,27 @@ export function HomeView({ initial }: { initial: TripRequest }) {
       <section className="relative mx-auto grid max-w-6xl items-center gap-8 py-10 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-16">
         <div className="pointer-events-none absolute -right-28 -top-2 z-0 opacity-60 sm:-right-10 sm:top-2 sm:opacity-80 lg:right-[38%] lg:top-4" aria-hidden="true"><GlobeHero size={300} pin /></div>
         <div className="relative z-10">
-          <p className="text-xs font-extrabold uppercase tracking-[.2em] text-signal">Inteligencia para decidir y viajar</p>
-          <h1 className="cond mt-4 max-w-3xl font-display text-4xl font-extrabold leading-[.98] tracking-tight sm:text-6xl">Entiende el pulso de un lugar. Decide cómo vivirlo.</h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-fg2 sm:text-lg">Travel Pulse reúne contexto de ciudad, señales de viajeros y oportunidades para convertir información dispersa en un viaje que puedas adaptar.</p>
-          <form onSubmit={openCity} className="mt-7 rounded-[24px] border border-line bg-surface p-4 shadow-sm sm:p-5">
-            <label htmlFor={`${ids}-city`} className="text-sm font-bold">¿Qué ciudad quieres entender?</label>
-            <div className="mt-2 flex flex-col gap-2 sm:flex-row"><input id={`${ids}-city`} list={`${ids}-cities`} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ciudad, país" className="min-h-12 min-w-0 flex-1 rounded-xl border border-line bg-page px-4 text-base"/><datalist id={`${ids}-cities`}>{CITY_SUGGESTIONS.map((name) => <option key={name} value={name}/>)}</datalist><Button type="submit" className="min-h-12 px-6">Ver pulso de la ciudad →</Button></div>
-            <p className="mt-3 text-xs leading-5 text-mid">Clima y lugares consultados desde fuentes abiertas. Las señales comunitarias de esta beta se guardan en este dispositivo.</p>
+          <p className="text-xs font-extrabold uppercase tracking-[.2em] text-signal">La inteligencia detrás de cada viaje</p>
+          <h1 className="cond mt-4 max-w-3xl font-display text-4xl font-extrabold leading-[.98] tracking-tight sm:text-6xl">Cuéntanos tu viaje. Te armamos el día con lo que realmente hay.</h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-fg2 sm:text-lg">Horarios, traslados y lluvia reales. Lo que no se sabe, te lo decimos en vez de inventarlo.</p>
+          <form onSubmit={planDay} className="mt-7 rounded-[24px] border border-line bg-surface p-4 shadow-sm sm:p-5" aria-label="Armar mi día">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="text-sm font-bold">¿A dónde vas?<select value={tripCity} onChange={(e) => setTripCity(e.target.value)} className="mt-1 min-h-12 w-full rounded-xl border border-line bg-page px-3 text-base font-normal">{Object.values(CITIES).map((c) => <option key={c.key} value={c.key}>{c.name}, {c.country}</option>)}</select></label>
+              <label className="text-sm font-bold">¿Qué día?<input type="date" value={tripDate} onChange={(e) => setTripDate(e.target.value)} required className="mt-1 min-h-12 w-full rounded-xl border border-line bg-page px-3 text-base font-normal"/></label>
+              <label className="text-sm font-bold">Llegas a las<input type="time" value={arrive} onChange={(e) => setArrive(e.target.value)} required className="mt-1 min-h-12 w-full rounded-xl border border-line bg-page px-3 text-base font-normal"/></label>
+              <label className="text-sm font-bold">Hasta las<input type="time" value={until} onChange={(e) => setUntil(e.target.value)} required className="mt-1 min-h-12 w-full rounded-xl border border-line bg-page px-3 text-base font-normal"/></label>
+            </div>
+            <fieldset className="mt-4 border-0 p-0"><legend className="text-sm font-bold">¿Qué quieres vivir?</legend><div className="mt-2 flex flex-wrap gap-2">{KINDS.map((k) => <button key={k} type="button" aria-pressed={kinds.includes(k)} onClick={() => toggleKind(k)} className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${kinds.includes(k) ? "border-signal bg-signal/15 text-signal" : "border-line text-fg2"}`}>{KIND_META[k].label}</button>)}</div></fieldset>
+            <Button type="submit" disabled={kinds.length === 0} className="mt-5 min-h-12 w-full px-6 sm:w-auto">Armar mi día →</Button>
+            <p className="mt-3 text-xs leading-5 text-mid">Hoy cubre São Paulo, Santiago y Valparaíso. Los precios aún no tienen fuente, así que no los mostramos.</p>
           </form>
-          <div className="mt-5 flex flex-wrap gap-2">{CITY_SUGGESTIONS.slice(0,4).map((name) => <button key={name} type="button" onClick={() => { setCity(name); router.push(`/ciudad?city=${encodeURIComponent(name)}`); }} className="rounded-full border border-line bg-surface px-3 py-2 text-xs font-semibold text-fg2 hover:border-signal">{name}</button>)}</div>
+          <form onSubmit={openCity} className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center"><label htmlFor={`${ids}-city`} className="text-sm font-semibold text-fg2">¿Solo quieres entender una ciudad?</label><input id={`${ids}-city`} list={`${ids}-cities`} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ciudad, país" className="min-h-11 min-w-0 flex-1 rounded-xl border border-line bg-page px-4 text-sm"/><datalist id={`${ids}-cities`}>{CITY_SUGGESTIONS.map((name) => <option key={name} value={name}/>)}</datalist><Button type="submit" className="min-h-11 px-5">Ver pulso →</Button></form>
         </div>
         <div className="relative z-10 overflow-hidden rounded-[28px] bg-[#0b1626] p-5 text-white shadow-[0_24px_60px_-30px_rgba(70,212,242,.45)] sm:p-7">
           <div className="absolute -right-16 -top-16 size-64 rounded-full border border-white/10"/><div className="absolute -right-4 -top-4 size-40 rounded-full border border-white/10"/>
           <p className="relative text-xs font-extrabold uppercase tracking-[.2em] text-[#46d4f2]">Una plataforma, varias capas</p>
           <div className="relative mt-6 space-y-3">
-            {[{n:"01",t:"Contexto de ciudad",d:"Clima de Open-Meteo y lugares de OpenStreetMap para cualquier ciudad. El Radar suma avisos oficiales, sismos y desastres de 30 destinos."},{n:"02",t:"Pulso de viajeros",d:"Observaciones en este dispositivo; todavía no hay comunidad sincronizada."},{n:"03",t:"Oportunidad de destino",d:"Recomienda destinos con clima, aviso oficial y tendencia de interés reales. Aún no usa precios: no hay una fuente de precios conectada."},{n:"04",t:"Mi viaje · Trip Twin",d:"Guarda lugares, prepara cambios revisables y permite deshacerlos. Aún no calcula tarifas ni traslados."}].map((item) => <div key={item.n} className="flex gap-4 rounded-2xl border border-white/10 bg-white/[.06] p-4"><span className="font-display text-sm font-extrabold text-[#46d4f2]">{item.n}</span><div><h2 className="font-display text-base font-extrabold">{item.t}</h2><p className="mt-1 text-sm leading-5 text-white/65">{item.d}</p></div></div>)}
+            {[{n:"01",t:"Contexto de ciudad",d:"Clima de Open-Meteo y lugares de OpenStreetMap para cualquier ciudad. El Radar suma avisos oficiales, sismos y desastres de 30 destinos."},{n:"02",t:"Pulso de viajeros",d:"Observaciones en este dispositivo; todavía no hay comunidad sincronizada."},{n:"03",t:"Oportunidad de destino",d:"Recomienda destinos con clima, aviso oficial y tendencia de interés reales. Aún no usa precios: no hay una fuente de precios conectada."},{n:"04",t:"Mi día · traslados y horarios",d:"Arma el día con horarios de OpenStreetMap y traslados reales; si llueve, propone alternativas bajo techo. Aún sin tarifas."}].map((item) => <div key={item.n} className="flex gap-4 rounded-2xl border border-white/10 bg-white/[.06] p-4"><span className="font-display text-sm font-extrabold text-[#46d4f2]">{item.n}</span><div><h2 className="font-display text-base font-extrabold">{item.t}</h2><p className="mt-1 text-sm leading-5 text-white/65">{item.d}</p></div></div>)}
           </div>
           <p className="relative mt-5 text-[11px] leading-5 text-white/55">La cobertura de fuentes varía. El mapa y el clima tienen fuentes externas; las señales humanas todavía no se sincronizan entre viajeros.</p>
         </div>

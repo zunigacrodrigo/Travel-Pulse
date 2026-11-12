@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { DayPrefill } from "@/lib/day/query";
 import { CITIES } from "@/lib/day/cities";
 import { clock } from "@/lib/day/openingHours";
 import { addStopWish, swapOutdoorForIndoor, type Stop, type Wish } from "@/lib/day/planner";
@@ -142,12 +143,12 @@ function WeatherCard({ data }: { data: DayResponse }) {
   );
 }
 
-export function DayView({ defaultDate }: { defaultDate: string }) {
-  const [city, setCity] = useState("sao-paulo-br");
-  const [date, setDate] = useState(defaultDate);
-  const [start, setStart] = useState("11:00");
-  const [end, setEnd] = useState("23:00");
-  const [wishes, setWishes] = useState<Wish[]>([{ kind: "museo" }, { kind: "restaurante" }, { kind: "galeria" }, { kind: "pub" }]);
+export function DayView({ prefill }: { prefill: DayPrefill }) {
+  const [city, setCity] = useState(prefill.city);
+  const [date, setDate] = useState(prefill.date);
+  const [start, setStart] = useState(prefill.start);
+  const [end, setEnd] = useState(prefill.end);
+  const [wishes, setWishes] = useState<Wish[]>(prefill.kinds.map((kind) => ({ kind })));
   const [data, setData] = useState<DayResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -164,6 +165,13 @@ export function DayView({ defaultDate }: { defaultDate: string }) {
       setError(e instanceof Error ? e.message : "No pudimos armar el día. Inténtalo de nuevo.");
     } finally { setBusy(false); }
   }
+
+  // Viene de la portada con todo dicho: se arma sola, una vez.
+  const started = useRef(false);
+  useEffect(() => {
+    if (prefill.go && !started.current) { started.current = true; void run(wishes); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const has = (k: Kind) => wishes.some((w) => w.kind === k);
   const toggle = (k: Kind) => setWishes(has(k) ? wishes.filter((w) => w.kind !== k) : [...wishes, { kind: k }]);
