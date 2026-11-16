@@ -70,3 +70,8 @@ Límites: Wikidata permite ~1 petición/min → caché de 7 días y copia vieja 
 - Si el contexto no se pudo consultar, se declara en notas/avisos y en las fuentes (ok / fuera de alcance / no respondió).
 - Verificado en vivo (ruta real `/api/trip-review`, São Paulo, 20-nov-2026): 4 fuentes «ok»; feriado + aire 151 + UV 10,4 reales.
 Límite: el aire y UV son pronóstico de un modelo (hasta 4 días); el aviso lo dice. La ventana del UV es una heurística nuestra, no un dato de la fuente.
+
+## Acción ante aire dañino (2026-11-16)
+En Mi día, el aviso de aire dañino ofrece «Cambiar lo del aire libre por museos y galerías bajo techo» (reutiliza el motor de «Está lloviendo»).
+Solo con un clic explícito, solo si el día tiene algo al aire libre (si no, dice que ya es bajo techo) y el aviso cuenta el motivo. El UV no ofrece cambio: se resuelve con protector y sombra, no cambiando de lugar.
+Limitación: el cambio reemplaza TODO lo al aire libre por museos; no elige «el más cercano» ni respeta si la persona quería un parque a propósito (por eso es un botón, no automático).

@@ -15,8 +15,8 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
   const browser = await chromium.launch();
   for (const [name, w, h] of [['escritorio', 1440, 900], ['movil', 390, 844]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, locale: 'es-CL' });
-    let modo = 'feriado'; let guia = 'ok'; let entorno = 'ok'; const pedidos = [];
-    await ctx.route('**/api/day-plan', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(REAL) }));
+    let modo = 'feriado'; let guia = 'ok'; let entorno = 'ok'; const planPedidos = []; const pedidos = [];
+    await ctx.route('**/api/day-plan', (r) => { planPedidos.push(JSON.parse(r.request().postData())); return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(REAL) }); });
     await ctx.route('**/api/contexto**', (r) => { pedidos.push(new URL(r.request().url()).search); return modo === 'error' ? r.fulfill({ status: 500, contentType: 'application/json', body: '{}' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(modo === 'vacio' ? { ...CTX.normal, items: [], gaps: [] } : modo === 'brecha' ? { ...CTX.normal, items: [], gaps: [{ source: 'Feriados (Nager.Date)', reason: 'HTTP 500' }] } : CTX[modo]) }); });
     await ctx.route('**/api/guia**', (r) => guia === 'error' ? r.fulfill({ status: 502, contentType: 'application/json', body: '{}' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(guia === 'vieja' ? { ...GUIA, stale: true, tips: [...GUIA.tips, { id: 'seguridad', title: 'Seguridad', text: 'Texto de prueba en inglés para la insignia.', lang: 'en' }] } : GUIA) }));
     await ctx.route('**/api/entorno**', (r) => entorno === 'error' ? r.fulfill({ status: 500, contentType: 'application/json', body: '{}' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(entorno === 'brecha' ? { ...ENT, heritage: null, gaps: [{ source: 'Patrimonio (Wikidata)', reason: 'HTTP 429' }] } : entorno === 'vieja' ? { ...ENT, nature: { ...ENT.nature, stale: true } } : ENT) }));
@@ -101,6 +101,31 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
     await step(`[${name}] si todo falla, lo dice y el plan sigue ahí`, async () => {
       await ecard.getByText(/No pudimos consultar esta información/).waitFor();
       assert.ok(await p.getByRole('heading', { name: /jueves/i }).isVisible());
+    });
+    const conParque = async () => { await p.goto(`${BASE}/dia?city=sao-paulo-br&date=2026-11-17&from=09:00&to=20:00&w=parque,museo&go=1`, { waitUntil: 'networkidle' }); await p.getByRole('heading', { name: /jueves/i }).waitFor({ timeout: 15000 }); };
+    modo = 'normal'; entorno = 'ok'; guia = 'ok'; planPedidos.length = 0; await conParque();
+    const swapBtn = card.getByRole('button', { name: /Cambiar lo del aire libre por museos y galerías bajo techo/ });
+    await step(`[${name}] con aire dañino y un parque en el día, ofrece cambiarlo por algo bajo techo (y no lo hace solo)`, async () => {
+      await swapBtn.waitFor();
+      assert.equal(planPedidos.length, 1, 'solo el pedido inicial: el cambio espera el clic');
+      assert.deepEqual(planPedidos[0].wishes.map((w) => w.kind), ['parque', 'museo']);
+    });
+    await step(`[${name}] al hacer clic, vuelve a armar el día sin nada al aire libre y lo cuenta con el motivo`, async () => {
+      await swapBtn.click();
+      await p.getByText(/Cambié lo que era al aire libre por lugares bajo techo por el aire dañino: Parque \(al aire libre\) → Museo/).waitFor();
+      assert.deepEqual(planPedidos.at(-1).wishes.map((w) => w.kind), ['museo', 'museo']);
+      await card.getByText('Tu día ya es bajo techo: no hay nada al aire libre que cambiar.').waitFor();
+      assert.equal(await swapBtn.count(), 0);
+    });
+    modo = 'normal'; await armar();
+    await step(`[${name}] con todo el día bajo techo no ofrece el botón y lo dice`, async () => {
+      await card.getByText('Tu día ya es bajo techo: no hay nada al aire libre que cambiar.').waitFor();
+      assert.equal(await swapBtn.count(), 0);
+    });
+    modo = 'vacio'; await conParque();
+    await step(`[${name}] sin aviso de aire no hay botón aunque haya un parque`, async () => {
+      await card.getByText('Sin novedades para ese día.').waitFor();
+      assert.equal(await swapBtn.count(), 0);
     });
     await ctx.close();
   }

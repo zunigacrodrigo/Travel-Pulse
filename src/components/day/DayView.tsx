@@ -166,6 +166,14 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
     } finally { setBusy(false); }
   }
 
+  const hasOutdoor = wishes.some((w) => !KIND_META[w.kind].indoor);
+  /** Cambia lo que era al aire libre por lugares bajo techo; `why` aclara el motivo en el aviso. */
+  function swapIndoor(why = "") {
+    const r = swapOutdoorForIndoor(wishes);
+    if (r.changes.length) void run(r.wishes, `Cambié lo que era al aire libre por lugares bajo techo${why}: ${r.changes.join("; ")}.`);
+    else setNotice("Tu día ya es bajo techo: no hay nada al aire libre que cambiar. Cada parada tiene «Cambiar por otro cercano».");
+  }
+
   // Viene de la portada con todo dicho: se arma sola, una vez.
   const started = useRef(false);
   useEffect(() => {
@@ -239,7 +247,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
                   <p className="text-[13px] text-mid">{data.city.name} · llegas a las {toHHMM(data.startMin)} · {stops.length} parada{stops.length === 1 ? "" : "s"}{last ? ` · terminas a las ${clock(last.endMin)}` : ""}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" disabled={busy} onClick={() => { const r = swapOutdoorForIndoor(wishes); if (r.changes.length) void run(r.wishes, `Cambié lo que era al aire libre por lugares bajo techo: ${r.changes.join("; ")}.`); else setNotice("Tu día ya es bajo techo: no hay nada al aire libre que cambiar. Cada parada tiene «Cambiar por otro cercano»."); }}>Está lloviendo</Button>
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => swapIndoor()}>Está lloviendo</Button>
                   <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(addStopWish(wishes, "pub", wishes.some((w) => w.kind === "pub") && last ? last.endMin + 15 : undefined), "Agregué un pub a tu día.")}>Quiero un pub</Button>
                   <Button size="sm" disabled={busy || stops.length === 0} onClick={saveToTrip}>Guardar en Mi viaje</Button>
                 </div>
@@ -270,7 +278,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
             <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:self-start" aria-label="Mapa, clima y viajeros">
               <DayMap origin={data.city.center} originName={data.city.anchorName} stops={stops.map((s, i) => ({ n: i + 1, name: s.place.name, lat: s.place.lat, lon: s.place.lon }))} />
               <WeatherCard data={data} />
-              <ContextCard key={`${data.city.key}-${data.date}`} cityKey={data.city.key} date={data.date} />
+              <ContextCard key={`${data.city.key}-${data.date}`} cityKey={data.city.key} date={data.date} hasOutdoor={hasOutdoor} busy={busy} onSwapIndoor={() => swapIndoor(" por el aire dañino")} />
               <GuideCard key={data.city.key} cityKey={data.city.key} />
               <EntornoCard key={data.city.key} cityKey={data.city.key} />
               <PulseMeshPanel cityName={cityInfo.name} country={cityInfo.country} />
