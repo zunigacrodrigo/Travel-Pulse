@@ -1,0 +1,159 @@
+{
+ "cityKey": "santiago-cl",
+ "heritage": {
+  "cityKey": "santiago-cl",
+  "radiusKm": 4,
+  "sites": [
+   {
+    "id": "Q1146881",
+    "name": "Palacio de La Moneda",
+    "designations": [
+     "lista indicativa del Patrimonio de la Humanidad",
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 30,
+    "lat": -33.443018,
+    "lon": -70.65387,
+    "url": "https://www.wikidata.org/wiki/Q1146881"
+   },
+   {
+    "id": "Q2901485",
+    "name": "Biblioteca Nacional de Chile",
+    "designations": [
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 25,
+    "lat": -33.44227222,
+    "lon": -70.645675,
+    "url": "https://www.wikidata.org/wiki/Q2901485"
+   },
+   {
+    "id": "Q775376",
+    "name": "Museo Nacional de Bellas Artes",
+    "designations": [
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 21,
+    "lat": -33.435322,
+    "lon": -70.643569,
+    "url": "https://www.wikidata.org/wiki/Q775376"
+   },
+   {
+    "id": "Q15042373",
+    "name": "Catedral Metropolitana de Santiago",
+    "designations": [
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 17,
+    "lat": -33.43765833,
+    "lon": -70.65180556,
+    "url": "https://www.wikidata.org/wiki/Q15042373"
+   },
+   {
+    "id": "Q3064279",
+    "name": "Museo Nacional de Historia Natural",
+    "designations": [
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 17,
+    "lat": -33.442169444,
+    "lon": -70.681838888,
+    "url": "https://www.wikidata.org/wiki/Q3064279"
+   },
+   {
+    "id": "Q517430",
+    "name": "Museo Chileno de Arte Precolombino",
+    "designations": [
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 15,
+    "lat": -33.43889,
+    "lon": -70.65222,
+    "url": "https://www.wikidata.org/wiki/Q517430"
+   },
+   {
+    "id": "Q1055993",
+    "name": "Cerro Santa Lucía",
+    "designations": [
+     "Monumento Nacional de Chile",
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 13,
+    "lat": -33.44027778,
+    "lon": -70.64416667,
+    "url": "https://www.wikidata.org/wiki/Q1055993"
+   },
+   {
+    "id": "Q605703",
+    "name": "Museo de Arte Contemporáneo de Santiago",
+    "designations": [
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 11,
+    "lat": -33.441945,
+    "lon": -70.680417,
+    "url": "https://www.wikidata.org/wiki/Q605703"
+   },
+   {
+    "id": "Q28163126",
+    "name": "Estación Central de Santiago",
+    "designations": [
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 10,
+    "lat": -33.45194444,
+    "lon": -70.67888889,
+    "url": "https://www.wikidata.org/wiki/Q28163126"
+   },
+   {
+    "id": "Q5722110",
+    "name": "basílica del Salvador",
+    "designations": [
+     "Monumento Histórico de Chile"
+    ],
+    "languages": 9,
+    "lat": -33.4413,
+    "lon": -70.6618,
+    "url": "https://www.wikidata.org/wiki/Q5722110"
+   }
+  ],
+  "fetchedAt": "2026-11-16T18:00:00.000Z",
+  "stale": false
+ },
+ "nature": {
+  "cityKey": "santiago-cl",
+  "totalRecords": 290190,
+  "species": [
+   {
+    "scientificName": "Turdus falcklandii",
+    "records": 30300
+   },
+   {
+    "scientificName": "Zenaida auriculata",
+    "records": 26987
+   },
+   {
+    "scientificName": "Columba livia",
+    "records": 25528
+   },
+   {
+    "scientificName": "Myiopsitta monachus",
+    "records": 21218
+   },
+   {
+    "scientificName": "Zonotrichia capensis",
+    "records": 19763
+   },
+   {
+    "scientificName": "Troglodytes musculus",
+    "records": 16907
+   }
+  ],
+  "yearFrom": 2021,
+  "yearTo": 2026,
+  "areaKm": 22,
+  "fetchedAt": "2026-11-16T18:00:00.000Z",
+  "stale": false
+ },
+ "gaps": []
+}

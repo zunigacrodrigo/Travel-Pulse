@@ -17,6 +17,7 @@ import type { DayResponse } from "@/lib/day/service";
 import { PulseMeshPanel } from "../PulseMeshPanel";
 import { Button } from "../ui/Button";
 import { ContextCard } from "./ContextCard";
+import { EntornoCard } from "./EntornoCard";
 import { GuideCard } from "./GuideCard";
 import { DayMap } from "./DayMap";
 
@@ -271,6 +272,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
               <WeatherCard data={data} />
               <ContextCard key={`${data.city.key}-${data.date}`} cityKey={data.city.key} date={data.date} />
               <GuideCard key={data.city.key} cityKey={data.city.key} />
+              <EntornoCard key={data.city.key} cityKey={data.city.key} />
               <PulseMeshPanel cityName={cityInfo.name} country={cityInfo.country} />
             </aside>
           </div>

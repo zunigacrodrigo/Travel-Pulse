@@ -7,6 +7,7 @@ const BASE = process.env.BASE || 'http://localhost:3102';
 const REAL = JSON.parse(fs.readFileSync(__dirname + '/fixtures/day-plan-real.json', 'utf8'));
 const CTX = JSON.parse(fs.readFileSync(__dirname + '/fixtures/contexto-real.json', 'utf8'));
 const GUIA = JSON.parse(fs.readFileSync(__dirname + '/fixtures/guia-real.json', 'utf8'));
+const ENT = JSON.parse(fs.readFileSync(__dirname + '/fixtures/entorno-real.json', 'utf8'));
 const results = []; const errors = [];
 const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } catch (e) { results.push(['FAIL', n + ' -> ' + String(e.message).split('\n')[0]]); } };
 
@@ -14,10 +15,11 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
   const browser = await chromium.launch();
   for (const [name, w, h] of [['escritorio', 1440, 900], ['movil', 390, 844]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, locale: 'es-CL' });
-    let modo = 'feriado'; let guia = 'ok'; const pedidos = [];
+    let modo = 'feriado'; let guia = 'ok'; let entorno = 'ok'; const pedidos = [];
     await ctx.route('**/api/day-plan', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(REAL) }));
     await ctx.route('**/api/contexto**', (r) => { pedidos.push(new URL(r.request().url()).search); return modo === 'error' ? r.fulfill({ status: 500, contentType: 'application/json', body: '{}' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(modo === 'vacio' ? { ...CTX.normal, items: [], gaps: [] } : modo === 'brecha' ? { ...CTX.normal, items: [], gaps: [{ source: 'Feriados (Nager.Date)', reason: 'HTTP 500' }] } : CTX[modo]) }); });
     await ctx.route('**/api/guia**', (r) => guia === 'error' ? r.fulfill({ status: 502, contentType: 'application/json', body: '{}' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(guia === 'vieja' ? { ...GUIA, stale: true, tips: [...GUIA.tips, { id: 'seguridad', title: 'Seguridad', text: 'Texto de prueba en inglés para la insignia.', lang: 'en' }] } : GUIA) }));
+    await ctx.route('**/api/entorno**', (r) => entorno === 'error' ? r.fulfill({ status: 500, contentType: 'application/json', body: '{}' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(entorno === 'brecha' ? { ...ENT, heritage: null, gaps: [{ source: 'Patrimonio (Wikidata)', reason: 'HTTP 429' }] } : entorno === 'vieja' ? { ...ENT, nature: { ...ENT.nature, stale: true } } : ENT) }));
     const p = await ctx.newPage();
     p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|ERR_TUNNEL|status of 50[02]|Error: 50[02]/.test(m.text())) errors.push(`[${name}] ${m.text().slice(0, 180)}`); });
     p.on('pageerror', (e) => errors.push(`[${name}] pageerror ${e.message.slice(0, 180)}`));
@@ -72,6 +74,32 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
     guia = 'error'; await armar();
     await step(`[${name}] si la guía falla, lo dice y el plan sigue ahí`, async () => {
       await gcard.getByText(/No pudimos consultar la guía/).waitFor();
+      assert.ok(await p.getByRole('heading', { name: /jueves/i }).isVisible());
+    });
+    const ecard = p.getByRole('region', { name: 'Patrimonio y naturaleza' });
+    entorno = 'ok'; await armar();
+    await step(`[${name}] patrimonio: un bien con varias declaratorias aparece una vez, con enlace a su fuente`, async () => {
+      await ecard.getByRole('link', { name: 'Palacio de La Moneda' }).waitFor();
+      assert.equal(await ecard.getByRole('link', { name: 'Palacio de La Moneda' }).count(), 1);
+      assert.match(await ecard.innerText(), /Monumento Histórico de Chile · lista indicativa|lista indicativa del Patrimonio de la Humanidad/);
+      assert.match(await ecard.getByRole('link', { name: 'Palacio de La Moneda' }).getAttribute('href'), /wikidata\.org\/wiki\/Q1146881/);
+    });
+    await step(`[${name}] aves: nombres científicos con registros, y dice qué cuenta y qué no`, async () => {
+      const t = await ecard.innerText();
+      assert.match(t, /Turdus falcklandii/); assert.match(t, /30\.300 registros/);
+      assert.match(t, /no cuántas aves hay/); assert.match(t, /no si conviene visitarlo ni si está abierto/);
+      assert.doesNotMatch(t, /Daptrius/);
+    });
+    entorno = 'brecha'; await armar();
+    await step(`[${name}] si Wikidata falla, lo dice y las aves siguen`, async () => {
+      await ecard.getByText(/Sin dato de Patrimonio \(Wikidata\): HTTP 429/).waitFor();
+      assert.match(await ecard.innerText(), /Turdus falcklandii/);
+    });
+    entorno = 'vieja'; await armar();
+    await step(`[${name}] una copia vieja se avisa`, async () => { await ecard.getByText(/Copia guardada: GBIF no respondió/).waitFor(); });
+    entorno = 'error'; await armar();
+    await step(`[${name}] si todo falla, lo dice y el plan sigue ahí`, async () => {
+      await ecard.getByText(/No pudimos consultar esta información/).waitFor();
       assert.ok(await p.getByRole('heading', { name: /jueves/i }).isVisible());
     });
     await ctx.close();

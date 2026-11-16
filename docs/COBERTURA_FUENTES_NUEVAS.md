@@ -57,3 +57,8 @@ Hallazgos con datos reales: en la guía en español de Santiago «Seguridad», �
 **No verificado:** el texto real en inglés (Wikivoyage devolvió 429 al grabarlo; sus pruebas usan texto sintético) y las guías de Valparaíso, Antofagasta y São Paulo (no se pudieron grabar; el código las consulta igual).
 Wikivoyage limita el ritmo: no hay que consultarla por cada visita; la caché es obligatoria.
 Nota de calidad: una prueba E2E de PulseMesh falló una vez de forma intermitente y pasó en 3 repeticiones; sin causa identificada.
+
+## Integrado (2026-11-16): «Patrimonio y naturaleza» (Wikidata + GBIF)
+`src/lib/context/{heritage,nature,entorno}.ts` → `GET /api/entorno?city=` → tarjeta en Mi día. Verificado EN VIVO en las 4 ciudades (10 bienes protegidos cada una; aves: SP 361.701 registros, Santiago 290.190, Valparaíso 102.675, Antofagasta 17.656).
+Con datos reales aparecieron: filas repetidas de Wikidata (un bien con varias declaratorias → se agrupa) y registros de GBIF solo de género (se descartan).
+Límites: Wikidata permite ~1 petición/min → caché de 7 días y copia vieja si limita. El orden del patrimonio es por idiomas de Wikipedia (popularidad), no calidad; las aves cuentan registros de observadores (sesgo: especies urbanas comunes primero, p. ej. paloma doméstica) y no traen nombre común.
