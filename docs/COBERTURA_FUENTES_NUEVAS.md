@@ -25,3 +25,21 @@ Las afirmaciones de cobertura que vienen de textos externos NO se dan por buenas
 - Sin claves, hoy se pueden integrar con datos reales: **Wikivoyage, Wikidata y GBIF**. Cubren "conocimiento práctico/cultural del destino" y "naturaleza".
 - Eventos (Ticketmaster/OpenAgenda), calidad del aire, incendios, transporte en tiempo real y actividades reservables **necesitan claves o accesos que no están en el sandbox**: sin ellos, no hay datos reales y no se inventan.
 - Precios y afluencia siguen sin fuente.
+
+## Segunda ronda: fuentes SIN clave que responden (2026-11-16)
+| Fuente | Medido | Para qué |
+|---|---|---|
+| Open-Meteo Air Quality | Santiago PM2.5 14,2 / AQI EE.UU. 59 / UV 5,4; Antofagasta AQI 52 | Calidad del aire y UV en vivo (sustituye a OpenAQ, que pide clave) |
+| Open-Meteo Marine | Valparaíso oleaje 1,62 m, mar 18,8 °C | Actividades costeras |
+| Nager.Date | Chile 17 y Brasil 15 feriados de 2026 | Cierres y afluencia por feriado |
+| Frankfurter (BCE) | USD→BRL 5,71; **CLP no está en su lista** | Cambio solo para monedas que el BCE publica |
+| NASA EONET | 200 eventos abiertos (tormentas, incendios…) | Alertas naturales globales; falta filtrar por cercanía |
+| Wikipedia geosearch | 50 artículos ≤2 km en Santiago | Contexto de cada zona |
+| Wikimedia Commons | 50 fotos geolocalizadas ≤1,5 km en Valparaíso | Fotos con licencia abierta (exigen atribución) |
+| Nominatim extratags | Museo de Bellas Artes: fee=no, toilets=yes | Entrada gratis/baños, lo que OSM sepa |
+| datos.gob.cl (CKAN) | 138 conjuntos "turismo" | Datos oficiales de Chile por revisar |
+| GTFS estático DTPM | ZIP descargable (agency.txt…) | Transporte programado de Santiago, NO tiempo real |
+| CSN Chile vía api.xor.cl | Responde (envoltorio de terceros) | Sismos locales; verificar fiabilidad del intermediario |
+| Wikidata museos | 425 "museos con web" ≤15 km Santiago | Cifra sospechosa (la consulta incluye subclases): NO fiable sin validar |
+
+Sin respuesta: espejos de Overpass (kumi, mail.ru, private.coffee) caídos; dados.gov.br exige acceso (401).
