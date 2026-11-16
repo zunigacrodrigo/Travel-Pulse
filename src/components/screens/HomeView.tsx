@@ -11,6 +11,7 @@ import { encodeRequest, storeLastRequest } from "@/lib/client/query";
 import { CITIES } from "@/lib/day/cities";
 import { dayHref } from "@/lib/day/query";
 import { KINDS, KIND_META, type Kind } from "@/lib/day/places";
+import { orderKindsByInterests } from "@/lib/day/preferences";
 import { INTEREST_LABELS, INTERESTS, type Interest, type TripRequest } from "@/lib/types";
 import { Globe } from "../Globe";
 import { Button } from "../ui/Button";
@@ -38,6 +39,9 @@ export function HomeView({ initial, defaultDate }: { initial: TripRequest; defau
   const toggleKind = (k: Kind) => setKinds((c) => (c.includes(k) ? c.filter((x) => x !== k) : [...c, k]));
   const planDay = (e: React.FormEvent) => { e.preventDefault(); if (kinds.length) router.push(dayHref({ city: tripCity, date: tripDate, start: arrive, end: until, kinds })); };
   const dna = useDna();
+  // Con un Travel DNA guardado, los tipos que el viajero declaró como intereses van primero (solo el orden cambia).
+  const dnaOrder = dna ? orderKindsByInterests(dna.interests) : null;
+  const shownKinds = dnaOrder ?? KINDS;
   const ids = useId();
   const budgetLabelId = `${ids}-budget`;
   const monthId = `${ids}-month`;
@@ -64,7 +68,7 @@ export function HomeView({ initial, defaultDate }: { initial: TripRequest; defau
               <label className="text-sm font-bold">Llegas a las<input type="time" value={arrive} onChange={(e) => setArrive(e.target.value)} required className="mt-1 min-h-12 w-full rounded-xl border border-line bg-page px-3 text-base font-normal"/></label>
               <label className="text-sm font-bold">Hasta las<input type="time" value={until} onChange={(e) => setUntil(e.target.value)} required className="mt-1 min-h-12 w-full rounded-xl border border-line bg-page px-3 text-base font-normal"/></label>
             </div>
-            <fieldset className="mt-4 border-0 p-0"><legend className="text-sm font-bold">¿Qué quieres vivir?</legend><div className="mt-2 flex flex-wrap gap-2">{KINDS.map((k) => <button key={k} type="button" aria-pressed={kinds.includes(k)} onClick={() => toggleKind(k)} className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${kinds.includes(k) ? "border-signal bg-signal/15 text-signal" : "border-line text-fg2"}`}>{KIND_META[k].label}</button>)}</div></fieldset>
+            <fieldset className="mt-4 border-0 p-0"><legend className="text-sm font-bold">¿Qué quieres vivir?</legend><div className="mt-2 flex flex-wrap gap-2">{shownKinds.map((k) => <button key={k} type="button" aria-pressed={kinds.includes(k)} onClick={() => toggleKind(k)} className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${kinds.includes(k) ? "border-signal bg-signal/15 text-signal" : "border-line text-fg2"}`}>{KIND_META[k].label}</button>)}</div></fieldset>
             <Button type="submit" disabled={kinds.length === 0} className="mt-5 min-h-12 w-full px-6 sm:w-auto">Armar mi día →</Button>
             <p className="mt-3 text-xs leading-5 text-mid">Hoy cubre São Paulo, Santiago, Valparaíso y Antofagasta. Los precios aún no tienen fuente, así que no los mostramos.</p>
           </form>
