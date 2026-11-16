@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { DayPrefill } from "@/lib/day/query";
+import { dayToTrip } from "@/lib/day/toTrip";
+import { buildTripPlan } from "@/lib/trip-twin/engine";
 import { PACES, PACE_LABELS, type Pace } from "@/lib/client/dna-core";
 import { CITIES } from "@/lib/day/cities";
 import { clock } from "@/lib/day/openingHours";
@@ -127,6 +130,22 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const router = useRouter();
+
+  /** Pasa el día armado a Mi viaje, donde se puede mover, cancelar y deshacer. Reemplaza el viaje guardado solo si la persona lo confirma. */
+  function saveToTrip() {
+    if (!data || data.plan.stops.length === 0) return;
+    try {
+      if (localStorage.getItem("travel-pulse.trip-twin.v1") && !window.confirm("Ya tienes un viaje guardado en este dispositivo. ¿Quieres reemplazarlo con este día?")) return;
+      const { trip, activities } = dayToTrip(data);
+      const plan = buildTripPlan(trip, activities, { now: new Date().toISOString() });
+      localStorage.setItem("travel-pulse.trip-twin.v1", JSON.stringify({ trip, activities, plan, origin: "mi-dia" }));
+      localStorage.removeItem("travel-pulse.trip-twin.history.v1");
+      router.push("/trip-twin");
+    } catch {
+      setError("No pudimos guardar el día en este navegador. Revisa que el almacenamiento esté permitido e inténtalo de nuevo.");
+    }
+  }
 
   async function run(next: Wish[], note?: string) {
     setBusy(true); setError(null); setNotice(note ?? null);
@@ -215,6 +234,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" disabled={busy} onClick={() => { const r = swapOutdoorForIndoor(wishes); if (r.changes.length) void run(r.wishes, `Cambié lo que era al aire libre por lugares bajo techo: ${r.changes.join("; ")}.`); else setNotice("Tu día ya es bajo techo: no hay nada al aire libre que cambiar. Cada parada tiene «Cambiar por otro cercano»."); }}>Está lloviendo</Button>
                   <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(addStopWish(wishes, "pub", wishes.some((w) => w.kind === "pub") && last ? last.endMin + 15 : undefined), "Agregué un pub a tu día.")}>Quiero un pub</Button>
+                  <Button size="sm" disabled={busy || stops.length === 0} onClick={saveToTrip}>Guardar en Mi viaje</Button>
                 </div>
               </div>
               {stops.length === 0 ? <p className="mt-4 rounded-2xl border border-dashed border-line p-5 text-[14px] text-fg2">No pudimos programar ninguna parada con lo que hay confirmado. Mira los motivos abajo.</p> : (

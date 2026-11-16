@@ -18,7 +18,7 @@ export function DayMap({ origin, originName, stops }: { origin: { lat: number; l
       const L = (await import("leaflet")).default;
       if (cancelled || !host.current) return;
       if (!map.current) {
-        map.current = L.map(host.current, { zoomControl: true, attributionControl: true, scrollWheelZoom: false }).setView([origin.lat, origin.lon], 13);
+        map.current = L.map(host.current, { zoomControl: true, attributionControl: true, scrollWheelZoom: false, zoomAnimation: false }).setView([origin.lat, origin.lon], 13);
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>' }).addTo(map.current);
         layer.current = L.layerGroup().addTo(map.current);
       }
@@ -39,7 +39,10 @@ export function DayMap({ origin, originName, stops }: { origin: { lat: number; l
     return () => { cancelled = true; };
   }, [origin.lat, origin.lon, originName, stops]);
 
-  useEffect(() => () => { map.current?.remove(); map.current = null; layer.current = null; }, []);
+  // Sin animación de zoom (su temporizador de 250 ms sigue corriendo tras `remove()` y lanza «Cannot read properties
+  // of undefined (reading '_leaflet_pos')» si la persona sale de la pantalla justo al armar el día) y se detiene
+  // cualquier desplazamiento en curso antes de destruir el mapa.
+  useEffect(() => () => { map.current?.stop(); map.current?.remove(); map.current = null; layer.current = null; }, []);
 
   return (
     <div
