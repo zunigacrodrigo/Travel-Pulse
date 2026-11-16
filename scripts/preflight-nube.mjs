@@ -104,7 +104,7 @@ export async function probeSupabase(url, anonKey, fetchImpl = fetch) {
   const marks = [
     ["0001", "/rest/v1/profiles?select=id&limit=1", "tablas base (profiles…)"],
     ["0002", "/rest/v1/destination_gap_stats?select=*&limit=1", "vista destination_gap_stats"],
-    ["0004", "/rest/v1/user_trips?select=id&limit=1", "viajes guardados en la nube (user_trips)"],
+    ["0004", "/rest/v1/user_trips?select=local_id&limit=1", "viajes guardados en la nube (user_trips)"],
     ["0005", "/rest/v1/pulse_signals_public?select=id&limit=1", "reportes de viajeros (PulseMesh)"],
     ["0006", "/rest/v1/pulse_signals_public?select=place_id&limit=1", "reportes por lugar (place_id)"],
   ];

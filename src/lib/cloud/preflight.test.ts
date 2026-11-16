@@ -82,7 +82,10 @@ describe("preflight: consulta al proyecto (respuestas simuladas)", () => {
     if (r === "red") throw new Error("ENOTFOUND");
     return new Response(JSON.stringify(r.body ?? []), { status: r.status });
   }) as unknown) as typeof fetch;
-  const healthy: Route = (p) => (p.startsWith("/auth/v1/settings") ? { status: 200, body: { disable_signup: false, mailer_autoconfirm: false } }
+  // `user_trips` no tiene columna `id` (su clave es user_id + local_id): consultarla por `id` daría un falso «no aplicada».
+  const healthy: Route = (p) => (p.includes("user_trips?select=id") ? { status: 400, body: { code: "42703" } }
+    : p.includes("user_trips") ? { status: 401, body: { code: "42501" } } // el visitante anónimo no tiene permiso: es lo correcto
+    : p.startsWith("/auth/v1/settings") ? { status: 200, body: { disable_signup: false, mailer_autoconfirm: false } }
     : p.includes("user_id") && p.includes("pulse_signals_public") ? { status: 400, body: { code: "42703" } }
     : p.includes("pulse_signals?select=user_id") ? { status: 401, body: { code: "42501" } } : { status: 200, body: [] });
 
