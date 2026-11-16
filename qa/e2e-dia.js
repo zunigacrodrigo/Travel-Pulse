@@ -39,7 +39,7 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
       });
       await step(`[${name}] armar el día envía ciudad, fecha, horas y deseos exactos`, async () => {
         await p.getByLabel('Fecha').fill('2026-11-05'); await arm(p);
-        assert.deepEqual(bodies[0], { city: 'sao-paulo-br', date: '2026-11-05', startMin: 660, endMin: 1380, wishes: [{ kind: 'museo' }, { kind: 'restaurante' }, { kind: 'galeria' }, { kind: 'pub' }] });
+        assert.deepEqual(bodies[0], { city: 'sao-paulo-br', date: '2026-11-05', startMin: 660, endMin: 1380, mood: 'clasico', variant: 0, wishes: [{ kind: 'museo' }, { kind: 'restaurante' }, { kind: 'galeria' }, { kind: 'pub' }] });
       });
       await step(`[${name}] muestra las 4 paradas con horas y estados reales (abierto/cierre, incluso después de medianoche)`, async () => {
         assert.equal(await p.locator('ol > li').count(), 4);

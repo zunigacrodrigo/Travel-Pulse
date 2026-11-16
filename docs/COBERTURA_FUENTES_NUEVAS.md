@@ -75,3 +75,11 @@ Límite: el aire y UV son pronóstico de un modelo (hasta 4 días); el aviso lo 
 En Mi día, el aviso de aire dañino ofrece «Cambiar lo del aire libre por museos y galerías bajo techo» (reutiliza el motor de «Está lloviendo»).
 Solo con un clic explícito, solo si el día tiene algo al aire libre (si no, dice que ya es bajo techo) y el aviso cuenta el motivo. El UV no ofrece cambio: se resuelve con protector y sombra, no cambiando de lugar.
 Limitación: el cambio reemplaza TODO lo al aire libre por museos; no elige «el más cercano» ni respeta si la persona quería un parque a propósito (por eso es un botón, no automático).
+
+## Día curado y rediseño de Mi día (2026-11-16)
+- **Curador** (`curate.ts`): orden por interés real (lecturas de Wikipedia, 30 días) + evidencia del dato; ánimo «Lo imperdible» / «Descubrir lo menos conocido»; «Otra propuesta» rota equivalentes. Reemplaza el orden por ficha completa cuando se pide un ánimo.
+- **Transporte público** (`transit.ts`, Transitous): verificado en vivo en Santiago (Metro L5, L1; buses 501, 508). Horario programado, no tiempo real. Valparaíso y Antofagasta: sin cobertura, la pantalla lo dice.
+- **Avisos de la calle** (`street-notes.ts`): notas abiertas de OpenStreetMap a ≤250 m, mostradas como «sin verificar».
+- **Pantalla**: tarjetas con foto a sangre, «Por qué te lo propongo», lecturas del mes, trayecto con líneas y estaciones.
+- **Límites reales vistos en vivo**: los restaurantes casi nunca tienen artículo → sin dato de interés (se ordenan por evidencia); el plan aún reserva el tiempo del traslado en auto/a pie, no el del transporte público (la pantalla avisa cuando el transporte toma más); el interés mide atención, no calidad.
+- **Seguridad**: Next.js 16.4.3 → 16.4.6 por GHSA-mfr8-8qww-v76h (moderada). `npm audit`: 0 vulnerabilidades.

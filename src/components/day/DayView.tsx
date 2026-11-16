@@ -12,7 +12,10 @@ import { CITIES } from "@/lib/day/cities";
 import { clock } from "@/lib/day/openingHours";
 import { addStopWish, swapOutdoorForIndoor, type Stop, type Wish } from "@/lib/day/planner";
 import { KIND_META, KINDS, type Kind } from "@/lib/day/places";
+import { MOODS, MOOD_LABELS, type Mood } from "@/lib/day/curate";
 import type { Media } from "@/lib/day/media";
+import type { StreetNote } from "@/lib/day/street-notes";
+import type { TransitOption } from "@/lib/day/transit";
 import type { DayResponse } from "@/lib/day/service";
 import { PulseMeshPanel } from "../PulseMeshPanel";
 import { Button } from "../ui/Button";
@@ -36,65 +39,122 @@ function StatusChip({ stop }: { stop: Stop }) {
   );
 }
 
-function StopCard({ stop, media, n, prevName, busy, onPick, onRemove, cityKey, pulse }: { cityKey: string; pulse: PlaceSignalsState; stop: Stop; media: Media | undefined; n: number; prevName: string; busy: boolean; onPick: (id: string) => void; onRemove: () => void }) {
-  const p = stop.place;
+const LEG_ICON: Record<TransitOption["legs"][number]["mode"], string> = { a_pie: "🚶", metro: "🚇", bus: "🚌", tren: "🚆", tranvia: "🚊", otro: "🚍" };
+const KIND_TINT: Record<Kind, string> = { museo: "from-[#3b2a6b] to-[#0f1626]", galeria: "from-[#6b2a55] to-[#0f1626]", restaurante: "from-[#6b3a1f] to-[#0f1626]", pub: "from-[#5c4a12] to-[#0f1626]", parque: "from-[#16523c] to-[#0f1626]" };
+const shortDate = (iso: string) => new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${iso}T12:00:00Z`));
+
+/** Cómo llegar: transporte público si se consultó y existe; si no, el traslado calculado. */
+function Journey({ stop, prevName, transit }: { stop: Stop; prevName: string; transit: TransitOption | null | undefined }) {
   return (
-    <li className="relative">
-      <div className="mb-2 ml-5 border-l-2 border-dashed border-line pl-4 text-[12px] text-mid">
+    <div className="mb-3 ml-5 border-l-2 border-dashed border-line pl-4">
+      <p className="text-[12px] text-mid">
         {stop.travel
           ? `${stop.travel.mode === "foot" ? "A pie" : "En auto, sin tráfico"} · ${stop.travel.minutes} min desde ${prevName}`
           : `Sin dato de traslado desde ${prevName}: se reservaron 30 min`}
         {stop.rainOnTravel ? <span className="ml-2 font-semibold text-[#8fc7ff]">· lluvia probable en el trayecto</span> : null}
-      </div>
-      <article className="rounded-2xl border border-line bg-surface p-4">
-        {media?.thumbnailUrl ? (
-          <figure className="mb-3 overflow-hidden rounded-xl">
-            {/* Foto de Wikimedia Commons: <img> directo porque el origen es externo y su licencia exige atribución visible. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={media.thumbnailUrl} alt={`${p.name}`} loading="lazy" className="h-44 w-full object-cover" />
-            <figcaption className="bg-page px-3 py-1 text-[11px] text-mid">Foto: <a className="underline" href={media.pageUrl} target="_blank" rel="noopener noreferrer">Wikipedia / Wikimedia Commons</a> (licencia libre; autoría en el enlace)</figcaption>
-          </figure>
-        ) : null}
-        <div className="flex items-start gap-3">
-          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-signal font-display text-[15px] font-extrabold text-ink" aria-hidden="true">{n}</span>
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-[22px] font-extrabold leading-none">{clock(stop.startMin)}<span className="text-mid"> – {clock(stop.endMin)}</span></p>
-            <h3 className="mt-1 font-display text-[17px] font-extrabold leading-tight">{p.name}</h3>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-line px-2.5 py-1 text-[11px] font-semibold text-fg2">{KIND_META[p.kind].label}{p.cuisine ? ` · ${p.cuisine.split(";")[0]}` : ""}</span>
-              <StatusChip stop={stop} />
-              {stop.rainOnVisit ? <span className="rounded-full bg-[#8fc7ff]/15 px-2.5 py-1 text-[11px] font-bold text-[#8fc7ff]">Lluvia probable durante la visita (al aire libre)</span> : null}
-            </div>
-            {media?.extract ? <p className="mt-2 text-[13px] leading-[1.5] text-fg2">{media.extract}</p> : null}
-            {p.hoursRaw ? <p className="mt-2 text-[12px] text-mid">Horario en OpenStreetMap: <span className="font-mono">{p.hoursRaw}</span></p> : null}
-            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
-              <a className="font-semibold underline underline-offset-2" href={osmUrl(p.id)} target="_blank" rel="noopener noreferrer">Ver en OpenStreetMap</a>
-              {p.website ? <a className="font-semibold underline underline-offset-2" href={p.website} target="_blank" rel="noopener noreferrer">Sitio web</a> : null}
-            </div>
-            <PlaceSignals cityKey={cityKey} placeId={p.id} placeName={p.name} state={pulse} tone="day" />
-          </div>
+      </p>
+      {transit ? (
+        <div className="mt-2 rounded-2xl border border-signal/30 bg-signal/[0.07] p-3" data-testid="transit">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-signal">En transporte público · {transit.minutes} min{transit.transfers > 0 ? ` · ${transit.transfers} transbordo${transit.transfers === 1 ? "" : "s"}` : ""}</p>
+          <ol className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px]">
+            {transit.legs.map((l, i) => (
+              <li key={i} className="flex items-center gap-1.5">
+                {i > 0 ? <span aria-hidden="true" className="text-mid">→</span> : null}
+                <span className={`whitespace-nowrap rounded-full px-2.5 py-1 font-semibold ${l.mode === "a_pie" ? "border border-line text-fg2" : "bg-signal text-ink"}`}>
+                  <span aria-hidden="true">{LEG_ICON[l.mode]} </span>
+                  {l.mode === "a_pie" ? `camina ${l.minutes} min` : `${l.line ?? "línea sin nombre"} · ${l.minutes} min`}
+                </span>
+                {l.mode !== "a_pie" && l.from && l.to ? <span className="text-fg2">{l.from} → {l.to}</span> : null}
+              </li>
+            ))}
+          </ol>
+          <p className="mt-2 text-[11px] text-mid">Horario programado, no tiempo real · <a className="underline" href="https://transitous.org/" target="_blank" rel="noopener noreferrer">Transitous</a>{stop.travel && transit.minutes > stop.travel.minutes + 5 ? ` · toma más que los ${stop.travel.minutes} min reservados en el plan: sal antes o ajusta la hora` : ""}</p>
         </div>
-        <details className="mt-3 text-[13px] text-fg2">
-          <summary className="cursor-pointer select-none font-semibold">¿Por qué este lugar?</summary>
-          <ul className="mt-1 list-disc pl-5">{stop.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
-        </details>
-        <div className="mt-3 flex flex-wrap items-start gap-2">
-          {stop.alternatives.length > 0 ? (
-            <details className="text-[13px]">
-              <summary className="cursor-pointer select-none rounded-xl border border-line px-3 py-2 font-semibold">Cambiar por otro cercano</summary>
-              <ul className="mt-2 flex flex-col gap-1.5">
-                {stop.alternatives.map((a) => (
-                  <li key={a.place.id}>
-                    <button type="button" disabled={busy} onClick={() => onPick(a.place.id)} className="w-full rounded-xl border border-line px-3 py-2 text-left hover:border-signal disabled:opacity-50">
-                      <b>{a.place.name}</b>
-                      <span className="block text-[12px] text-mid">{clock(a.startMin)} · {a.travelMin !== null ? `${a.travelMin} min de traslado` : "traslado sin dato"} · {a.status === "abierto" ? "abierto a esa hora" : "horario sin confirmar"}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </details>
+      ) : transit === null ? (
+        <p className="mt-1 text-[11px] text-mid">Sin recorrido de transporte público para este tramo en los datos abiertos.</p>
+      ) : null}
+    </div>
+  );
+}
+
+interface StopCardProps {
+  cityKey: string; pulse: PlaceSignalsState; stop: Stop; media: Media | undefined; n: number; prevName: string; busy: boolean;
+  onPick: (id: string) => void; onRemove: () => void;
+  why: { why: string[]; views30: number | null } | undefined; transit: TransitOption | null | undefined; notes: StreetNote[] | undefined;
+}
+
+function StopCard({ stop, media, n, prevName, busy, onPick, onRemove, cityKey, pulse, why, transit, notes }: StopCardProps) {
+  const p = stop.place;
+  return (
+    <li className="relative">
+      <Journey stop={stop} prevName={prevName} transit={transit} />
+      <article className="overflow-hidden rounded-3xl border border-line bg-surface shadow-[0_18px_40px_-24px_rgba(0,0,0,.7)]">
+        <figure className={`relative ${media?.thumbnailUrl ? "h-56 sm:h-64" : "h-28"} bg-gradient-to-br ${KIND_TINT[p.kind]}`}>
+          {media?.thumbnailUrl ? (
+            <>
+              {/* Foto de Wikimedia Commons: <img> directo porque el origen es externo y su licencia exige atribución visible. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={media.thumbnailUrl} alt={`${p.name}`} loading="lazy" className="absolute inset-0 size-full object-cover" />
+              <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#070c18] via-[#070c18]/35 to-transparent" />
+            </>
           ) : null}
-          <Button size="sm" variant="outline" disabled={busy} onClick={onRemove}>Quitar</Button>
+          <div className="absolute inset-x-0 bottom-0 flex items-end gap-3 p-4">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-signal font-display text-[17px] font-extrabold text-ink shadow-lg" aria-hidden="true">{n}</span>
+            <div className="min-w-0 text-white">
+              <p className="font-display text-[13px] font-bold tracking-wide text-white/85">{clock(stop.startMin)} – {clock(stop.endMin)} · {KIND_META[p.kind].label}{p.cuisine ? ` · ${p.cuisine.split(";")[0]}` : ""}</p>
+              <h3 className="font-display text-[22px] font-extrabold leading-tight drop-shadow sm:text-[26px]">{p.name}</h3>
+            </div>
+          </div>
+          {media?.thumbnailUrl ? <figcaption className="absolute right-2 top-2 rounded-full bg-black/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur">Foto: <a className="underline" href={media.pageUrl} target="_blank" rel="noopener noreferrer">Wikipedia / Wikimedia Commons</a></figcaption> : null}
+        </figure>
+        <div className="p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusChip stop={stop} />
+            {why && why.views30 !== null ? <span className="rounded-full border border-signal/40 px-2.5 py-1 text-[11px] font-semibold text-signal" title="Lecturas del artículo en Wikipedia, últimos 30 días. Mide interés, no calidad.">👥 {why.views30.toLocaleString("es-CL")} lecturas este mes</span> : null}
+            {stop.rainOnVisit ? <span className="rounded-full bg-[#8fc7ff]/15 px-2.5 py-1 text-[11px] font-bold text-[#8fc7ff]">Lluvia probable durante la visita (al aire libre)</span> : null}
+          </div>
+          {why?.why.length ? (
+            <div className="mt-3 rounded-2xl border-l-4 border-signal bg-signal/[0.06] p-3" data-testid="why">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-signal">Por qué te lo propongo</p>
+              <ul className="mt-1 text-[13px] leading-[1.5] text-fg2">{why.why.map((w) => <li key={w}>{w}</li>)}</ul>
+              <p className="mt-1 text-[11px] text-mid">Interés medido en lecturas de Wikipedia: indica atención de la gente, no si es «bueno».</p>
+            </div>
+          ) : null}
+          {media?.extract ? <p className="mt-3 text-[14px] leading-[1.55] text-fg2">{media.extract}</p> : null}
+          {notes?.length ? (
+            <div className="mt-3 rounded-2xl border border-[#f0a53a]/40 bg-[#f0a53a]/10 p-3 text-[13px]" data-testid="street-notes">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#f0a53a]">Aviso de la calle · sin verificar</p>
+              <ul className="mt-1 text-fg2">{notes.map((nt) => <li key={nt.id}>«{nt.text}» <span className="text-mid">— alguien lo anotó en <a className="underline" href={nt.url} target="_blank" rel="noopener noreferrer">OpenStreetMap</a>{nt.date ? ` el ${shortDate(nt.date)}` : ""}, cerca de aquí.</span></li>)}</ul>
+            </div>
+          ) : null}
+          {p.hoursRaw ? <p className="mt-3 text-[12px] text-mid">Horario en OpenStreetMap: <span className="font-mono">{p.hoursRaw}</span></p> : null}
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
+            <a className="font-semibold underline underline-offset-2" href={osmUrl(p.id)} target="_blank" rel="noopener noreferrer">Ver en OpenStreetMap</a>
+            {p.website ? <a className="font-semibold underline underline-offset-2" href={p.website} target="_blank" rel="noopener noreferrer">Sitio web</a> : null}
+          </div>
+          <PlaceSignals cityKey={cityKey} placeId={p.id} placeName={p.name} state={pulse} tone="day" />
+          <details className="mt-3 text-[13px] text-fg2">
+            <summary className="cursor-pointer select-none font-semibold">¿Por qué este lugar?</summary>
+            <ul className="mt-1 list-disc pl-5">{stop.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
+          </details>
+          <div className="mt-3 flex flex-wrap items-start gap-2">
+            {stop.alternatives.length > 0 ? (
+              <details className="text-[13px]">
+                <summary className="cursor-pointer select-none rounded-xl border border-line px-3 py-2 font-semibold">Cambiar por otro cercano</summary>
+                <ul className="mt-2 flex flex-col gap-1.5">
+                  {stop.alternatives.map((a) => (
+                    <li key={a.place.id}>
+                      <button type="button" disabled={busy} onClick={() => onPick(a.place.id)} className="w-full rounded-xl border border-line px-3 py-2 text-left hover:border-signal disabled:opacity-50">
+                        <b>{a.place.name}</b>
+                        <span className="block text-[12px] text-mid">{clock(a.startMin)} · {a.travelMin !== null ? `${a.travelMin} min de traslado` : "traslado sin dato"} · {a.status === "abierto" ? "abierto a esa hora" : "horario sin confirmar"}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
+            <Button size="sm" variant="outline" disabled={busy} onClick={onRemove}>Quitar</Button>
+          </div>
         </div>
       </article>
     </li>
@@ -132,6 +192,8 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
   const [end, setEnd] = useState(prefill.end);
   const [pace, setPace] = useState<Pace | "">(prefill.pace ?? "");
   const [wishes, setWishes] = useState<Wish[]>(prefill.kinds.map((kind) => ({ kind })));
+  const [mood, setMood] = useState<Mood>("clasico");
+  const [variant, setVariant] = useState(0);
   const [data, setData] = useState<DayResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,13 +216,13 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
     }
   }
 
-  async function run(next: Wish[], note?: string) {
+  async function run(next: Wish[], note?: string, v: number = variant) {
     setBusy(true); setError(null); setNotice(note ?? null);
     try {
-      const res = await fetch("/api/day-plan", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ city, date, startMin: toMin(start), endMin: toMin(end), ...(pace ? { pace } : {}), wishes: next }) });
+      const res = await fetch("/api/day-plan", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ city, date, startMin: toMin(start), endMin: toMin(end), ...(pace ? { pace } : {}), mood, variant: v, wishes: next }) });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message ?? "No pudimos armar el día.");
-      setWishes(next); setData(json as DayResponse);
+      setWishes(next); setVariant(v); setData(json as DayResponse);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No pudimos armar el día. Inténtalo de nuevo.");
     } finally { setBusy(false); }
@@ -219,6 +281,17 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
             <span className="mt-1 block text-[12px] font-normal text-mid">{prefill.pace ? "Viene de tu Travel DNA. " : ""}Cambia cuánto tiempo se dedica a cada visita; es un supuesto, no un dato de los lugares.</span>
           </label>
           <fieldset className="sm:col-span-2 lg:col-span-4">
+            <legend className="text-[13px] font-semibold">¿Qué día quieres hoy?</legend>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {MOODS.map((m) => (
+                <button key={m} type="button" aria-pressed={mood === m} onClick={() => { setMood(m); setVariant(0); }} className={`rounded-2xl border p-3 text-left transition ${mood === m ? "border-signal bg-signal/15" : "border-line hover:border-signal/50"}`}>
+                  <span className={`block font-display text-[15px] font-extrabold ${mood === m ? "text-signal" : ""}`}>{m === "clasico" ? "⭐ " : "🧭 "}{MOOD_LABELS[m]}</span>
+                  <span className="mt-0.5 block text-[12px] font-normal text-mid">{m === "clasico" ? "Lo que más gente busca en esta ciudad, primero." : "Lugares con datos confiables que casi nadie mira."}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset className="sm:col-span-2 lg:col-span-4">
             <legend className="text-[13px] font-semibold">¿Qué quieres hacer?</legend>
             <div className="mt-2 flex flex-wrap gap-2">
               {KINDS.map((k) => (
@@ -241,23 +314,26 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
         {data ? (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
             <section aria-labelledby="plan-title" className="min-w-0">
-              <div className="flex flex-wrap items-end justify-between gap-2">
+              <div className="flex flex-wrap items-end justify-between gap-3 rounded-3xl border border-signal/25 bg-gradient-to-br from-signal/15 via-surface to-surface p-5">
                 <div>
-                  <h2 id="plan-title" className="font-display text-[22px] font-extrabold first-letter:uppercase">{longDate(data.date)}</h2>
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-signal">{data.mood ? MOOD_LABELS[data.mood] : "Tu día"} · {data.city.name}</p>
+                  <h2 id="plan-title" className="font-display text-[28px] font-extrabold leading-tight first-letter:uppercase lg:text-[34px]">{longDate(data.date)}</h2>
                   <p className="text-[13px] text-mid">{data.city.name} · llegas a las {toHHMM(data.startMin)} · {stops.length} parada{stops.length === 1 ? "" : "s"}{last ? ` · terminas a las ${clock(last.endMin)}` : ""}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {data.mood ? <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(wishes.map((w) => ({ kind: w.kind, ...(w.minStart !== undefined ? { minStart: w.minStart } : {}) })), "Otra propuesta: roté los lugares equivalentes. Si ves los mismos, es que ninguno compite de cerca con ellos.", variant + 1)}>Otra propuesta</Button> : null}
                   <Button size="sm" variant="outline" disabled={busy} onClick={() => swapIndoor()}>Está lloviendo</Button>
                   <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(addStopWish(wishes, "pub", wishes.some((w) => w.kind === "pub") && last ? last.endMin + 15 : undefined), "Agregué un pub a tu día.")}>Quiero un pub</Button>
                   <Button size="sm" disabled={busy || stops.length === 0} onClick={saveToTrip}>Guardar en Mi viaje</Button>
                 </div>
               </div>
               {stops.length === 0 ? <p className="mt-4 rounded-2xl border border-dashed border-line p-5 text-[14px] text-fg2">No pudimos programar ninguna parada con lo que hay confirmado. Mira los motivos abajo.</p> : (
-                <ol className="mt-4 flex flex-col gap-1">
+                <ol className="mt-5 flex flex-col gap-5">
                   {stops.map((s, i) => (
                     <StopCard key={`${s.place.id}-${i}`} stop={s} media={data.media[s.place.id]} n={i + 1} prevName={i === 0 ? data.city.anchorName : stops[i - 1]!.place.name} busy={busy}
                       onPick={(id) => void run(wishes.map((w, wi) => (wi === s.wishIndex ? { ...w, pin: id } : w)), `Cambié ${s.place.name} por otro lugar cercano.`)}
-                      onRemove={() => void run(wishes.filter((_, wi) => wi !== s.wishIndex))} cityKey={data.city.key} pulse={pulse} />
+                      onRemove={() => void run(wishes.filter((_, wi) => wi !== s.wishIndex))} cityKey={data.city.key} pulse={pulse}
+                      why={data.curation?.[s.place.id]} transit={data.transit ? data.transit[s.place.id] : undefined} notes={data.streetNotes?.[s.place.id]} />
                   ))}
                 </ol>
               )}
@@ -271,7 +347,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
                 <summary className="cursor-pointer select-none font-semibold">Supuestos y fuentes</summary>
                 <ul className="mt-2 list-disc pl-5">{data.plan.assumptions.map((a) => <li key={a}>{a}</li>)}</ul>
                 <ul className="mt-2 list-disc pl-5">{data.sources.map((s) => <li key={s.name}><a className="underline" href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a>: {s.status === "ok" ? "consultada" : s.status === "fuera_de_alcance" ? "fuera de alcance para esa fecha" : "no respondió"}{s.detail ? ` (${s.detail})` : ""}</li>)}</ul>
-                <p className="mt-2 text-mid">El orden de los lugares sale de la completitud de sus datos en OpenStreetMap, no de reseñas: no sabemos si un lugar es «bueno». Eso lo cuentan los viajeros.</p>
+                <p className="mt-2 text-mid">{data.mood ? "El orden combina el interés real de la gente (lecturas de Wikipedia del último mes) con qué tan confiable es el dato de cada lugar. No hay reseñas: no sabemos si un lugar es «bueno». Eso lo cuentan los viajeros." : "El orden de los lugares sale de la completitud de sus datos en OpenStreetMap, no de reseñas: no sabemos si un lugar es «bueno». Eso lo cuentan los viajeros."}</p>
               </details>
             </section>
 
