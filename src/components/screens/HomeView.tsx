@@ -12,6 +12,8 @@ import { CITIES } from "@/lib/day/cities";
 import { dayHref } from "@/lib/day/query";
 import { KINDS, KIND_META, type Kind } from "@/lib/day/places";
 import { orderKindsByInterests, unmappedInterests } from "@/lib/day/preferences";
+import type { Pace } from "@/lib/client/dna-core";
+import type { IntentResult } from "@/lib/director/intent";
 import { INTEREST_LABELS, INTERESTS, type Interest, type TripRequest } from "@/lib/types";
 import { Globe } from "../Globe";
 import { Button } from "../ui/Button";
@@ -37,7 +39,33 @@ export function HomeView({ initial, defaultDate }: { initial: TripRequest; defau
   const [until, setUntil] = useState("23:00");
   const [kinds, setKinds] = useState<Kind[]>(["museo", "restaurante", "pub"]);
   const toggleKind = (k: Kind) => setKinds((c) => (c.includes(k) ? c.filter((x) => x !== k) : [...c, k]));
-  const planDay = (e: React.FormEvent) => { e.preventDefault(); if (kinds.length) router.push(dayHref({ city: tripCity, date: tripDate, start: arrive, end: until, kinds, pace: dna?.pace ?? null })); };
+  // «Cuéntalo con tus palabras»: la frase rellena el formulario; nunca arma el día sola.
+  const [phrase, setPhrase] = useState("");
+  const [understanding, setUnderstanding] = useState<(IntentResult & { understood: string[]; aiMode: "disponible" | "sin_ia" }) | null>(null);
+  const [understandingBusy, setUnderstandingBusy] = useState(false);
+  const [understandingError, setUnderstandingError] = useState<string | null>(null);
+  const [intentPace, setIntentPace] = useState<Pace | null>(null);
+  const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  async function understand() {
+    setUnderstandingBusy(true); setUnderstandingError(null);
+    try {
+      const res = await fetch("/api/intent", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: phrase }) });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message ?? "No pudimos entender la frase.");
+      const r = json as IntentResult & { understood: string[]; aiMode: "disponible" | "sin_ia" };
+      if (r.intent.city) setTripCity(r.intent.city);
+      if (r.intent.date) setTripDate(r.intent.date);
+      if (r.intent.startMin !== undefined) setArrive(hhmm(r.intent.startMin));
+      if (r.intent.endMin !== undefined) setUntil(hhmm(r.intent.endMin));
+      if (r.intent.kinds.length) setKinds(r.intent.kinds);
+      setIntentPace(r.intent.pace ?? null);
+      setUnderstanding(r);
+    } catch (e) {
+      setUnderstanding(null);
+      setUnderstandingError(e instanceof Error ? e.message : "No pudimos entender la frase. Puedes llenar el formulario a mano.");
+    } finally { setUnderstandingBusy(false); }
+  }
+  const planDay = (e: React.FormEvent) => { e.preventDefault(); if (kinds.length) router.push(dayHref({ city: tripCity, date: tripDate, start: arrive, end: until, kinds, pace: intentPace ?? dna?.pace ?? null })); };
   const dna = useDna();
   // Con un Travel DNA guardado, los tipos que el viajero declaró como intereses van primero (solo el orden cambia).
   const dnaOrder = dna ? orderKindsByInterests(dna.interests) : null;
@@ -63,6 +91,26 @@ export function HomeView({ initial, defaultDate }: { initial: TripRequest; defau
           <h1 className="cond mt-4 max-w-3xl font-display text-4xl font-extrabold leading-[.98] tracking-tight sm:text-6xl">Cuéntanos tu viaje. Te armamos el día con lo que realmente hay.</h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-fg2 sm:text-lg">Horarios, traslados y lluvia reales. Lo que no se sabe, te lo decimos en vez de inventarlo.</p>
           <form onSubmit={planDay} className="mt-7 rounded-[24px] border border-line bg-surface p-4 shadow-sm sm:p-5" aria-label="Armar mi día">
+            <div className="mb-4 rounded-2xl border border-line bg-page p-3">
+              <label htmlFor={`${ids}-phrase`} className="text-sm font-bold">Cuéntalo con tus palabras <span className="font-normal text-mid">(opcional)</span></label>
+              <textarea id={`${ids}-phrase`} value={phrase} onChange={(e) => setPhrase(e.target.value)} maxLength={500} rows={2} placeholder="Ej.: Llego a São Paulo el jueves 5 de noviembre a las 11:35, quiero un museo y un pub, algo tranquilo" className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2 text-base" />
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <Button type="button" onClick={() => void understand()} disabled={understandingBusy || phrase.trim().length < 3} className="min-h-11 px-4">{understandingBusy ? "Entendiendo…" : "Entender mi frase"}</Button>
+                <span className="text-xs text-mid">Rellena el formulario; tú confirmas antes de armar el día.</span>
+              </div>
+              {understandingError && <p role="alert" className="mt-2 text-sm text-[#ff8a78]">{understandingError}</p>}
+              {understanding && (
+                <div aria-live="polite" className="mt-3 text-sm" data-testid="entendido">
+                  <p className="text-xs font-bold uppercase tracking-widest text-mid">{understanding.source === "ia" ? "Entendido con IA" : "Entendido con reglas (sin IA)"}</p>
+                  {understanding.understood.length > 0
+                    ? <ul className="mt-1 flex flex-wrap gap-2">{understanding.understood.map((u) => <li key={u} className="rounded-full border border-line bg-surface px-3 py-1 text-xs font-semibold">{u}</li>)}</ul>
+                    : <p className="mt-1 text-fg2">No pude sacar datos de esa frase.</p>}
+                  {understanding.missing.length > 0 && <p className="mt-2 font-semibold text-[#f0a53a]">Falta: {understanding.missing.join(" y ")}. Complétalo abajo.</p>}
+                  {understanding.notes.map((n) => <p key={n} className="mt-1 text-xs text-[#f0a53a]">{n}</p>)}
+                  {understanding.aiMode === "sin_ia" && <p className="mt-2 text-xs text-mid">Modo sin IA: entiendo frases simples (ciudad, día, hora, tipos de lugar y ritmo). Revisa lo que se llenó.</p>}
+                </div>
+              )}
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-sm font-bold">¿A dónde vas?<select value={tripCity} onChange={(e) => setTripCity(e.target.value)} className="mt-1 min-h-12 w-full rounded-xl border border-line bg-page px-3 text-base font-normal">{Object.values(CITIES).map((c) => <option key={c.key} value={c.key}>{c.name}, {c.country}</option>)}</select></label>
               <label className="text-sm font-bold">¿Qué día?<input type="date" value={tripDate} onChange={(e) => setTripDate(e.target.value)} required className="mt-1 min-h-12 w-full rounded-xl border border-line bg-page px-3 text-base font-normal"/></label>
