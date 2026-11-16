@@ -49,3 +49,11 @@ Sin respuesta: espejos de Overpass (kumi, mail.ru, private.coffee) caídos; dado
 Cada dato muestra su fuente y si es dato publicado o pronóstico de modelo; si una fuente falla o la fecha está fuera de alcance
 (aire/UV: hasta 4 días) se informa en pantalla. Pendiente: Wikivoyage, Wikidata, GBIF, Commons, EONET, GTFS DTPM y las que piden clave.
 Ojo con términos: el plan gratuito de Open-Meteo es solo para uso no comercial; revisar antes de monetizar.
+
+## Integrado (2026-11-16): «Guía del destino» (Wikivoyage)
+`src/lib/context/guide.ts` → `GET /api/guia?city=` → tarjeta en Mi día. Cita secciones (cómo moverse, seguridad, comer, respetar) con enlace y licencia CC BY-SA 4.0;
+dice que es texto de voluntarios no verificado por Travel Pulse. Caché de 24 h; si Wikivoyage limita (429) sirve la copia vieja marcada, o dice que falló.
+Hallazgos con datos reales: en la guía en español de Santiago «Seguridad», «Salud» y «Respetar» están **vacías**; se completa solo «Seguridad» con la guía inglesa (marcada «en inglés»).
+**No verificado:** el texto real en inglés (Wikivoyage devolvió 429 al grabarlo; sus pruebas usan texto sintético) y las guías de Valparaíso, Antofagasta y São Paulo (no se pudieron grabar; el código las consulta igual).
+Wikivoyage limita el ritmo: no hay que consultarla por cada visita; la caché es obligatoria.
+Nota de calidad: una prueba E2E de PulseMesh falló una vez de forma intermitente y pasó en 3 repeticiones; sin causa identificada.

@@ -1,0 +1,22 @@
+{
+ "cityKey": "sao-paulo-br",
+ "pageTitle": "Santiago de Chile",
+ "pageUrl": "https://es.wikivoyage.org/wiki/Santiago_de_Chile",
+ "license": "CC BY-SA 4.0",
+ "tips": [
+  {
+   "id": "movilidad",
+   "title": "Cómo moverse",
+   "text": "En Santiago hay cuatro tipos de transporte público: el Metro, buses, taxis y taxis colectivos. Metro de Santiago Inaugurado en 1975, cuenta actualmente con siete líneas, 140 km de extensión y un total de 136 estaciones, convirtiéndolo en el ferrocarril subterráneo más grande de América del Sur. Línea : San Pablo - Los Domínicos Línea : Vespicio Norte - Hospital El Pino Línea : Plaza Quilicura - Fernando Castillo Velasco Línea : Tobalaba - Plaza de Puente Alto Línea : Vicuña Mackenna - La Cisterna Línea : Plaza de Maipú - Vicente Valdés Línea :",
+   "lang": "es"
+  },
+  {
+   "id": "comer",
+   "title": "Comer",
+   "text": "Para sugerencias de restaurantes específicos, consulte los artículos de los Distritos. La gastronomía en Santiago es variada, pasando desde una amplia red de locales de comida rápida a restaurantes de comida tradicional chilena y de otros países del mundo. En el centro de Santiago y la zona oriente existen múltiples locales de cadenas de fast food internacionales (como McDonald's, Burger King o Kentucky Fried Chicken). Sin embargo, el desarrollo de la comida rápida nacional es importante y han surgido diversos locales que intentan retener las preparaciones más características chilenas.",
+   "lang": "es"
+  }
+ ],
+ "fetchedAt": "2026-11-16T18:00:00.000Z",
+ "stale": false
+}

@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const BASE = process.env.BASE || 'http://localhost:3102';
 const REAL = JSON.parse(fs.readFileSync(__dirname + '/fixtures/day-plan-real.json', 'utf8'));
 const CTX = JSON.parse(fs.readFileSync(__dirname + '/fixtures/contexto-real.json', 'utf8'));
+const GUIA = JSON.parse(fs.readFileSync(__dirname + '/fixtures/guia-real.json', 'utf8'));
 const results = []; const errors = [];
 const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } catch (e) { results.push(['FAIL', n + ' -> ' + String(e.message).split('\n')[0]]); } };
 
@@ -13,11 +14,12 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
   const browser = await chromium.launch();
   for (const [name, w, h] of [['escritorio', 1440, 900], ['movil', 390, 844]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, locale: 'es-CL' });
-    let modo = 'feriado'; const pedidos = [];
+    let modo = 'feriado'; let guia = 'ok'; const pedidos = [];
     await ctx.route('**/api/day-plan', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(REAL) }));
     await ctx.route('**/api/contexto**', (r) => { pedidos.push(new URL(r.request().url()).search); return modo === 'error' ? r.fulfill({ status: 500, contentType: 'application/json', body: '{}' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(modo === 'vacio' ? { ...CTX.normal, items: [], gaps: [] } : modo === 'brecha' ? { ...CTX.normal, items: [], gaps: [{ source: 'Feriados (Nager.Date)', reason: 'HTTP 500' }] } : CTX[modo]) }); });
+    await ctx.route('**/api/guia**', (r) => guia === 'error' ? r.fulfill({ status: 502, contentType: 'application/json', body: '{}' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(guia === 'vieja' ? { ...GUIA, stale: true, tips: [...GUIA.tips, { id: 'seguridad', title: 'Seguridad', text: 'Texto de prueba en inglés para la insignia.', lang: 'en' }] } : GUIA) }));
     const p = await ctx.newPage();
-    p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|ERR_TUNNEL|status of 500|Error: 500/.test(m.text())) errors.push(`[${name}] ${m.text().slice(0, 180)}`); });
+    p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|ERR_TUNNEL|status of 50[02]|Error: 50[02]/.test(m.text())) errors.push(`[${name}] ${m.text().slice(0, 180)}`); });
     p.on('pageerror', (e) => errors.push(`[${name}] pageerror ${e.message.slice(0, 180)}`));
     const armar = async () => { await p.goto(`${BASE}/dia`, { waitUntil: 'networkidle' }); await p.getByRole('button', { name: 'Armar mi día' }).click(); await p.getByRole('heading', { name: /jueves/i }).waitFor({ timeout: 15000 }); };
     const card = p.getByRole('region', { name: 'Contexto del día' });
@@ -49,6 +51,29 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
       assert.ok(await p.getByRole('heading', { name: /jueves/i }).isVisible());
     });
     await step(`[${name}] sin desbordamiento horizontal`, async () => { modo = 'feriado'; await armar(); await card.getByText(/Feriado/).waitFor(); assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)); });
+    const gcard = p.getByRole('region', { name: 'Guía del destino' });
+    guia = 'ok'; modo = 'feriado'; await armar();
+    await step(`[${name}] la guía muestra consejos citados, con enlace, licencia y aviso de que no está verificada`, async () => {
+      await gcard.getByText('Cómo moverse').waitFor();
+      const t = await gcard.innerText();
+      assert.match(t, /CC BY-SA 4\.0/); assert.match(t, /no lo ha verificado/);
+      assert.ok(await gcard.getByRole('link', { name: 'Wikivoyage' }).isVisible());
+      assert.equal(await gcard.getByText('Seguridad').count(), 0); // en la guía real de Santiago esa sección está vacía: no se inventa
+    });
+    await step(`[${name}] un consejo se abre y muestra el texto citado`, async () => {
+      await gcard.getByText('Cómo moverse').click();
+      assert.ok((await gcard.locator('details[open] p').first().innerText()).length > 40);
+    });
+    guia = 'vieja'; await armar();
+    await step(`[${name}] un consejo en inglés lo dice y una copia vieja lo avisa`, async () => {
+      await gcard.getByText('en inglés', { exact: true }).waitFor();
+      assert.match(await gcard.innerText(), /copia guardada/);
+    });
+    guia = 'error'; await armar();
+    await step(`[${name}] si la guía falla, lo dice y el plan sigue ahí`, async () => {
+      await gcard.getByText(/No pudimos consultar la guía/).waitFor();
+      assert.ok(await p.getByRole('heading', { name: /jueves/i }).isVisible());
+    });
     await ctx.close();
   }
   await step('sin errores de consola', async () => assert.deepEqual(errors, []));

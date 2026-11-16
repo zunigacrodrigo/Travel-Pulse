@@ -17,6 +17,7 @@ import type { DayResponse } from "@/lib/day/service";
 import { PulseMeshPanel } from "../PulseMeshPanel";
 import { Button } from "../ui/Button";
 import { ContextCard } from "./ContextCard";
+import { GuideCard } from "./GuideCard";
 import { DayMap } from "./DayMap";
 
 const toMin = (hhmm: string) => { const [h = "0", m = "0"] = hhmm.split(":"); return Number(h) * 60 + Number(m); };
@@ -268,7 +269,8 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
             <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:self-start" aria-label="Mapa, clima y viajeros">
               <DayMap origin={data.city.center} originName={data.city.anchorName} stops={stops.map((s, i) => ({ n: i + 1, name: s.place.name, lat: s.place.lat, lon: s.place.lon }))} />
               <WeatherCard data={data} />
-              <ContextCard cityKey={data.city.key} date={data.date} />
+              <ContextCard key={`${data.city.key}-${data.date}`} cityKey={data.city.key} date={data.date} />
+              <GuideCard key={data.city.key} cityKey={data.city.key} />
               <PulseMeshPanel cityName={cityInfo.name} country={cityInfo.country} />
             </aside>
           </div>

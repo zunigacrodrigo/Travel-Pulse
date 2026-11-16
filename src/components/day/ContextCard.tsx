@@ -8,7 +8,6 @@ export function ContextCard({ cityKey, date }: { cityKey: string; date: string }
   const [state, setState] = useState<{ status: "cargando" } | { status: "error" } | { status: "ok"; ctx: DayContext }>({ status: "cargando" });
   useEffect(() => {
     const ac = new AbortController();
-    setState({ status: "cargando" });
     fetch(`/api/contexto?city=${encodeURIComponent(cityKey)}&date=${encodeURIComponent(date)}`, { signal: ac.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((ctx: DayContext) => setState({ status: "ok", ctx }))
