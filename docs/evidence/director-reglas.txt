@@ -1,0 +1,9 @@
+Frases de referencia: 32
+
+SOLO REGLAS — frases exactas: 24/32
+  city      correcto 27 · omitido  0 · equivocado  0 · INVENTADO  0
+  date      correcto 26 · omitido  2 · equivocado  1 · INVENTADO  0
+  startMin  correcto  7 · omitido  4 · equivocado  0 · INVENTADO  0
+  endMin    correcto  2 · omitido  3 · equivocado  0 · INVENTADO  0
+  kinds     correcto 15 · omitido  0 · equivocado  1 · INVENTADO  0
+  pace      correcto  6 · omitido  0 · equivocado  0 · INVENTADO  0

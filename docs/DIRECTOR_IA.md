@@ -46,3 +46,34 @@ y con dos ciudades la IA podía elegir una de las dos.
 - «Mañana» se entiende como el día siguiente salvo en «por la mañana»; las reglas no cubren todas las formas de decir una fecha.
 - La cantidad de viajeros no se usa todavía (Mi día no la considera).
 - La zona horaria para «hoy» y «mañana» es la de Santiago.
+
+## Cómo se mide (y qué NO se ha medido todavía)
+
+**Banco de pruebas** (`src/lib/director/measure.ts`): 32 frases en español con la respuesta correcta escrita a mano, incluidas
+frases con datos personales, intentos de inyección ("ignora tus instrucciones…"), ambiguas y casos donde sabemos que las reglas fallan.
+Cada campo se califica como `correcto`, `omitido`, `equivocado` o **`INVENTADO`** (la salida trae un dato que la persona no dijo; es el error grave).
+También cuenta llamadas, tokens, costo estimado, latencia p50/p95 y fugas de datos personales hacia el modelo.
+
+**Lo que SÍ está verificado** (con clientes falsos, sin gastar dinero):
+- *Modelo perfecto*: no empeora nada. *Modelo roto*: cae a reglas en las 32 frases, sin error.
+- *Modelo mentiroso* (propone siempre São Paulo, 30-nov, 09:00–21:00, museo/pub/parque, ritmo intenso): **no logra colar ningún dato** que
+  la frase no respalde. Este test destapó tres huecos reales que ya están cerrados: tipos de lugar y ritmo de la IA no se contrastaban con el
+  texto; una hora ambigua ("a partir de las 9") se aceptaba como "hasta las 21"; y una fecha ISO absurda pegada en el texto tapaba una fecha válida posterior.
+- Línea base de **solo reglas**: 24/32 frases exactas, 0 datos inventados (`docs/evidence/director-reglas.txt`).
+  Debilidades conocidas: "en diez días", "la semana que viene, el miércoles", algunas horas de llegada/fin.
+
+**Lo que NO está verificado:** nunca se ha ejecutado contra la API real de Anthropic. Desde el sandbox de desarrollo es imposible
+(la herramienta de credenciales rechaza `api.anthropic.com` y una prueba con clave ficticia devuelve 401). Hasta que lo corras con tu clave,
+cualquier cifra de "cuánto mejora la IA" es **desconocida**; la parte de reglas y las defensas sí están probadas.
+
+**Cómo medirlo con tu clave** (gasta centavos, ≈32 llamadas a Haiku; el informe queda en `docs/evidence/director-live.txt`):
+
+PowerShell (Windows):
+```powershell
+$env:LIVE_ANTHROPIC="1"; $env:ANTHROPIC_API_KEY="sk-ant-..."; npm.cmd run medir:director
+```
+bash (Mac/Linux):
+```bash
+LIVE_ANTHROPIC=1 ANTHROPIC_API_KEY=sk-ant-... npm run medir:director
+```
+La prueba falla si la IA inventa algún dato de ciudad/fecha/hora que las reglas no inventaban, o si filtra datos personales al modelo.

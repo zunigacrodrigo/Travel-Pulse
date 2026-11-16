@@ -11,6 +11,7 @@
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "e2e": "node scripts/e2e.mjs",
+    "medir:director": "vitest run src/lib/director/intent.live.test.ts",
     "start:prod": "cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/ && HOSTNAME=0.0.0.0 node .next/standalone/server.js"
   },
   "dependencies": {

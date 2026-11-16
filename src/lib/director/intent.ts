@@ -81,7 +81,26 @@ function inRange(date: string, today: string, notes: Notes): string | null {
   return date;
 }
 
+/**
+ * Si una fecha ISO no sirve (inexistente o fuera de rango, p. ej. una cifra absurda pegada en el texto), no tapa a otra
+ * fecha válida que la persona sí escribió después: se descarta ese trozo y se reintenta; solo si nada sirve se avisa.
+ */
 function parseDate(t: string, today: string, notes: Notes): string | null {
+  const first: string[] = [];
+  const got = parseDateOnce(t, today, { push: (n: string) => { first.push(n); } });
+  if (got) { for (const n of first) notes.push(n); return got; }
+  const iso = /\b20\d{2}-\d{2}-\d{2}\b/.exec(t);
+  if (iso) {
+    const rest = t.replace(iso[0], " ");
+    const retry: string[] = [];
+    const again = parseDateOnce(rest, today, { push: (n: string) => { retry.push(n); } });
+    if (again) { for (const n of retry) notes.push(n); return again; }
+  }
+  for (const n of first) notes.push(n);
+  return null;
+}
+
+function parseDateOnce(t: string, today: string, notes: Notes): string | null {
   // 1) AAAA-MM-DD
   let m = /\b(20\d{2})-(\d{2})-(\d{2})\b/.exec(t);
   if (m) { const r = realDate(+m[1]!, +m[2]!, +m[3]!); return r ? inRange(r, today, notes) : (notes.push("Esa fecha no existe."), null); }
@@ -286,6 +305,20 @@ function cityFromLlm(raw: string, t: string): { key: string | null; unsupported:
   return { key: CITY_ALIASES[key]!.some((a) => fuzzyHas(t, a)) ? key : null, unsupported: null };
 }
 
+/** Pistas del texto que respaldan a cada tipo de lugar: la IA no puede agregar una preferencia que la frase no insinúa. */
+const KIND_HINTS: Record<Kind, RegExp> = {
+  museo: /muse|cultur|histori|exposic|\barte\b/,
+  galeria: /galeri|\barte\b|cultur|exposic/,
+  restaurante: /comer|comida|almuerz|almorz|\bcena|cenar|restaur|\brico|gastronom/,
+  pub: /beber|tomar|trago|copa|cerveza|\bpubs?\b|\bbares?\b|carrete|fiesta|\bnoche/,
+  parque: /parque|plaza|jardin|naturaleza|\bverde|aire libre|caminar|pasear|paseo/,
+};
+const PACE_HINTS: Record<Pace, RegExp> = {
+  tranquilo: /tranquil|relaj|calma|sin apuro|sin prisa|despacio|lento|descans|cansad|pausa|suave/,
+  intenso: /intens|aprovech|\bfull\b|apur|rapido|mucho|maximo|todo lo posible|energia|activo/,
+  equilibrado: /equilibr|moderad|normal|\bmedio\b/,
+};
+
 const RELATIVE = /\b(?:hoy|manana|pasado manana|finde|fin de semana|semana que viene|proxima semana|proximo|siguiente|quincena)\b/;
 
 /** La fecha de la IA debe tener apoyo en el texto: el día, el día de la semana o una palabra relativa coherente. */
@@ -299,14 +332,35 @@ function groundedDate(t: string, date: string, today: string): boolean {
   return RELATIVE.test(t) && daysBetween(today, date) <= 14;
 }
 
-/** La hora de la IA debe aparecer en el texto (con sus minutos, si los tiene). */
+/**
+ * Horas que el texto realmente expresa, en minutos desde medianoche. Un número cuenta solo en contexto de hora
+ * (con minutos, con «h», tras «las/la», con «de la mañana/tarde/noche» o en un rango «de 10 a 18»), nunca si es un día.
+ * «9 de la noche» son las 21:00, no las 09:00; «a las 7» sin más puede ser mañana o tarde, así que admite ambas.
+ */
+function timesInText(t: string): Set<number> {
+  const out = new Set<number>();
+  if (/\bmediodia\b/.test(t)) out.add(720);
+  if (/\bmedianoche\b/.test(t)) out.add(0);
+  const range = [...t.matchAll(/\bde\s+(\d{1,2})(?:[:h.](\d{2}))?\s+a\s+(\d{1,2})(?:[:h.](\d{2}))?/g)];
+  const inRange = new Set<number>();
+  for (const m of range) { inRange.add((m.index ?? 0) + m[0].indexOf(m[1]!)); inRange.add((m.index ?? 0) + m[0].lastIndexOf(m[3]!)); }
+  for (const m of t.matchAll(/(?<![\d:])(\d{1,2})(?:\s*[:h.]\s*(\d{2}))?(?!\d)(\s*(?:h\b|hrs?\b|horas?\b))?(\s*de la (manana|tarde|noche))?/g)) {
+    const at = m.index ?? 0, before = t.slice(Math.max(0, at - 6), at), after = t.slice(at + m[0].length);
+    const hasMin = m[2] !== undefined, hasH = m[3] !== undefined, mer = m[5];
+    if (!(hasMin || hasH || mer || /\bla?s?\s+$/.test(before) || inRange.has(at))) continue;
+    if (new RegExp(`^\\s*(?:de\\s+)?${MONTH_RE}\\b`).test(after) || /^\s*\/\s*\d/.test(after)) continue; // es una fecha
+    const h = +m[1]!, min = hasMin ? +m[2]! : 0;
+    if (h > 23 || min > 59) continue;
+    if (mer === "tarde" || mer === "noche") out.add((h < 12 ? h + 12 : h) * 60 + min);
+    else if (mer === "manana") out.add(h * 60 + min);
+    else { out.add(h * 60 + min); if (!hasMin && h >= 1 && h <= 11 && !hasH) out.add((h + 12) * 60); }
+  }
+  return out;
+}
+
+/** La hora de la IA debe estar entre las que el texto expresa. */
 function groundedTime(t: string, minutes: number): boolean {
-  const h = Math.floor(minutes / 60), m = minutes % 60;
-  if (m === 0 && h === 12 && /\bmediodia\b/.test(t)) return true;
-  if (m === 0 && h === 0 && /\bmedianoche\b/.test(t)) return true;
-  const h12 = h > 12 ? h - 12 : h;
-  const hourRe = `(?<!\\d)0?(?:${h}${h12 !== h ? `|${h12}` : ""})(?!\\d)`;
-  return m === 0 ? new RegExp(hourRe).test(t) : new RegExp(`${hourRe}\\s*[:h.]\\s*0?${m}(?!\\d)`).test(t) || new RegExp(`${hourRe}\\s*(?:y|con)\\s*${m}\\b`).test(t);
+  return timesInText(t).has(minutes);
 }
 
 function parseHHMM(s: string | null | undefined): number | null {
@@ -351,13 +405,17 @@ export async function interpretDayIntent(text: string, now: Date): Promise<Inten
         if (real && inRange(real, today, quiet) && groundedDate(t, real, today)) { intent.date = real; used.push("fecha"); }
       }
       const start = parseHHMM(d.startTime), end = parseHHMM(d.endTime);
-      if (intent.startMin === undefined && start !== null && groundedTime(t, start)) { intent.startMin = start; used.push("llegada"); }
-      if (intent.endMin === undefined && end !== null && groundedTime(t, end) && end >= (intent.startMin ?? 0) + 60) { intent.endMin = end; used.push("fin"); }
+      const sameClock0 = (x: number, y: number | undefined) => y !== undefined && (x - y) % 720 === 0;
+      if (intent.startMin === undefined && start !== null && !sameClock0(start, intent.endMin) && groundedTime(t, start)) { intent.startMin = start; used.push("llegada"); }
+      // el fin no puede apoyarse en el mismo número que ya es la llegada («a partir de las 9» no es «hasta las 21»)
+      const sameClock = (x: number, y: number | undefined) => y !== undefined && (x - y) % 720 === 0;
+      if (intent.endMin === undefined && end !== null && !sameClock(end, intent.startMin) && groundedTime(t, end) && end >= (intent.startMin ?? 0) + 60) { intent.endMin = end; used.push("fin"); }
       if (intent.kinds.length === 0) {
-        const ks = KINDS.filter((k) => d.kinds.map(normalizeEs).includes(k));
+        const ks = KINDS.filter((k) => d.kinds.map(normalizeEs).includes(k) && KIND_HINTS[k].test(t));
         if (ks.length) { intent.kinds = ks; used.push("lugares"); }
       }
-      if (!intent.pace && d.pace && (PACES as readonly string[]).includes(normalizeEs(d.pace))) { intent.pace = normalizeEs(d.pace) as Pace; used.push("ritmo"); }
+      const paceName = d.pace ? normalizeEs(d.pace) : "";
+      if (!intent.pace && (PACES as readonly string[]).includes(paceName) && PACE_HINTS[paceName as Pace].test(t)) { intent.pace = paceName as Pace; used.push("ritmo"); }
     }
   }
 
