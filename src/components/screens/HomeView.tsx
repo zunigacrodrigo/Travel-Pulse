@@ -37,7 +37,7 @@ export function HomeView({ initial, defaultDate }: { initial: TripRequest; defau
   const [until, setUntil] = useState("23:00");
   const [kinds, setKinds] = useState<Kind[]>(["museo", "restaurante", "pub"]);
   const toggleKind = (k: Kind) => setKinds((c) => (c.includes(k) ? c.filter((x) => x !== k) : [...c, k]));
-  const planDay = (e: React.FormEvent) => { e.preventDefault(); if (kinds.length) router.push(dayHref({ city: tripCity, date: tripDate, start: arrive, end: until, kinds })); };
+  const planDay = (e: React.FormEvent) => { e.preventDefault(); if (kinds.length) router.push(dayHref({ city: tripCity, date: tripDate, start: arrive, end: until, kinds, pace: dna?.pace ?? null })); };
   const dna = useDna();
   // Con un Travel DNA guardado, los tipos que el viajero declaró como intereses van primero (solo el orden cambia).
   const dnaOrder = dna ? orderKindsByInterests(dna.interests) : null;

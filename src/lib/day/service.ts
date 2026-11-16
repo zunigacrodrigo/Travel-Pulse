@@ -4,6 +4,7 @@
  * y el día se arma con lo que sí hay; nada se rellena con datos inventados.
  */
 import { z } from "zod";
+import { PACES } from "@/lib/client/dna-core";
 import { describeError } from "@/lib/sources/http";
 import { fetchMedia, type Media } from "./media";
 import { KINDS, KIND_META, fetchPlaces, type Kind, type Place } from "./places";
@@ -20,6 +21,8 @@ export const dayInputSchema = z
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     startMin: z.number().int().min(0).max(1439),
     endMin: z.number().int().min(60).max(1440),
+    /** Ritmo declarado en el Travel DNA (opcional). */
+    pace: z.enum(PACES).optional(),
     wishes: z
       .array(z.object({ kind: z.enum(KINDS), pin: z.string().max(80).optional(), minStart: z.number().int().min(0).max(1439).optional() }).strict())
       .min(1)
@@ -106,7 +109,7 @@ export async function computeDayPlan(input: DayInput, deps: Deps = {}): Promise<
     warnings.push(`No pudimos consultar el pronóstico (${describeError(e)}): no se evaluó la lluvia.`);
   }
 
-  const plan = buildDay({ date: input.date, startMin: input.startMin, endMin: input.endMin, wishes: input.wishes, candidates, travel, weather });
+  const plan = buildDay({ date: input.date, startMin: input.startMin, endMin: input.endMin, wishes: input.wishes, candidates, travel, weather, pace: input.pace });
 
   // Fotos y descripciones: solo de las paradas elegidas y solo si OpenStreetMap enlaza un artículo. Sin foto no es un error.
   const media: Record<string, Media> = {};

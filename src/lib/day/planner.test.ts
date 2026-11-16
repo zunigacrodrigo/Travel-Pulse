@@ -189,3 +189,36 @@ describe("con datos reales de São Paulo", () => {
     expect(p.stops).toHaveLength(0);
   });
 });
+
+describe("buildDay: ritmo del viajero", () => {
+  const museos = ["a", "b", "c", "d"].map((id) => mk(id, "museo", "Th 09:00-23:00", id.toUpperCase()));
+  const wishes: Wish[] = [{ kind: "museo" }, { kind: "museo" }, { kind: "museo" }, { kind: "museo" }];
+  const day = (pace?: "tranquilo" | "equilibrado" | "intenso" | null) =>
+    buildDay(req({ places: museos, wishes, startMin: m(10), endMin: m(17), ...(pace !== undefined ? { pace } : {}) }));
+
+  it("sin ritmo declarado el plan es idéntico al de siempre (90 min por museo)", () => {
+    const p = day();
+    expect(p.stops.every((s) => s.endMin - s.startMin === 90)).toBe(true);
+    expect(day(null).stops.map((s) => [s.startMin, s.endMin])).toEqual(p.stops.map((s) => [s.startMin, s.endMin]));
+  });
+  it("tranquilo dedica más tiempo y caben menos visitas en el mismo día", () => {
+    const calm = day("tranquilo"), base = day(), fast = day("intenso");
+    expect(calm.stops[0]!.endMin - calm.stops[0]!.startMin).toBe(115);
+    expect(fast.stops[0]!.endMin - fast.stops[0]!.startMin).toBe(70);
+    expect(calm.stops.length).toBeLessThan(base.stops.length);
+    expect(fast.stops.length).toBeGreaterThanOrEqual(base.stops.length);
+  });
+  it("lo que no cabe por el ritmo se reporta como no ubicado, no se descarta en silencio", () => {
+    const calm = day("tranquilo");
+    expect(calm.stops.length + calm.unplaced.length).toBe(4);
+  });
+  it("el ritmo se declara como supuesto en el plan", () => {
+    expect(day("tranquilo").assumptions.join(" ")).toMatch(/Ritmo tranquilo/);
+    expect(day().assumptions.join(" ")).not.toMatch(/Ritmo/);
+  });
+  it("ninguna visita termina después del horario de cierre aunque el ritmo la alargue", () => {
+    const cierra = mk("z", "museo", "Th 10:00-12:00", "Z");
+    const p = buildDay(req({ places: [cierra], wishes: [{ kind: "museo" }], startMin: m(10), endMin: m(17), pace: "tranquilo" }));
+    for (const s of p.stops) expect(s.endMin).toBeLessThanOrEqual(m(12));
+  });
+});

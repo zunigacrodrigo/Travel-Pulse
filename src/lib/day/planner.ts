@@ -10,7 +10,9 @@
  *  - Con lluvia probable, lo que es al aire libre se marca; «reemplazar por techo» cambia los parques por
  *    museos o galerías. Nada se cambia sin que la persona lo pida.
  */
+import type { Pace } from "@/lib/client/dna-core";
 import { KIND_META, type Kind, type Place } from "./places";
+import { visitMinutes } from "./preferences";
 import { earliestFit, statusAt, windowsOn, weekdayOf, clock } from "./openingHours";
 import { leg, type Mode } from "./routing";
 import { rainRiskBetween, type HourWeather } from "./weather";
@@ -45,6 +47,8 @@ export interface DayRequest {
   candidates: Record<Kind, Place[]>;
   travel: TravelData;
   weather: HourWeather[] | null;
+  /** Ritmo declarado en el Travel DNA; si falta, las duraciones son las de siempre. */
+  pace?: Pace | null;
 }
 
 export type Confidence = "abierto" | "sin_confirmar";
@@ -95,7 +99,7 @@ function legBetween(t: TravelData, fromId: string, toId: string) {
 interface Slot { place: Place; start: number; end: number; travel: { minutes: number; mode: Mode } | null; status: Confidence; closesAt: number | null; wait: number }
 
 function tryPlace(place: Place, wish: Wish, fromId: string, cursor: number, req: DayRequest, maxWait: number): Slot | { reason: string } {
-  const duration = KIND_META[place.kind].durationMin;
+  const duration = visitMinutes(place.kind, req.pace);
   const tr = legBetween(req.travel, fromId, place.id);
   const minutes = tr ? tr.minutes : FALLBACK_TRAVEL_MIN;
   const earliest = Math.max(cursor + minutes, EARLIEST[place.kind] ?? 0, wish.minStart ?? 0);
@@ -196,7 +200,8 @@ export function buildDay(req: DayRequest): DayPlan {
   return {
     stops, unplaced,
     assumptions: [
-      ...kinds.map((k) => `${KIND_META[k].label}: ${KIND_META[k].durationMin} min de visita (supuesto, no un dato).`),
+      ...kinds.map((k) => `${KIND_META[k].label}: ${visitMinutes(k, req.pace)} min de visita (supuesto, no un dato).`),
+      ...(req.pace && req.pace !== "equilibrado" ? [`Ritmo ${req.pace} (de tu Travel DNA): las visitas duran ${req.pace === "tranquilo" ? "25 % más" : "20 % menos"} que lo habitual (supuesto).`] : []),
       "Los traslados en auto no incluyen tráfico.",
       ...(req.weather === null ? ["Sin pronóstico por hora para esa fecha: no se evaluó la lluvia."] : []),
     ],

@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { DayPrefill } from "@/lib/day/query";
+import { PACES, PACE_LABELS, type Pace } from "@/lib/client/dna-core";
 import { CITIES } from "@/lib/day/cities";
 import { clock } from "@/lib/day/openingHours";
 import { addStopWish, swapOutdoorForIndoor, type Stop, type Wish } from "@/lib/day/planner";
@@ -121,6 +121,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
   const [date, setDate] = useState(prefill.date);
   const [start, setStart] = useState(prefill.start);
   const [end, setEnd] = useState(prefill.end);
+  const [pace, setPace] = useState<Pace | "">(prefill.pace ?? "");
   const [wishes, setWishes] = useState<Wish[]>(prefill.kinds.map((kind) => ({ kind })));
   const [data, setData] = useState<DayResponse | null>(null);
   const [busy, setBusy] = useState(false);
@@ -130,7 +131,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
   async function run(next: Wish[], note?: string) {
     setBusy(true); setError(null); setNotice(note ?? null);
     try {
-      const res = await fetch("/api/day-plan", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ city, date, startMin: toMin(start), endMin: toMin(end), wishes: next }) });
+      const res = await fetch("/api/day-plan", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ city, date, startMin: toMin(start), endMin: toMin(end), ...(pace ? { pace } : {}), wishes: next }) });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message ?? "No pudimos armar el día.");
       setWishes(next); setData(json as DayResponse);
@@ -175,6 +176,13 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
           </label>
           <label className="text-[13px] font-semibold">Hasta las
             <input className={`${field} mt-1`} type="time" value={end} onChange={(e) => setEnd(e.target.value)} required />
+          </label>
+          <label className="text-[13px] font-semibold sm:col-span-2 lg:col-span-4">Ritmo
+            <select className={`${field} mt-1 sm:max-w-xs`} value={pace} onChange={(e) => setPace(e.target.value as Pace | "")}>
+              <option value="">Sin preferencia</option>
+              {PACES.map((p) => <option key={p} value={p}>{PACE_LABELS[p]}</option>)}
+            </select>
+            <span className="mt-1 block text-[12px] font-normal text-mid">{prefill.pace ? "Viene de tu Travel DNA. " : ""}Cambia cuánto tiempo se dedica a cada visita; es un supuesto, no un dato de los lugares.</span>
           </label>
           <fieldset className="sm:col-span-2 lg:col-span-4">
             <legend className="text-[13px] font-semibold">¿Qué quieres hacer?</legend>

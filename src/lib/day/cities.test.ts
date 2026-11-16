@@ -21,3 +21,14 @@ describe("ciudades del piloto de Mi día", () => {
     expect(parseDayQuery({ city: "antofagasta-cl", w: "pub" }, "2026-11-20").city).toBe("antofagasta-cl");
   });
 });
+
+describe("ritmo en el contrato de Mi día", () => {
+  const base = { city: "sao-paulo-br", date: "2026-11-20", startMin: 600, endMin: 1200, wishes: [{ kind: "museo" as const }] };
+  it("acepta los tres ritmos del Travel DNA y también ninguno", () => {
+    for (const pace of ["tranquilo", "equilibrado", "intenso"]) expect(dayInputSchema.safeParse({ ...base, pace }).success).toBe(true);
+    expect(dayInputSchema.safeParse(base).success).toBe(true);
+  });
+  it("rechaza un ritmo inventado", () => {
+    expect(dayInputSchema.safeParse({ ...base, pace: "frenético" }).success).toBe(false);
+  });
+});

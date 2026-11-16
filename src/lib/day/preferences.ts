@@ -7,7 +7,8 @@
  *  - Sin preferencias declaradas, el orden es el de siempre: no se cambia nada en silencio.
  */
 import type { Interest } from "@/lib/types";
-import { KINDS, type Kind } from "./places";
+import type { Pace } from "@/lib/client/dna-core";
+import { KINDS, KIND_META, type Kind } from "./places";
 
 /** Qué tipos de lugar sirven a cada interés, solo cuando la relación es directa. */
 export const INTEREST_TO_KINDS: Partial<Record<Interest, readonly Kind[]>> = {
@@ -32,4 +33,18 @@ export function orderKindsByInterests(interests: readonly Interest[], kinds: rea
 /** Intereses que no tienen equivalente en los datos de Mi día. Se muestran al viajero, no se ocultan. */
 export function unmappedInterests(interests: readonly Interest[]): Interest[] {
   return interests.filter((i) => !(INTEREST_TO_KINDS[i]?.length));
+}
+
+/**
+ * Ritmo declarado → factor sobre la duración de cada visita. Las duraciones por tipo ya son SUPUESTOS
+ * (museo 90 min, etc.); el ritmo las ajusta y el plan lo declara. No es un dato de ningún lugar.
+ */
+export const PACE_FACTOR: Record<Pace, number> = { tranquilo: 1.25, equilibrado: 1, intenso: 0.8 };
+
+export const paceFactor = (pace: Pace | null | undefined): number => (pace ? PACE_FACTOR[pace] : 1);
+
+/** Minutos de visita para un tipo de lugar según el ritmo, redondeados a 5 min. */
+export function visitMinutes(kind: Kind, pace: Pace | null | undefined): number {
+  const base = KIND_META[kind].durationMin;
+  return pace ? Math.round((base * paceFactor(pace)) / 5) * 5 : base;
 }
