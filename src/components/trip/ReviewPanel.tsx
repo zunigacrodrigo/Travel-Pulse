@@ -48,7 +48,7 @@ export function ReviewPanel({ trip, activities, plan, onApplyChange, onApplyPatc
     } finally { setBusy(false); }
   }
 
-  const result = data ? reviewTrip({ trip, activities, plan, date: ref.date, weather: data.weather, freshHours: data.hours, signals, now: data.checkedAt }) : null;
+  const result = data ? reviewTrip({ trip, activities, plan, date: ref.date, weather: data.weather, freshHours: data.hours, signals, context: data.context, now: data.checkedAt }) : null;
   const visible = result ? result.findings.filter((f) => !dismissed.has(f.id)) : [];
   const dismiss = (f: Finding) => setDismissed((s) => new Set(s).add(f.id));
 
@@ -64,12 +64,12 @@ export function ReviewPanel({ trip, activities, plan, onApplyChange, onApplyPatc
           <p className="text-[11px] text-slate-300">Revisado a las {hhmm(data.checkedAt, trip.timeZone)} · {data.sources.map((s) => `${s.name}: ${s.status === "ok" ? "ok" : s.status === "fuera_de_alcance" ? "fuera de alcance" : "no respondió"}`).join(" · ")}</p>
           {visible.length === 0 && (
             <p className="rounded-xl border border-slate-500/50 p-3 text-xs text-slate-200">
-              {result.findings.length === 0 ? "No encontré cambios en lo que pude consultar: los horarios y el pronóstico coinciden con tu plan." : "Descartaste todos los avisos. Tu plan se mantiene."}
+              {result.findings.length === 0 ? "No encontré cambios en lo que pude consultar: los horarios, el pronóstico y el contexto del día no piden cambios en tu plan." : "Descartaste todos los avisos. Tu plan se mantiene."}
             </p>
           )}
           {visible.map((f) => (
-            <article key={f.id} className="rounded-xl border border-amber-400/40 bg-amber-300/10 p-3" aria-label={`Aviso: ${f.activityName}`}>
-              <p className="text-[11px] font-extrabold uppercase tracking-wide text-amber-200">{f.kind === "horario" ? "Cambió un horario · OpenStreetMap" : f.kind === "viajeros" ? "Reporte de viajeros · no oficial" : "Lluvia probable · Open-Meteo"}</p>
+            <article key={f.id} className="rounded-xl border border-amber-400/40 bg-amber-300/10 p-3" aria-label={`Aviso: ${f.kind === "contexto" ? f.topic : f.activityName}`}>
+              <p className="text-[11px] font-extrabold uppercase tracking-wide text-amber-200">{f.kind === "horario" ? "Cambió un horario · OpenStreetMap" : f.kind === "viajeros" ? "Reporte de viajeros · no oficial" : f.kind === "contexto" ? `${f.topic === "feriado" ? "Feriado" : f.topic === "aire" ? "Calidad del aire" : "Radiación UV"} · ${f.source.name}` : "Lluvia probable · Open-Meteo"}</p>
               <p className="mt-2 text-xs leading-5 text-slate-100">{f.message}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {f.kind === "horario" && <button type="button" className="tt-primary" onClick={() => { onApplyPatch(f.activityId, f.patch, `Actualizar horario de ${f.activityName}`); dismiss(f); }}>Actualizar horario</button>}

@@ -8,6 +8,7 @@ const BASE = process.env.BASE || 'http://localhost:3102';
 const REAL = JSON.parse(fs.readFileSync(__dirname + '/fixtures/day-plan-real.json', 'utf8'));
 const LOOKUP = JSON.parse(fs.readFileSync(__dirname + '/../src/lib/day/__fixtures__/nominatim-lookup-real.json', 'utf8'));
 const horariosReales = Object.fromEntries(LOOKUP.map((r) => [`${r.osm_type}/${r.osm_id}`, { hoursRaw: r.extratags.opening_hours ?? null }]));
+const CTX = JSON.parse(fs.readFileSync(__dirname + '/fixtures/contexto-real.json', 'utf8'));
 const MASP = 'way/1370081491';
 const results = []; const errors = [];
 const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } catch (e) { results.push(['FAIL', n + ' -> ' + String(e.message).split('\n')[0]]); } };
@@ -73,6 +74,25 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
       respuesta = { ...respuesta, hours: horariosReales, weather: null, warnings: ['No hay pronóstico por hora para esa fecha: no se evaluó la lluvia.'], sources: [{ name: 'Open-Meteo', url: 'https://open-meteo.com/', status: 'fuera_de_alcance' }] };
       await review.getByRole('button', { name: 'Revisar de nuevo' }).click();
       await review.getByText(/no se evaluó la lluvia/i).first().waitFor();
+      assert.equal(await review.getByRole('article').count(), 0);
+    });
+    await step(`[${name}] un feriado se avisa con las paradas por confirmar, sin botón que cambie el plan, y se puede descartar`, async () => {
+      const antes = await n(); const c1 = await conflictos();
+      respuesta = { ...respuesta, hours: horariosReales, weather: REAL.weather.hours, warnings: [], context: CTX.feriado.items.filter((i) => i.kind === 'feriado'), sources: [{ name: 'Feriados (Nager.Date)', url: 'https://date.nager.at', status: 'ok' }] };
+      await review.getByRole('button', { name: 'Revisar de nuevo' }).click();
+      const aviso = review.getByRole('article', { name: /feriado/ });
+      await aviso.waitFor();
+      const t = await aviso.innerText();
+      assert.match(t, /Feriado · Nager\.Date/i); assert.match(t, /Dia da Consciência Negra/); assert.match(t, /Confirma los horarios de: Museu de Arte/); assert.match(t, /No tenemos el dato/);
+      assert.equal(await aviso.getByRole('button').count(), 1, 'solo «Mantener mi plan»: un feriado no cambia el plan solo');
+      assert.equal(await n(), antes); assert.equal(await conflictos(), c1);
+      await aviso.getByRole('button', { name: 'Mantener mi plan' }).click();
+      assert.equal(await review.getByRole('article').count(), 0);
+    });
+    await step(`[${name}] si no se pudo consultar el contexto del día, lo declara y no inventa avisos`, async () => {
+      respuesta = { ...respuesta, context: null, warnings: ['No se evaluó el feriado: HTTP 500'] };
+      await review.getByRole('button', { name: 'Revisar de nuevo' }).click();
+      await review.getByText(/No se pudo consultar el contexto del día/).first().waitFor();
       assert.equal(await review.getByRole('article').count(), 0);
     });
     await step(`[${name}] si el servidor falla, muestra el error y el plan sigue intacto`, async () => {

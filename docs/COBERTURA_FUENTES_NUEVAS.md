@@ -62,3 +62,11 @@ Nota de calidad: una prueba E2E de PulseMesh falló una vez de forma intermitent
 `src/lib/context/{heritage,nature,entorno}.ts` → `GET /api/entorno?city=` → tarjeta en Mi día. Verificado EN VIVO en las 4 ciudades (10 bienes protegidos cada una; aves: SP 361.701 registros, Santiago 290.190, Valparaíso 102.675, Antofagasta 17.656).
 Con datos reales aparecieron: filas repetidas de Wikidata (un bien con varias declaratorias → se agrupa) y registros de GBIF solo de género (se descartan).
 Límites: Wikidata permite ~1 petición/min → caché de 7 días y copia vieja si limita. El orden del patrimonio es por idiomas de Wikipedia (popularidad), no calidad; las aves cuentan registros de observadores (sesgo: especies urbanas comunes primero, p. ej. paloma doméstica) y no traen nombre común.
+
+## Integrado (2026-11-16): el contexto del día entra a «Revisar con datos de hoy»
+`reviewTrip` recibe `context` (feriado, aire, UV) y emite hallazgos `contexto`: nombran las paradas afectadas y **nunca proponen ni aplican cambios** (la persona decide).
+- Aire dañino (índice > 100): paradas al aire libre del día. UV muy alta (≥ 8): paradas al aire libre entre 11:00 y 16:00 (ventana fija, «horas centrales»). Feriado nacional: confirmar horarios de todas las paradas.
+- Una categoría desconocida NO se asume al aire libre; una parada cancelada o de otro día no cuenta.
+- Si el contexto no se pudo consultar, se declara en notas/avisos y en las fuentes (ok / fuera de alcance / no respondió).
+- Verificado en vivo (ruta real `/api/trip-review`, São Paulo, 20-nov-2026): 4 fuentes «ok»; feriado + aire 151 + UV 10,4 reales.
+Límite: el aire y UV son pronóstico de un modelo (hasta 4 días); el aviso lo dice. La ventana del UV es una heurística nuestra, no un dato de la fuente.

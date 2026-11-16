@@ -8,6 +8,7 @@
  *  - Lo que no se pudo consultar se declara en `notes`; jamás se rellena ni se supone.
  *  - Un horario que la fuente ya no trae o no se puede interpretar NO borra el que había: no se declara «cerrado».
  */
+import type { ContextItem } from "@/lib/context/types";
 import { KIND_META, type Kind } from "@/lib/day/places";
 import { clock, parseOpeningHours, weekdayOf, windowsOn } from "@/lib/day/openingHours";
 import { rainRiskBetween, type HourWeather } from "@/lib/day/weather";
@@ -32,6 +33,11 @@ export interface ReviewInput {
    * `undefined`: la función no está disponible (no se dice nada). `null`: no se pudieron consultar (se declara).
    */
   signals?: PublicSignal[] | null;
+  /**
+   * Contexto del día (feriado, aire, UV). `undefined`: no se pidió (no se dice nada). `null`: no se pudo consultar (se declara).
+   * Solo los avisos (`severity: "aviso"`) generan hallazgos.
+   */
+  context?: ContextItem[] | null;
   /** Hora de la consulta (ISO). */
   now: string;
 }
@@ -53,7 +59,11 @@ export interface TravelersFinding {
   /** Solo para «cerrado» y «ruta cortada»: quitar la parada. Una fila o el gentío no se resuelven moviendo nada inventado. */
   proposal: { label: string; change: PlanChange } | null;
 }
-export type Finding = RainFinding | HoursFinding | TravelersFinding;
+/** Aviso del contexto del día (feriado, aire, UV). Nunca propone un cambio: nombra las paradas afectadas y la persona decide. */
+export interface ContextFinding {
+  id: string; kind: "contexto"; topic: ContextItem["kind"]; activityNames: string[]; message: string; source: ContextItem["source"]; proposal: null;
+}
+export type Finding = RainFinding | HoursFinding | TravelersFinding | ContextFinding;
 
 export interface ReviewResult { findings: Finding[]; notes: string[] }
 
@@ -158,7 +168,35 @@ export function reviewTrip(input: ReviewInput): ReviewResult {
       });
     }
   }
-  const ORDER = { horario: 0, viajeros: 1, lluvia: 2 } as const;
+  // ---- Contexto del día: feriado, aire y UV ----
+  if (input.context === null) {
+    notes.push("No se pudo consultar el contexto del día (feriados, aire y UV): no se evaluó.");
+  } else if (input.context) {
+    const active = plan.items.filter((i) => i.status !== "cancelled" && localDateOf(i.plannedStart, tz) === date);
+    const named = (pred: (a: Activity, s: number, e: number) => boolean) => active.flatMap((i) => {
+      const a = byId.get(i.activityId);
+      return a && pred(a, localMinutes(i.plannedStart, tz), localMinutes(i.plannedEnd, tz)) ? [a.name] : [];
+    });
+    const outdoor = (a: Activity) => { const k = kindOf(a.category); return k !== null && !KIND_META[k].indoor; };
+    for (const c of input.context) {
+      if (c.severity !== "aviso") continue;
+      const topic = c.kind;
+      if (topic === "aire") {
+        const names = named((a) => outdoor(a));
+        if (names.length) findings.push({ id: "contexto-aire", kind: "contexto", topic, activityNames: names, source: c.source, proposal: null,
+          message: `${c.title}. Paradas al aire libre ese día: ${names.join(", ")}. Para personas sensibles conviene dejarlas para otro momento o cambiarlas por algo bajo techo; tú decides. Es un pronóstico de modelo, no una medición.` });
+      } else if (topic === "uv") {
+        const names = named((a, s, e) => outdoor(a) && s < 16 * 60 && e > 11 * 60);
+        if (names.length) findings.push({ id: "contexto-uv", kind: "contexto", topic, activityNames: names, source: c.source, proposal: null,
+          message: `${c.title}. Paradas al aire libre entre las 11:00 y las 16:00: ${names.join(", ")}. Lleva protector y busca sombra, o muévelas a otro rato; tú decides.` });
+      } else if (topic === "feriado") {
+        const names = named(() => true);
+        if (names.length) findings.push({ id: `contexto-${c.id}`, kind: "contexto", topic, activityNames: names, source: c.source, proposal: null,
+          message: `${c.title}. Confirma los horarios de: ${names.join(", ")}. No tenemos el dato de qué lugares cambian su horario ese día.` });
+      }
+    }
+  }
+  const ORDER = { horario: 0, viajeros: 1, lluvia: 2, contexto: 3 } as const;
   findings.sort((x, y) => ORDER[x.kind] - ORDER[y.kind]);
   return { findings, notes };
 }

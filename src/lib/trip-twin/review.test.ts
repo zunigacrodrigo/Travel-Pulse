@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import ctxReal from "../../../qa/fixtures/contexto-real.json";
 import real from "../../../qa/fixtures/day-plan-real.json";
+import type { ContextItem } from "../context/types";
 import lookup from "../day/__fixtures__/nominatim-lookup-real.json";
 import { dayToTrip } from "../day/toTrip";
 import type { DayResponse } from "../day/service";
@@ -189,5 +191,76 @@ describe("revisar con datos de hoy: reportes de viajeros (señales de prueba)", 
     const r = review({ signals: null });
     expect(r.notes.join(" ")).toMatch(/reportes de viajeros/i);
     expect(r.findings).toEqual([]);
+  });
+});
+
+// Contexto REAL grabado el 16-nov-2026 (São Paulo): aire dañino e UV muy alta el 17; además feriado el 20.
+const ctxNormal = (ctxReal.normal as { items: ContextItem[] }).items;
+const ctxFeriado = (ctxReal.feriado as { items: ContextItem[] }).items;
+const dry: HourWeather[] = rainyAllDay.map((h) => ({ ...h, rainProb: 0 }));
+const only = (items: ContextItem[], kind: ContextItem["kind"]) => items.filter((i) => i.kind === kind);
+
+describe("revisar con datos de hoy: contexto del día (feriado, aire, UV)", () => {
+  it("aire dañino + parada al aire libre → aviso que nombra la parada, sin proponer cambios solos", () => {
+    const acts = withOutdoorFirst();
+    const r = review({ activities: acts, weather: dry, context: only(ctxNormal, "aire") });
+    const f = r.findings.find((x) => x.kind === "contexto" && x.topic === "aire")!;
+    expect(f).toBeTruthy();
+    expect(f.kind === "contexto" && f.activityNames).toEqual([acts[0]!.name]);
+    expect(f.kind === "contexto" && f.proposal).toBeNull();
+    expect(f.message).toMatch(/Aire dañino/);
+    expect(f.message).toMatch(/pronóstico de modelo, no una medición/);
+    expect(f.kind === "contexto" && f.source.name).toMatch(/Open-Meteo/);
+  });
+  it("si todas las paradas son bajo techo, el aire malo no genera aviso (no hay nada que proteger)", () => {
+    expect(review({ weather: dry, context: only(ctxNormal, "aire") }).findings).toEqual([]);
+  });
+  it("el UV avisa de una parada al aire libre a las 11:01–12:31 (hora de São Paulo) y la nombra", () => {
+    const acts = withOutdoorFirst();
+    const f = review({ activities: acts, weather: dry, context: only(ctxNormal, "uv") }).findings.find((x) => x.kind === "contexto" && x.topic === "uv")!;
+    expect(f.kind === "contexto" && f.activityNames).toEqual([acts[0]!.name]);
+    expect(f.message).toMatch(/entre las 11:00 y las 16:00/);
+  });
+  it("el UV NO avisa de una parada al aire libre a las 18:30–20:00, fuera de las horas centrales", () => {
+    const acts = structuredClone(activities);
+    acts[3]!.category = "Parque"; // la última parada del día real
+    expect(review({ activities: acts, weather: dry, context: only(ctxNormal, "uv") }).findings).toEqual([]);
+    // pero el aire malo sí la alcanza: ahí no importa la hora
+    expect(review({ activities: acts, weather: dry, context: only(ctxNormal, "aire") }).findings.map((f) => f.kind)).toEqual(["contexto"]);
+  });
+  it("una parada cancelada o de otro día no cuenta como afectada", () => {
+    const acts = withOutdoorFirst();
+    const cancelledPlan = structuredClone(plan);
+    cancelledPlan.items[0]!.status = "cancelled";
+    expect(review({ activities: acts, plan: cancelledPlan, weather: dry, context: only(ctxNormal, "aire") }).findings).toEqual([]);
+    const otherDay = structuredClone(plan);
+    const shift = (iso: string) => new Date(Date.parse(iso) + 86_400_000).toISOString();
+    otherDay.items[0]!.plannedStart = shift(otherDay.items[0]!.plannedStart); otherDay.items[0]!.plannedEnd = shift(otherDay.items[0]!.plannedEnd);
+    expect(review({ activities: acts, plan: otherDay, weather: dry, context: only(ctxNormal, "aire") }).findings).toEqual([]);
+  });
+  it("una categoría desconocida no se asume al aire libre", () => {
+    const acts = structuredClone(activities);
+    acts[0]!.category = "Algo que no sabemos";
+    expect(review({ activities: acts, weather: dry, context: only(ctxNormal, "aire") }).findings).toEqual([]);
+  });
+  it("un feriado pide confirmar los horarios de TODAS las paradas y admite que no sabe qué cierra", () => {
+    const r = review({ weather: dry, context: only(ctxFeriado, "feriado") });
+    const f = r.findings.find((x) => x.kind === "contexto" && x.topic === "feriado")!;
+    expect(f.kind === "contexto" && f.activityNames).toHaveLength(plan.items.filter((i) => i.status !== "cancelled").length);
+    expect(f.message).toMatch(/Dia da Consciência Negra/);
+    expect(f.message).toMatch(/No tenemos el dato/);
+  });
+  it("lo meramente informativo (víspera, aire normal) no genera aviso", () => {
+    const calm: ContextItem[] = [{ id: "aire", kind: "aire", severity: "info", title: "Aire bueno", detail: "", source: { name: "x", url: "u" }, certainty: "pronostico" }];
+    expect(review({ activities: withOutdoorFirst(), weather: dry, context: calm }).findings).toEqual([]);
+  });
+  it("sin contexto pedido (undefined) no dice nada; si no se pudo consultar (null) lo declara", () => {
+    expect(review({ weather: dry }).notes.join(" ")).not.toMatch(/contexto/i);
+    expect(review({ weather: dry, context: null }).notes.join(" ")).toMatch(/contexto del día/);
+  });
+  it("los avisos de contexto van después de horarios, viajeros y lluvia", () => {
+    const acts = withOutdoorFirst();
+    const r = review({ activities: acts, context: only(ctxNormal, "aire") });
+    expect(r.findings.map((f) => f.kind)).toEqual(["lluvia", "contexto"]);
   });
 });

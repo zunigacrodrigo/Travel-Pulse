@@ -5,6 +5,8 @@
  * Cada fuente que falla se declara en `warnings`; la otra se entrega igual. Nada se rellena con datos inventados.
  */
 import { z } from "zod";
+import { computeDayContext } from "@/lib/context/service";
+import type { ContextItem } from "@/lib/context/types";
 import { describeError, fetchJson, type FetchOptions } from "@/lib/sources/http";
 import { CITIES } from "./cities";
 import { fetchDayWeather, type HourWeather } from "./weather";
@@ -52,6 +54,8 @@ export async function fetchFreshHours(ids: readonly string[], opts: FetchOptions
 
 export interface ReviewData {
   checkedAt: string;
+  /** Avisos del día (feriado, aire, UV); `null` si no se pudo consultar. */
+  context: ContextItem[] | null;
   weather: HourWeather[] | null;
   hours: Record<string, FreshHours>;
   sources: { name: string; url: string; status: "ok" | "error" | "fuera_de_alcance"; detail?: string }[];
@@ -62,7 +66,7 @@ export async function computeReviewData(input: ReviewInput, deps: { fetchImpl?: 
   const now = deps.now ?? new Date();
   const city = CITIES[input.city]!;
   const http = { fetchImpl: deps.fetchImpl };
-  const out: ReviewData = { checkedAt: now.toISOString(), weather: null, hours: {}, sources: [], warnings: [] };
+  const out: ReviewData = { checkedAt: now.toISOString(), context: null, weather: null, hours: {}, sources: [], warnings: [] };
 
   try {
     out.hours = await fetchFreshHours(input.places, http);
@@ -79,6 +83,18 @@ export async function computeReviewData(input: ReviewInput, deps: { fetchImpl?: 
   } catch (e) {
     out.sources.push({ name: "Open-Meteo", url: "https://open-meteo.com/", status: "error", detail: describeError(e) });
     out.warnings.push(`No pudimos consultar el pronóstico (${describeError(e)}): no se evaluó la lluvia.`);
+  }
+  try {
+    const ctx = await computeDayContext(input.city, input.date, { now, fetchImpl: deps.fetchImpl });
+    out.context = ctx ? ctx.items : null;
+    const gapOf = (needle: string) => ctx?.gaps.find((g) => g.source.includes(needle));
+    for (const [needle, name, url] of [["Feriados", "Feriados (Nager.Date)", "https://date.nager.at"], ["aire", "Aire y UV (Open-Meteo)", "https://open-meteo.com/en/docs/air-quality-api"]] as const) {
+      const g = gapOf(needle);
+      out.sources.push({ name, url, status: !g ? "ok" : /hasta \d+ días/.test(g.reason) ? "fuera_de_alcance" : "error", ...(g ? { detail: g.reason } : {}) });
+      if (g) out.warnings.push(`No se evaluó ${needle === "aire" ? "el aire ni el UV" : "el feriado"}: ${g.reason}`);
+    }
+  } catch (e) {
+    out.warnings.push(`No pudimos consultar el contexto del día (${describeError(e)}): no se evaluaron feriados, aire ni UV.`);
   }
   return out;
 }
