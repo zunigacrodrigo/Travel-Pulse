@@ -43,3 +43,9 @@ Las afirmaciones de cobertura que vienen de textos externos NO se dan por buenas
 | Wikidata museos | 425 "museos con web" ≤15 km Santiago | Cifra sospechosa (la consulta incluye subclases): NO fiable sin validar |
 
 Sin respuesta: espejos de Overpass (kumi, mail.ru, private.coffee) caídos; dados.gov.br exige acceso (401).
+
+## Integrado (2026-11-16): «Contexto del día» en Mi día
+`src/lib/context/` (feriados Nager.Date + aire y UV Open-Meteo) → `GET /api/contexto?city=&date=` → tarjeta en Mi día.
+Cada dato muestra su fuente y si es dato publicado o pronóstico de modelo; si una fuente falla o la fecha está fuera de alcance
+(aire/UV: hasta 4 días) se informa en pantalla. Pendiente: Wikivoyage, Wikidata, GBIF, Commons, EONET, GTFS DTPM y las que piden clave.
+Ojo con términos: el plan gratuito de Open-Meteo es solo para uso no comercial; revisar antes de monetizar.

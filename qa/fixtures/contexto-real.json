@@ -1,0 +1,78 @@
+{
+ "normal": {
+  "cityKey": "sao-paulo-br",
+  "date": "2026-11-17",
+  "items": [
+   {
+    "id": "aire",
+    "kind": "aire",
+    "severity": "aviso",
+    "source": {
+     "name": "Open-Meteo Air Quality (modelo CAMS)",
+     "url": "https://open-meteo.com/en/docs/air-quality-api"
+    },
+    "certainty": "pronostico",
+    "title": "Aire dañino (índice máximo 166)",
+    "detail": "El aire puede afectar a personas sensibles (asma, niños, mayores). Considera dejar lo más exigente al aire libre para otro rato o llevar mascarilla. Es un pronóstico de modelo, no una medición en la calle."
+   },
+   {
+    "id": "uv",
+    "kind": "uv",
+    "severity": "aviso",
+    "source": {
+     "name": "Open-Meteo Air Quality (modelo CAMS)",
+     "url": "https://open-meteo.com/en/docs/air-quality-api"
+    },
+    "certainty": "pronostico",
+    "title": "Radiación UV muy alta (máx. 9.2 hacia las 12:00)",
+    "detail": "Protector solar y sombra en las horas centrales; deja las paradas bajo techo para ese rato."
+   }
+  ],
+  "gaps": [],
+  "fetchedAt": "2026-11-16T18:00:00.000Z"
+ },
+ "feriado": {
+  "cityKey": "sao-paulo-br",
+  "date": "2026-11-20",
+  "items": [
+   {
+    "id": "feriado-2026-11-20-Dia da Consciência Negra",
+    "kind": "feriado",
+    "severity": "aviso",
+    "source": {
+     "name": "Nager.Date (feriados públicos)",
+     "url": "https://date.nager.at"
+    },
+    "certainty": "confirmado",
+    "title": "Feriado: Dia da Consciência Negra",
+    "detail": "Es feriado en todo el país. Varios museos y comercios cambian su horario ese día; confírmalo en el sitio de cada lugar (no tenemos ese dato)."
+   },
+   {
+    "id": "aire",
+    "kind": "aire",
+    "severity": "aviso",
+    "source": {
+     "name": "Open-Meteo Air Quality (modelo CAMS)",
+     "url": "https://open-meteo.com/en/docs/air-quality-api"
+    },
+    "certainty": "pronostico",
+    "title": "Aire dañino (índice máximo 151)",
+    "detail": "El aire puede afectar a personas sensibles (asma, niños, mayores). Considera dejar lo más exigente al aire libre para otro rato o llevar mascarilla. Es un pronóstico de modelo, no una medición en la calle."
+   },
+   {
+    "id": "uv",
+    "kind": "uv",
+    "severity": "aviso",
+    "source": {
+     "name": "Open-Meteo Air Quality (modelo CAMS)",
+     "url": "https://open-meteo.com/en/docs/air-quality-api"
+    },
+    "certainty": "pronostico",
+    "title": "Radiación UV muy alta (máx. 10.4 hacia las 11:00)",
+    "detail": "Protector solar y sombra en las horas centrales; deja las paradas bajo techo para ese rato."
+   }
+  ],
+  "gaps": [],
+  "fetchedAt": "2026-11-16T18:00:00.000Z"
+ }
+}
