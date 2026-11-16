@@ -24,4 +24,11 @@ describe("Travel DNA → Mi día", () => {
   it("los intereses sin equivalente se reportan, no se traducen", () => {
     expect(unmappedInterests(["romance", "lujo", "comida"])).toEqual(["romance", "lujo"]);
   });
+  it("«aventura» no se traduce a parques: la relación no es directa", () => {
+    expect(orderKindsByInterests(["aventura"])).toEqual([...KINDS]);
+    expect(unmappedInterests(["aventura"])).toEqual(["aventura"]);
+  });
+  it("el orden es estable: los tipos sin interés mantienen su orden original", () => {
+    expect(orderKindsByInterests(["comida"])).toEqual(["restaurante", "museo", "galeria", "pub", "parque"]);
+  });
 });

@@ -14,7 +14,6 @@ export const INTEREST_TO_KINDS: Partial<Record<Interest, readonly Kind[]>> = {
   cultura: ["museo", "galeria"],
   comida: ["restaurante"],
   naturaleza: ["parque"],
-  aventura: ["parque"],
 };
 
 /**
@@ -26,7 +25,8 @@ export function orderKindsByInterests(interests: readonly Interest[], kinds: rea
   interests.forEach((interest, i) => {
     for (const k of INTEREST_TO_KINDS[interest] ?? []) if (!rank.has(k)) rank.set(k, i);
   });
-  return [...kinds].sort((a, b) => (rank.get(a) ?? Infinity) - (rank.get(b) ?? Infinity));
+  const NONE = Number.MAX_SAFE_INTEGER;
+  return [...kinds].sort((a, b) => (rank.get(a) ?? NONE) - (rank.get(b) ?? NONE));
 }
 
 /** Intereses que no tienen equivalente en los datos de Mi día. Se muestran al viajero, no se ocultan. */
