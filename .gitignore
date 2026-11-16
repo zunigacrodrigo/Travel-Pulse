@@ -42,3 +42,6 @@ yarn-error.log*
 next-env.d.ts
 
 work/pdf-review/
+
+# Paquete comprimido generado para entregar el proyecto; no se versiona
+/travel-pulse-completo.zip
