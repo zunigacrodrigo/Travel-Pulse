@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DayPrefill } from "@/lib/day/query";
 import { dayToTrip } from "@/lib/day/toTrip";
+import { PlaceSignals } from "@/components/pulse/PlaceSignals";
+import { usePlaceSignals, type PlaceSignalsState } from "@/components/pulse/usePlaceSignals";
 import { buildTripPlan } from "@/lib/trip-twin/engine";
 import { PACES, PACE_LABELS, type Pace } from "@/lib/client/dna-core";
 import { CITIES } from "@/lib/day/cities";
@@ -31,7 +33,7 @@ function StatusChip({ stop }: { stop: Stop }) {
   );
 }
 
-function StopCard({ stop, media, n, prevName, busy, onPick, onRemove }: { stop: Stop; media: Media | undefined; n: number; prevName: string; busy: boolean; onPick: (id: string) => void; onRemove: () => void }) {
+function StopCard({ stop, media, n, prevName, busy, onPick, onRemove, cityKey, pulse }: { cityKey: string; pulse: PlaceSignalsState; stop: Stop; media: Media | undefined; n: number; prevName: string; busy: boolean; onPick: (id: string) => void; onRemove: () => void }) {
   const p = stop.place;
   return (
     <li className="relative">
@@ -66,6 +68,7 @@ function StopCard({ stop, media, n, prevName, busy, onPick, onRemove }: { stop: 
               <a className="font-semibold underline underline-offset-2" href={osmUrl(p.id)} target="_blank" rel="noopener noreferrer">Ver en OpenStreetMap</a>
               {p.website ? <a className="font-semibold underline underline-offset-2" href={p.website} target="_blank" rel="noopener noreferrer">Sitio web</a> : null}
             </div>
+            <PlaceSignals cityKey={cityKey} placeId={p.id} placeName={p.name} state={pulse} tone="day" />
           </div>
         </div>
         <details className="mt-3 text-[13px] text-fg2">
@@ -131,6 +134,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const router = useRouter();
+  const pulse = usePlaceSignals(data?.city.key ?? null, data?.plan.stops.map((s) => s.place.id) ?? []);
 
   /** Pasa el día armado a Mi viaje, donde se puede mover, cancelar y deshacer. Reemplaza el viaje guardado solo si la persona lo confirma. */
   function saveToTrip() {
@@ -242,7 +246,7 @@ export function DayView({ prefill }: { prefill: DayPrefill }) {
                   {stops.map((s, i) => (
                     <StopCard key={`${s.place.id}-${i}`} stop={s} media={data.media[s.place.id]} n={i + 1} prevName={i === 0 ? data.city.anchorName : stops[i - 1]!.place.name} busy={busy}
                       onPick={(id) => void run(wishes.map((w, wi) => (wi === s.wishIndex ? { ...w, pin: id } : w)), `Cambié ${s.place.name} por otro lugar cercano.`)}
-                      onRemove={() => void run(wishes.filter((_, wi) => wi !== s.wishIndex))} />
+                      onRemove={() => void run(wishes.filter((_, wi) => wi !== s.wishIndex))} cityKey={data.city.key} pulse={pulse} />
                   ))}
                 </ol>
               )}

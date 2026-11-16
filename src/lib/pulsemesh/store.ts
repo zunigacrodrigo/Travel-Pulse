@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { friendlyError, parsePublicSignals, type InsertRow, type PublicSignal } from "./model";
+import { friendlyError, OSM_PLACE_ID, parsePublicSignals, type InsertRow, type PublicSignal } from "./model";
 
 /** Error con un mensaje ya pensado para mostrarle a la persona. */
 export class PulseError extends Error {
@@ -14,6 +14,8 @@ export type Verdict = "confirma" | "contradice";
 
 export interface PulseStore {
   list(cityKey: string): Promise<PublicSignal[]>;
+  /** Reportes vigentes de los lugares dados (ids de OpenStreetMap). Los ids con otro formato se descartan. */
+  listForPlaces(cityKey: string, placeIds: readonly string[]): Promise<PublicSignal[]>;
   create(row: InsertRow): Promise<void>;
   respond(signalId: string, userId: string, verdict: Verdict): Promise<void>;
   flag(signalId: string, userId: string, reason: FlagReason): Promise<void>;
@@ -29,6 +31,13 @@ export function supabasePulseStore(db: SupabaseClient): PulseStore {
   return {
     async list(cityKey) {
       const { data, error } = await db.from("pulse_signals_public").select("*").eq("city_key", cityKey).order("observed_at", { ascending: false }).limit(50);
+      check(error);
+      return parsePublicSignals(data);
+    },
+    async listForPlaces(cityKey, placeIds) {
+      const ids = [...new Set(placeIds)].filter((id) => OSM_PLACE_ID.test(id));
+      if (ids.length === 0) return [];
+      const { data, error } = await db.from("pulse_signals_public").select("*").eq("city_key", cityKey).in("place_id", ids).order("observed_at", { ascending: false }).limit(200);
       check(error);
       return parsePublicSignals(data);
     },

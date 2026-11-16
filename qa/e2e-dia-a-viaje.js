@@ -34,6 +34,11 @@ const step = async (n, f) => { try { await f(); results.push(['PASS', n]); } cat
       await p.waitForURL(/\/trip-twin/); await p.waitForSelector('.tt-timeline-item');
       assert.deepEqual(await p.locator('.tt-timeline-detail b').allInnerTexts(), NOMBRES);
     });
+    await step(`[${name}] sin nube configurada: dice que los reportes de viajeros no están disponibles y NUNCA «aún no hay reportes»`, async () => {
+      const txt = await cuerpo();
+      assert.match(txt, /Reportes de viajeros: no disponibles en esta instalación/);
+      assert.doesNotMatch(txt, /Aún no hay reportes de viajeros aquí/);
+    });
     await step(`[${name}] Mi viaje dice de dónde viene: armado en Mi día, nunca «importado»`, async () => {
       assert.equal(await p.locator('.tt-eyebrow').first().innerText(), 'TU VIAJE · ARMADO EN MI DÍA');
       assert.doesNotMatch(await cuerpo(), /importado por ti|ubicaciones son aproximadas|demostraci|sint[eé]tic/i);

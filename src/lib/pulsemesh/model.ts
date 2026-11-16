@@ -75,6 +75,9 @@ export function pilotCity(name: string): PilotCity | null {
 /** La base guarda ~1 km; se redondea también aquí para no enviar más precisión de la necesaria. */
 export const roundCoord = (n: number) => Math.round(n * 100) / 100;
 
+/** Identificador de OpenStreetMap. Misma regla que la restricción de la base de datos (0006): `^(node|way|relation)/[0-9]{1,15}$`. */
+export const OSM_PLACE_ID = /^(node|way|relation)\/[0-9]{1,15}$/;
+
 export const reportInputSchema = z
   .object({
     category: z.enum(CATEGORIES),
@@ -85,6 +88,9 @@ export const reportInputSchema = z
     priceCurrency: z.enum(["CLP", "BRL", "USD"]).optional(),
     lat: z.number().min(-90).max(90).optional(),
     lon: z.number().min(-180).max(180).optional(),
+    /** Lugar al que se refiere el reporte. El nombre viaja con el id: es lo que ven los demás viajeros. */
+    placeId: z.string().regex(OSM_PLACE_ID, "El lugar no tiene un identificador válido.").optional(),
+    placeName: z.string().trim().min(1).max(120).optional(),
   })
   .superRefine((v, ctx) => {
     if (!KINDS[v.category].some((k) => k.kind === v.kind)) ctx.addIssue({ code: "custom", path: ["kind"], message: "Elige un tipo de reporte válido." });
@@ -92,6 +98,7 @@ export const reportInputSchema = z
     if (v.category !== "precios" && v.priceAmount !== undefined) ctx.addIssue({ code: "custom", path: ["priceAmount"], message: "Solo los reportes de precios llevan monto." });
     if ((v.priceAmount === undefined) !== (v.priceCurrency === undefined)) ctx.addIssue({ code: "custom", path: ["priceCurrency"], message: "Indica la moneda del precio." });
     if ((v.lat === undefined) !== (v.lon === undefined)) ctx.addIssue({ code: "custom", path: ["lat"], message: "La ubicación necesita latitud y longitud." });
+    if ((v.placeId === undefined) !== (v.placeName === undefined)) ctx.addIssue({ code: "custom", path: ["placeName"], message: "El lugar necesita su identificador y su nombre." });
   });
 export type ReportInput = z.infer<typeof reportInputSchema>;
 
@@ -106,6 +113,8 @@ export interface InsertRow {
   price_currency: string | null;
   lat_approx: number | null;
   lon_approx: number | null;
+  place_id: string | null;
+  place_name: string | null;
 }
 
 /** Fila para insertar. Las columnas que decide el servidor (vigencia, marcas, ocultamiento) no se envían. */
@@ -121,6 +130,8 @@ export function toInsertRow(input: ReportInput, userId: string, cityKey: string)
     price_currency: input.priceCurrency ?? null,
     lat_approx: input.lat === undefined ? null : roundCoord(input.lat),
     lon_approx: input.lon === undefined ? null : roundCoord(input.lon),
+    place_id: input.placeId ?? null,
+    place_name: input.placeName ?? null,
   };
 }
 
@@ -141,6 +152,8 @@ const publicSignalSchema = z.object({
   contradicted_count: z.number().int().min(0),
   state: z.enum(["por_confirmar", "corroborada", "en_disputa"]),
   is_mine: z.boolean().nullable().optional(),
+  place_id: z.string().regex(OSM_PLACE_ID).nullable().optional(),
+  place_name: z.string().max(120).nullable().optional(),
 });
 
 export interface PublicSignal {
@@ -158,6 +171,8 @@ export interface PublicSignal {
   contradictedCount: number;
   state: SignalState;
   isMine: boolean;
+  placeId: string | null;
+  placeName: string | null;
 }
 
 /** Interpreta las filas de la vista pública. Descarta lo que no cumple el contrato: nunca se confía en la red. */
@@ -177,6 +192,7 @@ export function parsePublicSignals(raw: unknown): PublicSignal[] {
       observedAt: r.observed_at, expiresAt: r.expires_at,
       independentCount: r.independent_count, contradictedCount: r.contradicted_count,
       state: r.state, isMine: r.is_mine === true,
+      placeId: r.place_id ?? null, placeName: r.place_name ?? null,
     });
   }
   return out.sort((a, b) => Date.parse(b.observedAt) - Date.parse(a.observedAt));

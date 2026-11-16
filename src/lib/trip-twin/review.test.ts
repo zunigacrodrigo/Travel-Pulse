@@ -132,3 +132,62 @@ describe("revisar con datos de hoy: horarios", () => {
     expect(review({ freshHours: sin }).findings).toEqual([]);
   });
 });
+
+// ---- Reportes de viajeros ----
+// Todavía no existe una comunidad real que reporte: estas señales son DE PRUEBA (se declara así) y solo ejercitan la regla.
+import type { PublicSignal } from "../pulsemesh/model";
+
+describe("revisar con datos de hoy: reportes de viajeros (señales de prueba)", () => {
+  const masp = activities[0]!;
+  const signal = (over: Partial<PublicSignal> = {}): PublicSignal => ({
+    id: "t1", cityKey: "sao-paulo-br", category: "condiciones", kind: "cerrado", title: "Cerrado hoy", detail: null, priceAmount: null, priceCurrency: null,
+    observedAt: "2026-11-05T08:30:00Z", expiresAt: "2026-11-06T08:30:00Z", independentCount: 3, contradictedCount: 0, state: "corroborada", isMine: false,
+    placeId: masp.location.placeId!, placeName: "Museu de Arte de São Paulo", ...over,
+  });
+  const viajeros = (signals: PublicSignal[] | null | undefined) => review({ signals }).findings.filter((f) => f.kind === "viajeros");
+
+  it("sin la función de reportes (undefined) no cambia nada ni agrega notas", () => {
+    expect(review({ signals: undefined }).findings).toEqual([]);
+    expect(review({ signals: undefined }).notes.join(" ")).not.toMatch(/viajeros/i);
+  });
+  it("sin reportes de ese lugar no hay aviso", () => expect(viajeros([])).toEqual([]));
+  it("un reporte corroborado por 3 personas de «cerrado» genera un aviso con la propuesta de quitarlo del día", () => {
+    const [f] = viajeros([signal()]);
+    expect(f).toBeDefined();
+    expect(f!.activityId).toBe(masp.id);
+    expect(f!.proposal).toMatchObject({ change: { type: "activity_cancelled", activityId: masp.id } });
+    expect(f!.message).toMatch(/3 personas/);
+    expect(f!.message).toMatch(/no es una fuente oficial/i);
+  });
+  it("un reporte SIN corroborar (1 persona) no genera aviso: no se mueve el plan por un rumor", () => {
+    expect(viajeros([signal({ state: "por_confirmar", independentCount: 1 })])).toEqual([]);
+  });
+  it("un reporte en disputa no genera aviso", () => {
+    expect(viajeros([signal({ state: "en_disputa", independentCount: 1, contradictedCount: 2 })])).toEqual([]);
+  });
+  it("un reporte caducado no genera aviso", () => {
+    expect(viajeros([signal({ expiresAt: "2026-11-05T08:59:00Z" })])).toEqual([]);
+  });
+  it("un reporte de OTRO lugar no afecta a esta parada", () => {
+    expect(viajeros([signal({ placeId: "node/999" })])).toEqual([]);
+  });
+  it("una fila larga corroborada avisa pero no inventa una propuesta de cambio", () => {
+    const [f] = viajeros([signal({ category: "afluencia", kind: "fila_larga" })]);
+    expect(f).toBeDefined();
+    expect(f!.proposal).toBeNull();
+  });
+  it("lo positivo (tranquilo, buen estado) no genera aviso", () => {
+    expect(viajeros([signal({ category: "afluencia", kind: "tranquilo" })])).toEqual([]);
+  });
+  it("una parada de horario fijo recibe el aviso pero no se le propone quitarla sola", () => {
+    const acts = structuredClone(activities); acts[0]!.importance = "fixed"; acts[0]!.fixedStart = plan.items[0]!.plannedStart;
+    const [f] = review({ activities: acts, plan: buildTripPlan(trip, acts, { now: NOW }), signals: [signal()] }).findings.filter((x) => x.kind === "viajeros");
+    expect(f).toBeDefined();
+    expect(f!.proposal).toBeNull();
+  });
+  it("si no se pudieron consultar los reportes (null) se declara en las notas, sin inventar avisos", () => {
+    const r = review({ signals: null });
+    expect(r.notes.join(" ")).toMatch(/reportes de viajeros/i);
+    expect(r.findings).toEqual([]);
+  });
+});

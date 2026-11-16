@@ -11,6 +11,8 @@
 import { KIND_META, type Kind } from "@/lib/day/places";
 import { clock, parseOpeningHours, weekdayOf, windowsOn } from "@/lib/day/openingHours";
 import { rainRiskBetween, type HourWeather } from "@/lib/day/weather";
+import { kindLabel, type PublicSignal } from "@/lib/pulsemesh/model";
+import { agoText, summarizePlace } from "@/lib/pulsemesh/place";
 import { buildTripPlan, replanTrip } from "./engine";
 import { zonedIso } from "./import";
 import type { Activity, Evidence, PlanChange, Trip, TripPlan } from "./types";
@@ -25,6 +27,11 @@ export interface ReviewInput {
   date: string;
   weather: HourWeather[] | null;
   freshHours: FreshHoursMap;
+  /**
+   * Reportes vigentes de viajeros de los lugares del viaje.
+   * `undefined`: la función no está disponible (no se dice nada). `null`: no se pudieron consultar (se declara).
+   */
+  signals?: PublicSignal[] | null;
   /** Hora de la consulta (ISO). */
   now: string;
 }
@@ -40,10 +47,20 @@ export interface HoursFinding {
   /** Datos nuevos de la actividad, con su fuente y la hora de la consulta. */
   patch: { openingHours: NonNullable<Activity["openingHours"]>; hoursEvidence: Evidence };
 }
-export type Finding = RainFinding | HoursFinding;
+export interface TravelersFinding {
+  id: string; kind: "viajeros"; activityId: string; activityName: string; message: string;
+  signal: PublicSignal;
+  /** Solo para «cerrado» y «ruta cortada»: quitar la parada. Una fila o el gentío no se resuelven moviendo nada inventado. */
+  proposal: { label: string; change: PlanChange } | null;
+}
+export type Finding = RainFinding | HoursFinding | TravelersFinding;
 
 export interface ReviewResult { findings: Finding[]; notes: string[] }
 
+/** Tipos de reporte que justifican un aviso. Lo positivo (tranquilo, buen estado) y los descubrimientos no. */
+const ACTIONABLE_KINDS = new Set(["cerrado", "via_cortada", "fila_larga", "muy_lleno", "obras"]);
+/** De estos, quitar la parada es una propuesta razonable. */
+const REMOVABLE_KINDS = new Set(["cerrado", "via_cortada"]);
 const MAX_SHIFT_MIN = 6 * 60;
 const STEP_MIN = 15;
 
@@ -98,6 +115,27 @@ export function reviewTrip(input: ReviewInput): ReviewResult {
     });
   }
 
+  // ---- Reportes de viajeros: solo los corroborados por 3 o más personas distintas y vigentes ----
+  if (input.signals === null) {
+    notes.push("No se pudieron consultar los reportes de viajeros: se muestra el plan sin ellos.");
+  } else if (input.signals) {
+    const nowDate = new Date(now);
+    for (const a of activities) {
+      const pid = a.location.placeId;
+      if (!pid) continue;
+      const item = plan.items.find((i) => i.activityId === a.id);
+      if (!item || item.status === "cancelled") continue;
+      const hit = summarizePlace(input.signals, pid, nowDate).corroborated.find((r) => ACTIONABLE_KINDS.has(r.kind));
+      if (!hit) continue;
+      const removable = a.importance !== "fixed" && REMOVABLE_KINDS.has(hit.kind);
+      findings.push({
+        id: `viajeros-${a.id}`, kind: "viajeros", activityId: a.id, activityName: a.name, signal: hit,
+        message: `Viajeros reportan en ${a.name}: ${kindLabel(hit.category, hit.kind).toLowerCase()} (${hit.independentCount} personas distintas, ${agoText(hit.observedAt, nowDate)}). Es una observación de viajeros, no es una fuente oficial; tú decides.`,
+        proposal: removable ? { label: "Quitar del día", change: { type: "activity_cancelled", activityId: a.id } } : null,
+      });
+    }
+  }
+
   // ---- Lluvia ----
   if (!weather) {
     notes.push("No se evaluó la lluvia: no hay pronóstico por hora para esa fecha.");
@@ -120,7 +158,8 @@ export function reviewTrip(input: ReviewInput): ReviewResult {
       });
     }
   }
-  findings.sort((x, y) => (x.kind === y.kind ? 0 : x.kind === "horario" ? -1 : 1));
+  const ORDER = { horario: 0, viajeros: 1, lluvia: 2 } as const;
+  findings.sort((x, y) => ORDER[x.kind] - ORDER[y.kind]);
   return { findings, notes };
 }
 

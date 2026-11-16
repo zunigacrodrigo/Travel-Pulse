@@ -107,3 +107,37 @@ describe("textos", () => {
     expect(friendlyError(null)).toContain("Inténtalo de nuevo");
   });
 });
+
+describe("reportes con lugar (OpenStreetMap)", () => {
+  const withPlace = { ...ok, placeId: "way/1370081491", placeName: "Museu de Arte de São Paulo" };
+  it("acepta un lugar con el formato de OpenStreetMap", () => {
+    expect(reportInputSchema.safeParse(withPlace).success).toBe(true);
+    for (const id of ["node/1", "way/123", "relation/9"]) expect(reportInputSchema.safeParse({ ...ok, placeId: id, placeName: "X" }).success, id).toBe(true);
+  });
+  it("rechaza ids con otro formato (la misma regla que la base de datos)", () => {
+    for (const id of ["abc", "way/abc", "way/", "Way/1", " way/1", "way/1; drop table x", "way/1234567890123456", "way/1\nnode/2"]) {
+      expect(reportInputSchema.safeParse({ ...ok, placeId: id, placeName: "X" }).success, JSON.stringify(id)).toBe(false);
+    }
+  });
+  it("el nombre del lugar exige el id y tiene tamaño acotado", () => {
+    expect(reportInputSchema.safeParse({ ...ok, placeName: "Sin id" }).success).toBe(false);
+    expect(reportInputSchema.safeParse({ ...ok, placeId: "way/5", placeName: "" }).success).toBe(false);
+    expect(reportInputSchema.safeParse({ ...ok, placeId: "way/5", placeName: "n".repeat(121) }).success).toBe(false);
+    expect(reportInputSchema.safeParse({ ...ok, placeId: "way/5" }).success).toBe(false); // el id solo no basta: se muestra el nombre
+  });
+  it("toInsertRow envía el lugar y, sin lugar, envía null", () => {
+    expect(toInsertRow(withPlace, "u1", "sao-paulo-br")).toMatchObject({ place_id: "way/1370081491", place_name: "Museu de Arte de São Paulo" });
+    expect(toInsertRow(ok, "u1", "sao-paulo-br")).toMatchObject({ place_id: null, place_name: null });
+  });
+  const row = { id: "s1", city_key: "sao-paulo-br", category: "afluencia", kind: "fila_larga", title: "Fila", detail: null, price_amount: null, price_currency: null,
+    observed_at: "2026-11-05T10:00:00Z", expires_at: "2026-11-05T16:00:00Z", independent_count: 3, contradicted_count: 0, state: "corroborada", is_mine: false };
+  it("parsePublicSignals lee el lugar; sin lugar queda en null", () => {
+    const [a] = parsePublicSignals([{ ...row, place_id: "way/1370081491", place_name: "Museu" }]);
+    expect(a).toMatchObject({ placeId: "way/1370081491", placeName: "Museu" });
+    const [b] = parsePublicSignals([row]);
+    expect(b).toMatchObject({ placeId: null, placeName: null });
+  });
+  it("una fila con un place_id fuera de formato se descarta: nunca se confía en la red", () => {
+    expect(parsePublicSignals([{ ...row, place_id: "evil<script>", place_name: "x" }])).toEqual([]);
+  });
+});
