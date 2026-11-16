@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit",
     "e2e": "node scripts/e2e.mjs",
     "medir:director": "vitest run src/lib/director/intent.live.test.ts",
-    "start:prod": "cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/ && HOSTNAME=0.0.0.0 node .next/standalone/server.js"
+    "start:prod": "cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/ && HOSTNAME=0.0.0.0 node .next/standalone/server.js",
+    "preflight": "node scripts/preflight-nube.mjs",
+    "nube:sql": "node scripts/build-setup-sql.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.132.1",

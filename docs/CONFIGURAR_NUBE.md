@@ -7,18 +7,31 @@ Con sesión iniciada (enlace por correo, sin contraseña) se sincronizan **Trave
 
 ## Pasos (una sola vez)
 
-1. **Proyecto de Supabase.** Crea uno exclusivo para Travel Pulse.
-2. **Aplicar el esquema, en orden**, con la CLI (`supabase link --project-ref <ref>` y `supabase db push`) o pegando en el editor SQL:
-   `0001_init.sql` → `0002_gap_view.sql` → `0003_mark_seed_prices_as_estimates.sql` → `0004_user_cloud_data.sql` → `0005_pulsemesh.sql` → **`0006_pulsemesh_places.sql`**.
-   Luego carga el catálogo: `supabase/seed.sql` (los guardados dependen de que existan los destinos).
-3. **Autenticación → Providers → Email:** activa el acceso por enlace mágico.
-4. **Autenticación → URL Configuration:** *Site URL* = el dominio de producción; en *Redirect URLs* agrega `https://<tu-dominio>/cuenta` y, para pruebas, `http://localhost:3000/cuenta` y las URLs de previsualización de Vercel.
-5. **Variables en Vercel** (Project → Settings → Environment Variables), en Production y Preview:
+**Antes de empezar:** necesitas una cuenta de [Supabase](https://supabase.com) y una de [Vercel](https://vercel.com) con el repositorio de GitHub conectado. Todo lo de abajo son clics y pegar texto; nada de esto se puede hacer desde la sesión de desarrollo.
+
+1. **Proyecto de Supabase.** *New project*, exclusivo para Travel Pulse. Guarda la contraseña de la base donde quieras (la app no la usa).
+2. **Esquema, de una vez.** Supabase → *SQL Editor* → *New query* → pega **todo** `supabase/setup-completo.sql` → *Run*.
+   - Reúne las migraciones 0001–0006 en orden. Verificado en un Postgres limpio con `bash supabase/tests/setup_completo.sh` (19 tablas, 2 vistas, 39 políticas, RLS activo).
+   - **Ejecútalo una sola vez:** una segunda ejecución falla con «relation already exists» (comprobado). Si algo sale a medias, no lo repitas: corre el paso 7 para ver qué quedó aplicado.
+   - Si cambias una migración, regénéralo con `npm run nube:sql`.
+3. **Catálogo de destinos:** pega `supabase/seed.sql` en otra consulta nueva y ejecútala (los guardados dependen de que existan los destinos). Son ~75 KB; si el editor se queja del tamaño, usa la CLI (`supabase link --project-ref <ref>` y `supabase db push`).
+4. **Autenticación → Providers → Email:** activa el acceso por enlace mágico.
+5. **Autenticación → URL Configuration:** *Site URL* = el dominio de producción; en *Redirect URLs* agrega `https://<tu-dominio>/cuenta` y, para pruebas, `http://localhost:3000/cuenta` y las URLs de previsualización de Vercel.
+6. **Vercel:** *Add New → Project* → importa el repositorio (rama `claude/fase-0-sin-demo` o `main` cuando la fusiones). Antes de desplegar, en *Environment Variables* (Production y Preview):
    - `NEXT_PUBLIC_SUPABASE_URL` = `https://<project-ref>.supabase.co`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = la clave **anon / publishable** (pública por diseño).
-   - Nunca pongas la `service_role` en una variable `NEXT_PUBLIC_`: la app la rechaza, pero no dependas de eso.
-   - Estas variables se leen **al compilar**: después de agregarlas, vuelve a desplegar.
-6. Deploy. Abre `/cuenta`, pide el enlace con tu correo y comprueba «Sincronizar ahora».
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = la clave **anon / publishable** (Supabase → *Project Settings → API Keys*). **Nunca** la `service_role`/`secret`.
+   - `IP_HASH_SALT` = una cadena aleatoria de 16+ caracteres.
+   - Opcional: `ANTHROPIC_API_KEY` (solo servidor) **con** `AI_MONTHLY_BUDGET_USD`. Sin ella la app funciona con reglas.
+   - **No pongas** `SUPABASE_URL` ni `SUPABASE_SERVICE_ROLE_KEY` salvo que hayas cargado el seed y quieras que los destinos salgan de Supabase; no hacen falta para cuentas ni reportes.
+   - **No pongas** `RATE_LIMIT_DISABLED`, `NEXT_PUBLIC_USE_MOCK` ni `TP_NOW` (son de pruebas).
+   - Las variables `NEXT_PUBLIC_*` se leen **al compilar**: si las agregas después, vuelve a desplegar.
+7. **Chequeo previo** (desde tu computador, con las mismas variables). Lee tus variables y consulta tu proyecto con la clave pública; no escribe nada:
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon> IP_HASH_SALT=<sal> npm run preflight
+   ```
+   PowerShell: `$env:NEXT_PUBLIC_SUPABASE_URL="https://<ref>.supabase.co"; $env:NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon>"; $env:IP_HASH_SALT="<sal>"; npm.cmd run preflight`.
+   Dice, con ✔ ⚠ ✖: si la URL y la clave son válidas, **si una clave secreta quedó en una variable pública**, qué migraciones están aplicadas, si el registro de usuarios está activo y si un visitante anónimo puede leer quién publicó un reporte. Sale con código 1 si hay errores.
+8. **Deploy** y comprueba: `https://<tu-dominio>/api/health`; abre `/cuenta`, pide el enlace con tu correo y pulsa «Sincronizar ahora»; en «Mi día» arma un día y publica un reporte de viajeros.
 
 ## Seguridad (verificada con `bash supabase/tests/rls.sh`)
 24 comprobaciones contra un Postgres real con el esquema `0001` + `0004`, usando dos usuarios:
@@ -26,6 +39,8 @@ cada uno solo ve y escribe lo suyo; `anon` no accede a nada; nadie puede ascende
 límites de 50 viajes y 200 guardados por usuario; tamaños acotados; `delete_my_cloud_data()` borra solo lo propio.
 
 ## Lo que NO está verificado
+- **`npm run preflight` contra un proyecto real:** sus comprobaciones están probadas con respuestas simuladas y contra una URL inexistente; nunca se ejecutó contra un Supabase real. Si una huella de migración da falso error, revisa el nombre de la tabla en el panel y avísame.
+- **El tamaño de `seed.sql` en el SQL Editor** y qué pasa si el script falla a medias (no sé si Supabase lo deshace entero).
 - **No se probó contra un proyecto real de Supabase ni con el envío real de correos.** Las pruebas de navegador usan un servidor simulado con las mismas rutas y formas de respuesta de PostgREST/GoTrue.
 - La entrega del correo depende del proveedor de correo de tu proyecto (el integrado de Supabase tiene límites bajos; para producción conviene un SMTP propio).
 - Borrar una cuenta de acceso por completo no está en la app: «Borrar mis datos en la nube» elimina los datos, no el inicio de sesión.
@@ -80,5 +95,6 @@ Las variables `NEXT_PUBLIC_*` se leen **al compilar**: tras agregarlas hay que v
 
 **Riesgos de Vercel que NO verifiqué** (conviene revisarlos antes de lanzar):
 - Las cachés, el límite de uso y el control de gasto de IA viven en la memoria de cada instancia: en un entorno sin servidor no se comparten entre instancias.
+- Las rutas nuevas de contexto (`/api/entorno` hasta 30 s; Wikidata y Wikivoyage limitan el ritmo) y «Mi día» pueden chocar con el tiempo máximo de función de tu plan de Vercel; no lo medí.
 - «Mi día» hace varias consultas seguidas a Nominatim (1,1 s de espera entre cada una, por su política de uso). Si el plan de Vercel limita la duración de la función, podría agotar el tiempo. No medí ese límite contra tu plan.
 - El repositorio trae `railway.json`: un proceso de larga duración conserva las cachés y respeta mejor esos tiempos. Es una alternativa si Vercel se queda corto.
