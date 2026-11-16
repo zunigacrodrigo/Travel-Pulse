@@ -6,7 +6,12 @@
 import { z } from "zod";
 import { PACES } from "@/lib/client/dna-core";
 import { describeError } from "@/lib/sources/http";
+import { zonedIso } from "@/lib/trip-twin/import";
+import { MOODS, curate, type Mood } from "./curate";
+import { fetchViews30 } from "./interest";
 import { fetchMedia, type Media } from "./media";
+import { fetchNotes, notesNear, type StreetNote } from "./street-notes";
+import { fetchTransit, type TransitOption } from "./transit";
 import { KINDS, KIND_META, fetchPlaces, type Kind, type Place } from "./places";
 import { buildDay, type DayPlan, type TravelData } from "./planner";
 import { fetchMatrix, type Point } from "./routing";
@@ -23,6 +28,10 @@ export const dayInputSchema = z
     endMin: z.number().int().min(60).max(1440),
     /** Ritmo declarado en el Travel DNA (opcional). */
     pace: z.enum(PACES).optional(),
+    /** Ánimo del día: activa el curador (interés real + evidencia). Sin él, el orden es el histórico. */
+    mood: z.enum(MOODS).optional(),
+    /** «Otra propuesta»: rota los lugares equivalentes. */
+    variant: z.number().int().min(0).max(50).optional(),
     wishes: z
       .array(z.object({ kind: z.enum(KINDS), pin: z.string().max(80).optional(), minStart: z.number().int().min(0).max(1439).optional() }).strict())
       .min(1)
@@ -48,9 +57,21 @@ export interface DayResponse {
   weather: { hours: HourWeather[]; windows: RainWindow[] } | null;
   sources: SourceNote[];
   warnings: string[];
+  /** Presentes cuando se pidió un ánimo del día. */
+  mood?: Mood;
+  /** Por qué se ofreció cada lugar y cuánta gente leyó sobre él (null = sin dato). */
+  curation?: Record<string, { why: string[]; views30: number | null }>;
+  /** Opción en transporte público para llegar a cada parada (clave: id del lugar). null = se consultó y no hay. */
+  transit?: Record<string, TransitOption | null>;
+  /** Avisos abiertos de OpenStreetMap cerca de cada parada. */
+  streetNotes?: Record<string, StreetNote[]>;
 }
 
 const TOP_PER_KIND = 8;
+/** Cuántos lugares por tipo entran al curador (acota las consultas de interés). */
+const POOL_PER_KIND = 18;
+const WALK_OK_MIN = 15;
+const MAX_TRANSIT_QUERIES = 5;
 
 export interface Deps { fetchImpl?: typeof fetch; now?: Date; spacingMs?: number }
 
@@ -65,10 +86,21 @@ export async function computeDayPlan(input: DayInput, deps: Deps = {}): Promise<
   // Lugares: una consulta por tipo, en serie y con pausa (uso razonable de Nominatim).
   const candidates: Record<Kind, Place[]> = { museo: [], galeria: [], restaurante: [], pub: [], parque: [] };
   let placesOk = 0;
+  const curation: NonNullable<DayResponse["curation"]> = {};
+  let interestAsked = false;
   for (const kind of kinds) {
     try {
       const all = await fetchPlaces(kind, city.center, { ...http, spacingMs: deps.spacingMs });
-      const top = all.slice(0, TOP_PER_KIND);
+      let top = all.slice(0, TOP_PER_KIND);
+      if (input.mood) {
+        // Curador: interés real de la gente (lecturas de Wikipedia) + evidencia del dato, según el ánimo del día.
+        const pool = all.slice(0, POOL_PER_KIND);
+        const views = new Map<string, number | null>(await Promise.all(pool.map(async (p) => [p.id, p.wikipedia ? await fetchViews30(p.wikipedia, now, http) : null] as const)));
+        const curated = curate(pool, views, input.mood, input.variant ?? 0);
+        top = curated.slice(0, TOP_PER_KIND).map((c) => c.place);
+        for (const c of curated) curation[c.place.id] = { why: c.why, views30: c.views30 };
+        if (pool.some((p) => p.wikipedia)) interestAsked = true;
+      }
       for (const w of input.wishes) {
         if (w.kind === kind && w.pin && !top.some((p) => p.id === w.pin)) {
           const pinned = all.find((p) => p.id === w.pin);
@@ -119,8 +151,34 @@ export async function computeDayPlan(input: DayInput, deps: Deps = {}): Promise<
     for (const [id, m] of found) if (m) media[id] = m;
     sources.push({ name: "Wikipedia y Wikimedia Commons", url: "https://commons.wikimedia.org/", status: Object.keys(media).length ? "ok" : "error", ...(Object.keys(media).length ? {} : { detail: "no respondió; los lugares se muestran sin foto" }) });
   }
+  if (!input.mood) {
+    return {
+      generatedAt: now.toISOString(), city, date: input.date, startMin: input.startMin, endMin: input.endMin,
+      plan, candidates, media, weather: weather ? { hours: weather, windows: rainWindows(weather) } : null, sources, warnings,
+    };
+  }
+  if (interestAsked) sources.push({ name: "Wikipedia (lecturas por artículo, últimos 30 días)", url: "https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews", status: Object.values(curation).some((c) => c.views30 !== null) ? "ok" : "error", ...(Object.values(curation).some((c) => c.views30 !== null) ? {} : { detail: "sin datos de interés: se ordenó solo por evidencia" }) });
+
+  // Cómo llegar en transporte público: solo donde caminar no basta (más de 15 min, en auto o sin dato).
+  const transit: Record<string, TransitOption | null> = {};
+  const needs = plan.stops.map((s, i) => ({ s, from: i === 0 ? city.center : plan.stops[i - 1]!.place })).filter(({ s }) => !s.travel || s.travel.mode === "car" || s.travel.minutes > WALK_OK_MIN).slice(0, MAX_TRANSIT_QUERIES);
+  await Promise.all(needs.map(async ({ s, from }) => {
+    const depart = zonedIso(input.date, Math.max(0, s.startMin - (s.travel?.minutes ?? 30)), city.timezone);
+    transit[s.place.id] = await fetchTransit(from, s.place, depart, http);
+  }));
+  if (needs.length) {
+    const found = Object.values(transit).some(Boolean);
+    sources.push({ name: "Transitous (transporte público, horarios programados)", url: "https://transitous.org/", status: found ? "ok" : "error", ...(found ? {} : { detail: "sin recorridos para esta ciudad o la fuente no respondió" }) });
+  }
+
+  // Avisos abiertos de OpenStreetMap cerca de las paradas (personas reportando la calle).
+  const notes = await fetchNotes(plan.stops.map((s) => s.place), http);
+  const streetNotes = notes ? notesNear(notes, plan.stops.map((s) => s.place), now) : {};
+  sources.push({ name: "OpenStreetMap (notas abiertas de la comunidad)", url: "https://www.openstreetmap.org/#layers=N", status: notes ? "ok" : "error" });
+
   return {
     generatedAt: now.toISOString(), city, date: input.date, startMin: input.startMin, endMin: input.endMin,
     plan, candidates, media, weather: weather ? { hours: weather, windows: rainWindows(weather) } : null, sources, warnings,
+    mood: input.mood, curation: Object.fromEntries(plan.stops.flatMap((s) => (curation[s.place.id] ? [[s.place.id, curation[s.place.id]!]] : []))), transit, streetNotes,
   };
 }
